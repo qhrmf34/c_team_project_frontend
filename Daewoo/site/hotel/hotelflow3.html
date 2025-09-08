@@ -726,6 +726,14 @@
             align-items: center;
             gap: 8px;
         }
+        .map-address img{
+            width: 11.25px;
+            height: 15.749412536621094px;
+            top: 1.13px;
+            left: 3.38px;
+            angle: 0 deg;
+            opacity: 1;
+        }
 
         .view-map-btn {
             background: #8DD3BB;
@@ -783,9 +791,26 @@
 
         .amenity-text {
             font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             color: #112211;
+        }
+       
+
+        .amenity-text.plus{
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #FF8682;
+            cursor: pointer;
         }
 
         .amenity-item.hidden {
@@ -848,12 +873,27 @@
 
         .review-summary-text {
             font-family: Montserrat;
-            font-weight: 500;
-            font-size: 16px;
-            color: #666666;
-            line-height: 1.2;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 20px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #112211;
         }
+        
 
+        .review-summary-text2 {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #112211;
+            margin-top: 6px;
+        }
         .review-actions {
             display: flex;
             flex-direction: column;
@@ -1452,14 +1492,14 @@
         <nav>
             <div class="nav-left">
                 <a href="#" class="nav-item">
-                    <span><img src="img/hotel.jpg"></span>
+                    <span><img src="../hotel_img/hotel.jpg"></span>
                     Find Stays
                 </a>
             </div>
             
             <div class="nav-right">
                 <a href="#" class="nav-item">
-                    <span><img src="img/heart.jpg"></span>
+                    <span><img src="../hotel_img/heart.jpg"></span>
                     찜하기
                 </a>
                 <span>|</span>
@@ -1483,17 +1523,17 @@
         </div>
         <div class="dropdown-menu">
             <a href="#" class="dropdown-item">
-                <span><img src="img/account.jpg"></span> 계정
+                <span><img src="../hotel_img/account.jpg"></span> 계정
             </a>
             <a href="#" class="dropdown-item">
-                <span><img src="img/card.jpg"></span> 결제내역
+                <span><img src="../hotel_img/card.jpg"></span> 결제내역
             </a>
             <a href="#" class="dropdown-item">
-                <span><img src="img/setting.jpg"></span> 설정
+                <span><img src="../hotel_img/setting.jpg"></span> 설정
             </a>
             <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
             <a href="#" class="dropdown-item">
-                <span><img src="img/logout.jpg"></span> 로그아웃
+                <span><img src="../hotel_img/logout.jpg"></span> 로그아웃
             </a>
         </div>
     </div>
@@ -1509,7 +1549,7 @@
             <div class="hotel-info">
                 <h1 class="hotel-title">해튼호텔<span class="stars">★★★★★</span><span class="stars-hotel">5 Star Hotel</span></h1>
                 <div class="hotel-location-line">
-                    <span><img src="img/map.jpg"></span>
+                    <span><img src="../hotel_img/map.jpg"></span>
                     <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
                 </div>
                 <div class="hotel-meta-left">
@@ -1525,8 +1565,8 @@
                     <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
                 </div>
                 <div class="hotel-buttons">
-                    <button class="action-btn"><img src="img/heart2.jpg"/></button>
-                    <button class="action-btn"><img src="img/share.jpg"></button>
+                    <button class="action-btn"><img src="../hotel_img/heart2.jpg"/></button>
+                    <button class="action-btn"><img src="../hotel_img/share.jpg"></button>
                     <button class="book-now-btn">Book now</button>
                 </div>
             </div>
@@ -1535,23 +1575,23 @@
         <!-- Image Gallery -->
         <div class="image-gallery">
             <div class="main-image">
-                <img src="img/findhotel1.jpg" alt="해튼호텔 메인">
+                <img src="../hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
             </div>
             <div class="sub-images">
                 <div class="sub-row">
                     <div class="gallery-item">
-                        <img src="img/findhotel2.jpg" alt="호텔 객실">
+                        <img src="../hotel_img/findhotel2.jpg" alt="호텔 객실">
                     </div>
                     <div class="gallery-item item3">
-                        <img src="img/findhotel3.jpg" alt="호텔 로비">
+                        <img src="../hotel_img/findhotel3.jpg" alt="호텔 로비">
                     </div>
                 </div>  
                 <div class="sub-row">
                     <div class="gallery-item">
-                        <img src="img/findhotel4.jpg" alt="호텔 외관">
+                        <img src="../hotel_img/findhotel4.jpg" alt="호텔 외관">
                     </div>
                     <div class="gallery-item item5">
-                        <img src="img/findhotel5.jpg" alt="호텔 수영장">
+                        <img src="../hotel_img/findhotel5.jpg" alt="호텔 수영장">
                         <button class="view-all-photos">View all photos</button>
                     </div>
                 </div>     
@@ -1576,22 +1616,22 @@
                                 <div class="review-count">371 reviews</div>
                             </div>
                             <div class="rating-box">
-                                <div class="rating-number"><img src="img/star.jpg"></div>
+                                <div class="rating-number"><img src="../hotel_img/star.jpg"></div>
                                 <div class="rating-label">Near park</div>
                                 <div class="review-count">215 reviews</div>
                             </div>
                             <div class="rating-box">
-                                <div class="rating-number"><img src="img/star.jpg"></div>
+                                <div class="rating-number"><img src="../hotel_img/star.jpg"></div>
                                 <div class="rating-label">Near nightlife</div>
                                 <div class="review-count">89 reviews</div>
                             </div>
                             <div class="rating-box">
-                                <div class="rating-number"><img src="img/star.jpg"></div>
+                                <div class="rating-number"><img src="../hotel_img/star.jpg"></div>
                                 <div class="rating-label">Near theater</div>
                                 <div class="review-count">142 reviews</div>
                             </div>
                             <div class="rating-box">
-                                <div class="rating-number"><img src="img/star.jpg"></div>
+                                <div class="rating-number"><img src="../hotel_img/star.jpg"></div>
                                 <div class="rating-label">Clean Hotel</div>
                                 <div class="review-count">142 reviews</div>
                             </div>
@@ -1657,7 +1697,7 @@
                     </div>
                     <div class="map-actions">
                         <div class="map-address">
-                            📍 Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
+                            <img src="../hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
                         </div>
                         <button class="view-map-btn">View on google maps</button>
                     </div>
@@ -1668,42 +1708,42 @@
                     <h3 class="amenities-title">Amenities</h3>
                     <div class="amenities-grid" id="amenitiesGrid">
                         <div class="amenity-item">
-                            <span><img src="img/outdoor.jpg"></span>
+                            <span><img src="../hotel_img/outdoor.jpg"></span>
                             <span class="amenity-text">Outdoor pool</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/fitness.jpg"></span>
+                            <span><img src="../hotel_img/fitness.jpg"></span>
                             <span class="amenity-text">Fitness center</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/outdoor.jpg"></span>
+                            <span><img src="../hotel_img/outdoor.jpg"></span>
                             <span class="amenity-text">Indoor pool</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/bar.jpg"></span>
+                            <span><img src="../hotel_img/bar.jpg"></span>
                             <span class="amenity-text">Bar/Lounge</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/spa.jpg"/></span>
+                            <span><img src="../hotel_img/spa.jpg"/></span>
                             <span class="amenity-text">Spa and wellness center</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/wifi.jpg"></span>
+                            <span><img src="../hotel_img/wifi.jpg"></span>
                             <span class="amenity-text">Free Wi-Fi</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/restaurant.jpg"></span>
+                            <span><img src="../hotel_img/restaurant.jpg"></span>
                             <span class="amenity-text">Restaurant</span>
                         </div>
                         <div class="amenity-item">
-                            <span><img src="img/cafe.jpg"></span>
+                            <span><img src="../hotel_img/cafe.jpg"></span>
                             <span class="amenity-text">Tes/coffee machine</span>
                         </div>
-                        <!-- Hidden amenities -->
-                        <div class="amenity-item hidden">
-                            <span>🏋️</span>
-                            <span class="amenity-text">Fitness center</span>
+                        <div class="amenity-item">
+                            <span><img src="../hotel_img/roomservice.jpg"></span>
+                            <span class="amenity-text">Room service</span>
                         </div>
+                        <!-- Hidden amenities -->
                         <div class="amenity-item hidden">
                             <span>🅿️</span>
                             <span class="amenity-text">Parking</span>
@@ -1765,8 +1805,7 @@
                             <span class="amenity-text">Garden</span>
                         </div>
                         <div class="amenity-item">
-                            <span>➕</span>
-                            <span class="amenity-text" id="showMoreBtn" style="color: #8DD3BB; cursor: pointer;" onclick="toggleAmenities()">24 more</span>
+                            <span class="amenity-text plus" id="showMoreBtn" onclick="toggleAmenities()">+ 24 more</span>
                         </div>
                     </div>
                 </div>
@@ -1782,7 +1821,7 @@
                                     <span class="review-score-big">4.2</span>
                                     <div>
                                         <div class="review-summary-text">Very good</div>
-                                        <div class="review-summary-text">371 verified reviews</div>
+                                        <div class="review-summary-text2">371 verified reviews</div>
                                     </div>
                                 </div>
                             </div>
@@ -1819,7 +1858,6 @@
                         <button class="filter-btn active" onclick="filterReviews('all')">All reviews</button>
                         <button class="filter-btn" onclick="filterReviews('highest')">Highest rated</button>
                         <button class="filter-btn" onclick="filterReviews('lowest')">Lowest rated</button>
-                        <button class="filter-btn" onclick="filterReviews('recent')">Most recent</button>
                     </div>
 
                     <div id="reviewsList">
@@ -1933,10 +1971,10 @@
 
         <div class="footer-content">
             <div class="social-icons">
-                <span><img src="img/facebook.jpg"></span>
-                <span><img src="img/twitter.jpg"></span>
-                <span><img src="img/youtube.jpg"></span>
-                <span><img src="img/instagram.jpg"></span>
+                <span><img src="../hotel_img/facebook.jpg"></span>
+                <span><img src="../hotel_img/twitter.jpg"></span>
+                <span><img src="../hotel_img/youtube.jpg"></span>
+                <span><img src="../hotel_img/instagram.jpg"></span>
             </div>
 
             <div class="footer-links">
@@ -2016,23 +2054,30 @@
             highlightStars(selectedRating);
         }
 
-        // Amenities toggle functionality
+        // +버튼, -버튼
         function toggleAmenities() {
-            const hiddenAmenities = document.querySelectorAll('.amenity-item.hidden');
-            const showMoreBtn = document.getElementById('showMoreBtn');
-            
-            amenitiesExpanded = !amenitiesExpanded;
-            
-            hiddenAmenities.forEach(item => {
-                if (amenitiesExpanded) {
-                    item.classList.remove('hidden');
-                } else {
-                    item.classList.add('hidden');
-                }
+        const hiddenAmenities = document.querySelectorAll('.amenity-item.hidden');
+        const showMoreBtn = document.getElementById('showMoreBtn');
+
+        amenitiesExpanded = !amenitiesExpanded; 
+
+        hiddenAmenities.forEach(item => {
+            if (amenitiesExpanded) {
+                item.style.display = "flex"; 
+            } else {
+                item.style.display = "none"; 
+            }
+        });
+
+        showMoreBtn.textContent = amenitiesExpanded ? "− 24 less" : "+ 24 more";
+    }
+
+    // 페이지 로드 시시 히든
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".amenity-item.hidden").forEach(item => {
+                item.style.display = "none";
             });
-            
-            showMoreBtn.textContent = amenitiesExpanded ? '24 less' : '24 more';
-        }
+        });
 
         // Review filtering functionality
         function filterReviews(filter) {
