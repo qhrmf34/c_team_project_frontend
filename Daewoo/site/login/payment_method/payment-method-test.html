@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up (Add a Payment Method)</title>
+    <link rel="stylesheet" href="payment-method.css">
+</head>
+<body>
+    <div class="container">
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper">
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-method-form-section">
+            <div>
+                <h1>결제수단 추가</h1>
+                <p>결제수단을 추가해주새요</p>
+                <form>
+                    <div class="card-number-group">
+                        <div class="input-group">
+                            <label for="card-number">Card Number</label>
+                            <input type="text" id="Card Number" placeholder="4321 4321 4321 4321" inputmode="numeric" maxlength="19">
+                        </div>
+                    </div>
+
+                    <div class="card-group">
+                        <div class="input-group">
+                            <label for="Exp-date">Exp. Date</label>
+                            <!-- 혹여나 까먹을 까봐 추가함 placeholder 는 사용자 힌트용 inputmode 는 모바일 사용자 한테 뛰어줄 보드-->
+                            <input type="text" id="Exp-date"  maxlength="5" placeholder="02/27" inputmode="numeric" > 
+                        </div>
+                        <div class="input-group">
+                            <label for="cvc">CVC</label>
+                            <input type="text" id="CVC" placeholder="123" maxlength="3" pattern="[0-9]{3}">
+                        </div>
+                    </div>
+
+                    <div class="member-group">
+                        <div class="input-group">
+                            <label for="name-card">Name on Card</label>
+                            <input type="text" id="name" placeholder="John Doe" maxlength="50">
+                        </div>
+                        <div class="input-group">
+                            <label for = "country-select">Country or Region</label>
+                              <select name="country" id="country-select">
+                                 <!--이건 예시고 백엔드에서 받아와서 처리해야한다고함 db로 들어올 예정임 해당부분은-->
+                                <option value="US"disabled selected>United States</option>
+                                <option value="KR">South Korea</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="options">
+                        <div class="remember-me">
+                            <input type="checkbox" id="onetouch-checkbox">
+                            <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
+                        </div>
+                        <button type="submit" class="payment-method-button">결제수단 추가</button>
+                    </div>  
+                </form>
+                
+                <div class="divider">
+                    <span>By confirming your subscription, you allwo The Outdoor inn Crowd Limited to charge </span>
+                    <span>your card for this payment and future payments in accordance with their terms. You can</span>
+                    <span>always cancel your subscription.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

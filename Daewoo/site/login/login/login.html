@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 좌측 로그인 폼 -->
+        <div class="login-form-section">
+            <div>
+                <h1>Login</h1>
+                <p>로그인해주세요</p>
+                <form>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" value="" placeholder="john.doe@gmail.com" maxlength="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" value="" placeholder="••••••••••••••••" maxlength="255">
+                    </div>
+                    
+                    <div class="options">
+                        <div class="remember-me">
+                            <input type="checkbox" id="rememver-checkbox">
+                            <label for="rememver-checkbox">비밀번호 기억하기</label>
+                        </div>
+                        
+                        <a href="/site/login/forgot_password/forgot-password.html" class="forgot-password">Forgot Password</a>
+                        
+                        <button type="submit" class="login-button">Login</button>
+                        <a href="/site/login/sign_up/sign-up.html" class="signup-link">회원가입</a>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span>Or login with</span>
+                </div>
+                
+                <!-- 소셜 로그인 버튼들 -->
+                <div class="social-login">
+                    <button class="social-btn" onclick="loginWithFacebook()">
+                        <img src="/site/login_img/facebook.png" alt="Facebook">
+                    </button>
+                    
+                    <button class="social-btn" onclick="loginWithGoogle()">
+                        <img src="/site/login_img/google.png" alt="Google">
+                    </button>
+                    
+                    <button class="social-btn" onclick="loginWithApple()">
+                        <img src="/site/login_img/apple-logo.png" alt="Apple">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 우측 이미지 영역 -->
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper">
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 외부 JS 파일 로드 -->
+    <script src="slider.js"></script>
+    
+    <!-- 소셜 로그인 함수들 -->
+    <script>
+        function loginWithFacebook() {
+            alert('Facebook 로그인 기능');
+        }
+        
+        function loginWithGoogle() {
+            alert('Google 로그인 기능');
+        }
+        
+        function loginWithApple() {
+            alert('Apple 로그인 기능');
+        }
+    </script>
+</body>
+</html>
