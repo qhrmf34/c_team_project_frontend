@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up & Payment Method</title>
+    <style>
+        /* 기본 설정 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 공통 폼 영역 */
+        .sign-up-form-section,
+        .payment-method-form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .sign-up-form-section > div,
+        .payment-method-form-section > div {
+            width: 512px;
+            height: 593px;
+        }
+
+        /* 이미지 영역 */
+        .image-section {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 슬라이더 컨테이너 */
+        .slider-container {
+            width: 70%;
+            height: 90%;
+            overflow: hidden;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        /* 슬라이드 래퍼 */
+        .slider-wrapper {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        /* 각 슬라이드 */
+        .slide {
+            width: 33.333%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        /* 슬라이더 점들 */
+        .image-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: #7dd3c0;
+        }
+
+        .dot:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 폼 스타일 */
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input, 
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .options {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .agreement-me,
+        .remember-me {
+            margin-bottom: 10px;
+        }
+
+        .sign-up-button,
+        .payment-method-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #7dd3c0;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        /* 소셜 로그인 버튼들 */
+        .social-login {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .social-btn {
+            width: 160px;
+            height: 50px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .social-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .social-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* 회원가입 폼 그룹 스타일 */
+        .group {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .group .input-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        .group .input-group input {
+            width: 100%;
+        }
+
+        .password-group {
+            display: block;
+            width: 100%;
+        }
+
+        /* 결제수단 폼 그룹 스타일 */
+        .card-number-group {
+            width: 100%;
+        }
+
+        .card-group {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .member-group {
+            display: block;
+            width: 100%;
+        }
+
+        /* 화면 숨김/표시 */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- 회원가입 화면 -->
+    <div id="sign-up-screen" class="container screen active">
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper1">
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sign-up-form-section">
+            <div>
+                <h1>Sign up</h1>
+                <p>회원 가입</p>
+                <form onsubmit="submitSignUp(event)">
+                    <div class="group">
+                        <div class="input-group">
+                            <label for="first-name">First Name</label>
+                            <input type="text" id="first-name" placeholder="성" maxlength="50" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="last-name">Last Name</label>
+                            <input type="text" id="last-name" placeholder="이름" maxlength="50" required>
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <div class="input-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" placeholder="john.doe@gmail.com" maxlength="100" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="phone-number">Phone Number</label>
+                            <input type="text" id="phone-number" placeholder="010-1234-1234" maxlength="30" required>
+                        </div>
+                    </div>
+
+                    <div class="password-group">
+                        <div class="input-group">
+                            <label for="signup-password">Password</label>
+                            <input type="password" id="signup-password" placeholder="*************" maxlength="255" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" placeholder="*************" maxlength="255" required>
+                        </div>
+                    </div>
+                    
+                    <div class="options">
+                        <div class="agreement-me">
+                            <input type="checkbox" id="agreement-checkbox" required>
+                            <label for="agreement-checkbox">동의 하기</label>
+                        </div>
+                        <button type="submit" class="sign-up-button">계정 생성</button>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span>Or Sign up with</span>
+                </div>
+                
+                <div class="social-login">
+                    <button class="social-btn" onclick="loginWithFacebook()">
+                        <span>📘</span>
+                    </button>
+                    <button class="social-btn" onclick="loginWithGoogle()">
+                        <span>🔍</span>
+                    </button>
+                    <button class="social-btn" onclick="loginWithApple()">
+                        <span>🍎</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결제수단 추가 화면 -->
+    <div id="payment-method-screen" class="container screen">
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper2">
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-method-form-section">
+            <div>
+                <h1>결제수단 추가</h1>
+                <p>결제수단을 추가해주세요</p>
+                <form onsubmit="submitPaymentMethod(event)">
+                    <div class="card-number-group">
+                        <div class="input-group">
+                            <label for="card-number">Card Number</label>
+                            <input type="text" id="card-number" placeholder="4321 4321 4321 4321" inputmode="numeric" maxlength="19" required>
+                        </div>
+                    </div>
+
+                    <div class="card-group">
+                        <div class="input-group">
+                            <label for="exp-date">Exp. Date</label>
+                            <input type="text" id="exp-date" maxlength="5" placeholder="02/27" inputmode="numeric" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="cvc">CVC</label>
+                            <input type="text" id="cvc" placeholder="123" maxlength="3" pattern="[0-9]{3}" required>
+                        </div>
+                    </div>
+
+                    <div class="member-group">
+                        <div class="input-group">
+                            <label for="name-card">Name on Card</label>
+                            <input type="text" id="name-card" placeholder="John Doe" maxlength="50" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="country-select">Country or Region</label>
+                            <select name="country" id="country-select" required>
+                                <option value="US" selected>United States</option>
+                                <option value="KR">South Korea</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="options">
+                        <div class="remember-me">
+                            <input type="checkbox" id="onetouch-checkbox">
+                            <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
+                        </div>
+                        <button type="submit" class="payment-method-button">결제수단 추가</button>
+                    </div>  
+                </form>
+                
+                <div class="divider">
+                    <span>By confirming your subscription, you allow The Outdoor inn Crowd Limited to charge</span><br>
+                    <span>your card for this payment and future payments in accordance with their terms. You can</span><br>
+                    <span>always cancel your subscription.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 이미지 슬라이더 기능
+        class ImageSlider {
+            constructor(config = {}) {
+                this.currentSlideIndex = 0;
+                this.totalSlides = config.totalSlides || 3;
+                this.autoSlideInterval = config.autoSlideInterval || null;
+                this.autoSlideTimer = null;
+                
+                this.init();
+            }
+            
+            init() {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+                } else {
+                    this.setupEventListeners();
+                }
+            }
+            
+            setupEventListeners() {
+                window.slideToImage = (index) => this.slideToImage(index);
+                
+                if (this.autoSlideInterval) {
+                    this.startAutoSlide();
+                }
+            }
+            
+            slideToImage(index) {
+                const currentScreen = document.querySelector('.screen.active');
+                const sliderWrapper = currentScreen.querySelector('.slider-wrapper');
+                const dots = currentScreen.querySelectorAll('.dot');
+                
+                if (!sliderWrapper || dots.length === 0) {
+                    console.error('슬라이더 요소를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                if (dots[this.currentSlideIndex]) {
+                    dots[this.currentSlideIndex].classList.remove('active');
+                }
+                
+                this.currentSlideIndex = index;
+                const translateX = -index * (100 / this.totalSlides);
+                sliderWrapper.style.transform = `translateX(${translateX}%)`;
+                
+                if (dots[this.currentSlideIndex]) {
+                    dots[this.currentSlideIndex].classList.add('active');
+                }
+            }
+            
+            nextSlide() {
+                const nextIndex = (this.currentSlideIndex + 1) % this.totalSlides;
+                this.slideToImage(nextIndex);
+            }
+            
+            prevSlide() {
+                const prevIndex = (this.currentSlideIndex - 1 + this.totalSlides) % this.totalSlides;
+                this.slideToImage(prevIndex);
+            }
+            
+            startAutoSlide() {
+                if (this.autoSlideTimer) {
+                    clearInterval(this.autoSlideTimer);
+                }
+                this.autoSlideTimer = setInterval(() => {
+                    this.nextSlide();
+                }, this.autoSlideInterval);
+            }
+            
+            stopAutoSlide() {
+                if (this.autoSlideTimer) {
+                    clearInterval(this.autoSlideTimer);
+                    this.autoSlideTimer = null;
+                }
+            }
+        }
+
+        // 슬라이더 초기화
+        const slider = new ImageSlider({
+            totalSlides: 3
+        });
+
+        // 화면 전환 함수
+        function showScreen(screenName) {
+            // 모든 화면 숨기기
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // 선택된 화면 표시
+            const targetScreen = document.getElementById(screenName + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                
+                // 슬라이더 초기화
+                const dots = targetScreen.querySelectorAll('.dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.remove('active');
+                    if (index === 0) dot.classList.add('active');
+                });
+                
+                const sliderWrapper = targetScreen.querySelector('.slider-wrapper');
+                if (sliderWrapper) {
+                    sliderWrapper.style.transform = 'translateX(0%)';
+                }
+            }
+        }
+
+        // 회원가입 폼 제출
+        function submitSignUp(event) {
+            event.preventDefault();
+            
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('signup-email').value;
+            const phone = document.getElementById('phone-number').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const agreement = document.getElementById('agreement-checkbox').checked;
+            
+            if (!agreement) {
+                alert('약관에 동의해주세요.');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            if (password.length < 8) {
+                alert('비밀번호는 8자 이상이어야 합니다.');
+                return;
+            }
+            
+            alert('회원가입이 완료되었습니다! 이제 결제수단을 추가해주세요.');
+            showScreen('payment-method');
+        }
+
+        // 결제수단 추가 폼 제출
+        function submitPaymentMethod(event) {
+            event.preventDefault();
+            
+            const cardNumber = document.getElementById('card-number').value;
+            const expDate = document.getElementById('exp-date').value;
+            const cvc = document.getElementById('cvc').value;
+            const nameOnCard = document.getElementById('name-card').value;
+            const country = document.getElementById('country-select').value;
+            
+            // 간단한 유효성 검사
+            if (cardNumber.replace(/\s/g, '').length !== 16) {
+                alert('올바른 카드번호를 입력해주세요.');
+                return;
+            }
+            
+            if (cvc.length !== 3) {
+                alert('올바른 CVC를 입력해주세요.');
+                return;
+            }
+            
+            if (!expDate.match(/^\d{2}\/\d{2}$/)) {
+                alert('올바른 만료일을 입력해주세요. (MM/YY)');
+                return;
+            }
+            
+            alert('결제수단이 성공적으로 추가되었습니다!');
+        }
+
+        // 카드번호 자동 포매팅
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
+            if (formattedValue.length > 19) {
+                formattedValue = formattedValue.substring(0, 19);
+            }
+            e.target.value = formattedValue;
+        });
+
+        // 만료일 자동 포매팅
+        document.getElementById('exp-date').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // CVC 숫자만 입력
+        document.getElementById('cvc').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        // 소셜 로그인 함수들
+        function loginWithFacebook() {
+            alert('Facebook 로그인 기능');
+        }
+        
+        function loginWithGoogle() {
+            alert('Google 로그인 기능');
+        }
+        
+        function loginWithApple() {
+            alert('Apple 로그인 기능');
+        }
+    </script>
+</body>
+</html>
