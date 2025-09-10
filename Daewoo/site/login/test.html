@@ -22,10 +22,31 @@
             height: 100vh;
         }
 
-        /* 공통 좌측 폼 영역 */
-        .login-form-section,
-        .forgot-password-form-section,
-        .forgot-password-verify-form-section,
+        /* 각 폼 영역을 개별적으로 설정 */
+        .login-form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .forgot-password-form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .forgot-password-verify-form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
         .set-a-new-password-form-section {
             flex: 1;
             display: flex;
@@ -34,10 +55,32 @@
             padding: 40px;
         }
 
-        .login-form-section > div,
-        .forgot-password-form-section > div,
-        .forgot-password-verify-form-section > div,
-        .set-a-new-password-form-section > div {
+        /* 각 폼의 내부 div도 개별적으로 설정 */
+        .login-form-section-content {
+            width: 512px;
+            height: 593px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .forgot-password-form-section-content {
+            width: 512px;
+            height: 593px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .forgot-password-verify-form-section-content {
+            width: 512px;
+            height: 593px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .set-a-new-password-form-section-content {
             width: 512px;
             height: 593px;
             display: flex;
@@ -252,7 +295,7 @@
     <div id="login-screen" class="container screen active">
         <!-- 좌측 로그인 폼 -->
         <div class="login-form-section">
-            <div>
+            <div class="login-form-section-content">
                 <h1>Login</h1>
                 <p>로그인해주세요</p>
                 <form>
@@ -320,7 +363,7 @@
     <div id="forgot-password-screen" class="container screen">
         <!-- 좌측 비밀번호 찾기 폼 -->
         <div class="forgot-password-form-section">
-            <div>
+            <div class="forgot-password-form-section-content">
                 <a href="#" class="back-link" onclick="showScreen('login')">
                     &lt; Back to login
                 </a>
@@ -379,7 +422,7 @@
     <div id="verify-code-screen" class="container screen">
         <!-- 좌측 비밀번호 찾기 폼 -->
         <div class="forgot-password-verify-form-section">
-            <div>
+            <div class="forgot-password-verify-form-section-content">
                 <a href="#" class="back-link" onclick="showScreen('login')">
                     &lt; Back to login
                 </a>
@@ -423,7 +466,7 @@
     <div id="set-password-screen" class="container screen">
         <!-- 좌측 비밀번호 설정 폼 -->
         <div class="set-a-new-password-form-section">
-            <div>
+            <div class="set-a-new-password-form-section-content">
                 <h1>비밀번호 설정</h1>
                 <p>비밀번호 다시 설정하기</p>
                 <form onsubmit="submitSetPassword(event)">

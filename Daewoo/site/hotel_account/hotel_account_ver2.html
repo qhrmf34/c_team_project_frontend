@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Profile Account - Find Steps</title>
+<style>
+/* ==================== 기본 설정 ==================== */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: 'Montserrat', system-ui, -apple-system, "Noto Sans KR", Arial, sans-serif;
+          color: #112211;
+          background: #FAFBFC;
+          min-width: 1440px;
+          max-width: 1440px;
+          margin: 0 auto;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          overflow-x: scroll;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 21px 104px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 87px;
+            width: 100%;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1232px;
+            margin: 0 auto;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-item {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #112211;
+            text-decoration: none;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: #D9D9D9;
+            border: 1px solid #000000;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .online-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #112211;
+            border-radius: 50%;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        /* User Dropdown */
+        .user-dropdown {
+            position: fixed;
+            top: 82px;
+            left: 64%;
+            width: 329px;
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 32px;
+            display: none;
+            z-index: 1001;
+        }
+
+        .user-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dropdown-avatar {
+            width: 64px;
+            height: 64px;
+            background: #D9D9D9;
+            border-radius: 50%;
+        }
+
+        .dropdown-info h3 {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            margin-bottom: 4px;
+        }
+
+        .dropdown-info p {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+            opacity: 0.75;
+        }
+
+        .dropdown-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+            padding-top: 24px;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #112211;
+            text-decoration: none;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 100%;
+            padding: 4px 0;
+        }
+        
+        .vertical-line{
+            width: 0.5px;
+            height: 1420px;
+            top: 287px;
+            left: 471px;
+            opacity: 0.25;
+            background: rgba(17, 34, 17, 1);
+
+        }
+
+/* ==================== 메인 컨테이너 ==================== */
+.container {
+  max-width: 1232px;
+  width: 1232px;
+  margin: 0 auto 80px;
+  padding: 0;
+}
+
+/* ==================== 커버 이미지 ==================== */
+.cover {
+  height: 260px;
+  margin-top: 111px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  background: linear-gradient(135deg, #0ea5e9 0%, #0b7285 25%, #f59e0b 55%, #fbbf24 80%);
+  position: relative;
+  z-index: 0;
+}
+
+.upload {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  background: #ecfdf5;
+  border: 1px solid #99f6e4;
+  color: #065f46;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ==================== 프로필 섹션 ==================== */
+.profile {
+  margin-top: -58px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.profile .avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 6px solid #ffffff;
+  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  display: block;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.name {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.email {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ==================== 탭 메뉴 ==================== */
+.tabs {
+  max-width: 1232px;
+  margin: 24px auto 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tab {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 13px 18px;
+  text-align: center;
+  font-weight: 600;
+  color: #111827;
+  position: relative;
+  cursor: pointer;
+}
+
+.tab.active {
+  box-shadow: 0 0 0 2px #8DD3BB inset;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -1px;
+  height: 4px;
+  border-radius: 2px;
+  background: #8DD3BB;
+}
+
+/* ==================== 패널 시스템 ==================== */
+.panels .panel {
+  display: none;
+}
+
+.panels .panel.active {
+  display: block;
+}
+
+/* ==================== 카드 컴포넌트 ==================== */
+.card {
+  max-width: 1232px;
+  margin: 10px auto 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+}
+
+.head {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.body {
+  padding: 8px 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.value {
+  font-weight: 700;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #065f46;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ==================== 예약내역 스타일 ==================== */
+.booking-wrap {
+  max-width: 1232px;
+  margin: 24px auto 0;
+}
+
+.booking-title {
+  font-weight: 800;
+  font-size: 24px;
+  margin: 16px 0 12px;
+}
+
+.booking-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.booking-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.bc-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: #eef7f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #0f3f2e;
+}
+
+.bc-col .label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.bc-col .val {
+  font-weight: 800;
+}
+
+.bc-dl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bc-btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #e6f5ef;
+  border: 1px solid #bfe8d6;
+  color: #0f3f2e;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bc-next {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+/* ==================== 결제수단 스타일 ==================== */
+.billing {
+  max-width: 1232px;
+  margin: 24px auto 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+}
+
+.billing .head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.billing .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 18px 24px 24px;
+}
+
+/* ==================== 신용카드 스타일 ==================== */
+.credit-card {
+  background: #CDEAE1;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 160px;
+  border: 1px solid rgba(17, 34, 17, 0.08);
+}
+
+.cc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cc-chip {
+  width: 34px;
+  height: 24px;
+  border-radius: 6px;
+  background: #a7f3d0;
+}
+
+.cc-number {
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #0f3f2e;
+}
+
+.cc-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 16px;
+}
+
+.cc-meta {
+  font-size: 12px;
+  color: #0f3f2e;
+  opacity: 0.8;
+}
+
+.cc-brand {
+  width: 52px;
+  height: 36px;
+  border-radius: 6px;
+  background: #0f3f2e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.add-card {
+  border: 2px dashed #9ca3af;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.add-card .plus {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px dashed #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-right: 12px;
+}
+
+.add-card span {
+  font-weight: 600;
+}
+
+/* ==================== 모달 스타일 ==================== */
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 3000;
+}
+
+.modal.open {
+  display: block;
+}
+
+.modal .backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: saturate(120%) blur(2px);
+}
+
+.modal .card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 640px;
+  max-width: calc(100% - 40px);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20);
+  padding: 28px;
+}
+
+.modal .title {
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 18px;
+}
+
+.modal .close {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #111827;
+  opacity: 0.7;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ==================== 폼 요소 스타일 ==================== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  color: #374151;
+}
+
+.input,
+.select {
+  height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+}
+
+.input:focus,
+.select:focus {
+  border-color: #86efac;
+  box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.35);
+}
+
+.h2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cardnum-wrap {
+  position: relative;
+}
+
+.cardnum-wrap .brand-mini {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 20px;
+  border-radius: 4px;
+  background: #0f3f2e;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.submit {
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #A7DCC6;
+  font-weight: 700;
+  color: #0f3f2e;
+}
+
+/* ==================== 뉴스레터 섹션 ==================== */
+.newsletter-section {
+  background: rgba(141, 211, 187, 1);
+  padding: 80px 104px;
+  position: relative;
+  height: 422px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 60px;
+  z-index: 0;
+  margin-bottom: -513px;
+}
+
+.newsletter-content {
+  background: rgba(205, 234, 225, 1);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 1232px;
+  height: 305px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 40px;
+}
+
+.newsletter-left {
+  flex: 1;
+  max-width: 500px;
+}
+
+.newsletter-title {
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 900;
+  font-size: 44px;
+  line-height: 54px;
+  color: #112211;
+  margin-bottom: 24px;
+}
+
+.newsletter-info {
+  margin-bottom: 24px;
+}
+
+.newsletter-brand {
+  font-family: Acme;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 100%;
+  color: #112211;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.newsletter-desc {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 100%;
+  color: #112211;
+  opacity: 0.7;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.newsletter-input {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 100%;
+  height: 56px;
+}
+
+.subscribe-btn {
+  padding: 16px 24px;
+  background: #112211;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 100%;
+  cursor: pointer;
+  height: 56px;
+}
+
+/* ==================== 우편함 디자인 ==================== */
+.mailbox-container {
+  position: relative;
+  width: 400px;
+  height: 305px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.mailbox-back {
+  position: absolute;
+  width: 208px;
+  height: 191px;
+  top: 47px;
+  left: 0px;
+  background: rgba(101, 181, 153, 1);
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  z-index: 5;
+}
+
+.mailbox-base {
+  position: absolute;
+  width: 187px;
+  height: 179px;
+  top: 59px;
+  left: 10px;
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  background: rgba(84, 104, 105, 1);
+  z-index: 10;
+}
+
+.mailbox-front {
+  position: absolute;
+  width: 291px;
+  height: 191px;
+  top: 47px;
+  left: 71px;
+  background: rgba(17, 34, 17, 1);
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  z-index: 4;
+}
+
+.mailbox-flag {
+  position: absolute;
+  width: 169px;
+  height: 40px;
+  top: 154px;
+  left: 231px;
+  background: rgba(255, 134, 130, 1);
+  z-index: 6;
+}
+
+.mailbox-flag2 {
+  position: absolute;
+  width: 39px;
+  height: 77px;
+  top: 154px;
+  left: 361px;
+  background: rgba(255, 134, 130, 1);
+  z-index: 6;
+}
+
+.mailbox-pole {
+  position: absolute;
+  width: 47px;
+  height: 188px;
+  top: 117px;
+  left: 194px;
+  background: rgba(164, 128, 109, 1);
+  z-index: 3;
+}
+
+.mailbox-stand-base {
+  position: absolute;
+  width: 85px;
+  height: 57px;
+  top: 212px;
+  left: 156px;
+  background: rgba(164, 128, 109, 1);
+  z-index: 3;
+}
+
+.mailbox-stand-front {
+  position: absolute;
+  width: 85px;
+  height: 188px;
+  top: 117px;
+  left: 156px;
+  background: rgba(223, 173, 146, 1);
+  z-index: 2;
+}
+
+/* ==================== 푸터 컨텐츠 ==================== */
+.footer-content {
+  max-width: 1232px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+  gap: 64px;
+  padding-bottom: 40px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.social-icons img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.footer-links {
+  display: flex;
+  gap: 60px;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-column h4 {
+  font-family: Acme, system-ui;
+  font-weight: 600;
+  font-size: 16px;
+  color: #112211;
+  margin-bottom: 8px;
+}
+
+.footer-column a {
+  font-weight: 500;
+  font-size: 14px;
+  color: #112211;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.footer-column a:hover {
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+  <header class="header">
+        <nav>
+            <div class="nav-left">
+                <a href="#" class="nav-item">
+                    <span><img src="../hotel_img/hotel.jpg"></span>
+                    Find Stays
+                </a>
+            </div>
+            
+            <div class="nav-right">
+                <a href="#" class="nav-item">
+                    <span><img src="../hotel_img/heart.jpg"></span>
+                    찜하기
+                </a>
+                <span>|</span>
+                <div class="user-profile" onclick="toggleDropdown()">
+                    <div class="user-avatar">
+                        <div class="online-dot"></div>
+                    </div>
+                    <span>Tomhoon</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-header">
+            <div class="dropdown-avatar"></div>
+            <div class="dropdown-info">
+                <h3>Tomhoon</h3>
+                <p>Online</p>
+            </div>
+        </div>
+        <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">
+                <span><img src="../hotel_img/account.jpg"></span> 계정
+            </a>
+            <a href="#" class="dropdown-item">
+                <span><img src="../hotel_img/card.jpg"></span> 결제내역
+            </a>
+            <a href="#" class="dropdown-item">
+                <span><img src="../hotel_img/setting.jpg"></span> 설정
+            </a>
+            <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+            <a href="#" class="dropdown-item">
+                <span><img src="../hotel_img/logout.jpg"></span> 로그아웃
+            </a>
+        </div>
+    </div>
+
+  <main class="container">
+    <section class="cover">
+      <button class="upload">Upload new cover</button>
+    </section>
+
+    <section class="profile">
+      <img class="avatar" src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=300&auto=format&fit=crop" alt="프로필" />
+      <h2 class="name">Tomhoon</h2>
+      <div class="email">gnsdj90798@gmail.com</div>
+    </section>
+
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-target="panel-account">계정</div>
+      <div class="tab" data-target="panel-history">내역</div>
+      <div class="tab" data-target="panel-payments">결제수단</div>
+    </div>
+
+    <div class="panels">
+      <!-- 계정 패널 -->
+      <section id="panel-account" class="panel active">
+        <section class="card">
+          <div class="head">Account</div>
+          <div class="body">
+            <div class="row">
+              <div>
+                <div class="meta">Name</div>
+                <div class="value" id="name-value">Tomhoon</div>
+              </div>
+              <button class="btn" onclick="openEditModal('name')">Change</button>
+            </div>
+            <div class="row">
+              <div>
+                <div class="meta">Email</div>
+                <div class="value" id="email-value">gnsdj90798@gmail.com</div>
+              </div>
+              <button class="btn" onclick="openEditModal('email')">Change</button>
+            </div>
+            <div class="row">
+              <div>
+                <div class="meta">Password</div>
+                <div class="value">************</div>
+              </div>
+              <button class="btn" onclick="openEditModal('password')">Change</button>
+            </div>
+            <div class="row">
+              <div>
+                <div class="meta">Phone number</div>
+                <div class="value" id="phone-value">010-5555-5555</div>
+              </div>
+              <button class="btn" onclick="openEditModal('phone')">Change</button>
+            </div>
+            <div class="row">
+              <div>
+                <div class="meta">Address</div>
+                <div class="value" id="address-value">경기도 화성시 화성읍 드레미아파트 101동 101호</div>
+              </div>
+              <button class="btn" onclick="openEditModal('address')">Change</button>
+            </div>
+            <div class="row">
+              <div>
+                <div class="meta">Date of birth</div>
+                <div class="value" id="birth-value">1999-99-99</div>
+              </div>
+              <button class="btn" onclick="openEditModal('birth')">Change</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- 내역 패널 -->
+      <section id="panel-history" class="panel">
+        <div class="booking-wrap">
+          <div class="booking-title">예약내역</div>
+          <div class="booking-sub">객실</div>
+
+          <div class="booking-list">
+            <div class="booking-card">
+              <div class="bc-logo">CVK</div>
+              <div class="bc-col">
+                <div class="label">Check-In — Check Out</div>
+                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">체크인</div>
+                <div>12:00pm</div>
+                <div class="label" style="margin-top:4px;">체크아웃</div>
+                <div>11:30am</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">명단</div>
+                <div>On arrival</div>
+              </div>
+              <div class="bc-dl">
+                <button class="bc-btn">Download Ticket</button>
+                <div class="bc-next">›</div>
+              </div>
+            </div>
+
+            <div class="booking-card">
+              <div class="bc-logo">CVK</div>
+              <div class="bc-col">
+                <div class="label">Check-In — Check Out</div>
+                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">체크인</div><div>12:00pm</div>
+                <div class="label" style="margin-top:4px;">체크아웃</div><div>11:30am</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">명단</div><div>On arrival</div>
+              </div>
+              <div class="bc-dl"><button class="bc-btn">Download Ticket</button><div class="bc-next">›</div></div>
+            </div>
+
+            <div class="booking-card">
+              <div class="bc-logo">CVK</div>
+              <div class="bc-col">
+                <div class="label">Check-In — Check Out</div>
+                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">체크인</div><div>12:00pm</div>
+                <div class="label" style="margin-top:4px;">체크아웃</div><div>11:30am</div>
+              </div>
+              <div class="bc-col">
+                <div class="label">명단</div><div>On arrival</div>
+              </div>
+              <div class="bc-dl"><button class="bc-btn">Download Ticket</button><div class="bc-next">›</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 결제수단 패널 -->
+      <section id="panel-payments" class="panel">
+        <section class="billing">
+          <div class="head">결제수단</div>
+          <div class="grid">
+            <div class="credit-card">
+              <div class="cc-top">
+                <div class="cc-chip"></div>
+                <div class="cc-meta">VISA</div>
+              </div>
+              <div class="cc-number">**** **** **** 4321</div>
+              <div class="cc-bottom">
+                <div>
+                  <div class="cc-meta">Valid Thru</div>
+                  <div class="cc-meta" style="font-weight:700">02/27</div>
+                </div>
+                <div class="cc-brand">VISA</div>
+              </div>
+            </div>
+            <div class="add-card" onclick="openCardModal()">
+              <div class="plus">+</div>
+              <span>Add a new card</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <!-- 카드 추가 모달 -->
+  <div class="modal" id="cardModal" aria-hidden="true">
+    <div class="backdrop" data-close></div>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="cardAddTitle">
+      <button class="close" title="닫기" data-close>&times;</button>
+      <h2 id="cardAddTitle" class="title">카드추가</h2>
+
+      <form id="cardForm">
+        <div class="field cardnum-wrap">
+          <label class="label">Card Number</label>
+          <input class="input" type="text" inputmode="numeric" placeholder="4321 4321 4321 4321" required>
+          <div class="brand-mini">VISA</div>
+        </div>
+
+        <div class="h2">
+          <div class="field">
+            <label class="label">Exp. Date</label>
+            <input class="input" type="text" placeholder="02/27" required>
+          </div>
+          <div class="field">
+            <label class="label">CVC</label>
+            <input class="input" type="text" placeholder="123" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Name on Card</label>
+          <input class="input" type="text" placeholder="John Doe" required>
+        </div>
+
+        <div class="field">
+          <label class="label">Country or Region</label>
+          <select class="select" required>
+            <option>United States</option>
+            <option>Republic of Korea</option>
+            <option>Japan</option>
+            <option>Canada</option>
+          </select>
+        </div>
+
+        <label class="checkline">
+          <input type="checkbox" checked>
+          정보 저장하기
+        </label>
+
+        <button class="submit" type="submit">Add Card</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 계정 정보 편집 모달 -->
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="backdrop" data-close></div>
+    <div class="card" role="dialog" aria-modal="true">
+      <button class="close" title="닫기" data-close>&times;</button>
+      <h2 class="title" id="editModalTitle">정보 수정</h2>
+
+      <form id="editForm">
+        <div id="editModalContent">
+          <!-- 동적으로 내용이 채워집니다 -->
+        </div>
+
+        <button class="submit" type="submit" id="editSubmitBtn">저장</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 비밀번호 변경 모달 -->
+  <div class="modal" id="passwordModal" aria-hidden="true">
+    <div class="backdrop" data-close></div>
+    <div class="card" role="dialog" aria-modal="true">
+      <button class="close" title="닫기" data-close>&times;</button>
+      <h2 class="title">비밀번호 변경</h2>
+
+      <!-- 1단계: 현재 비밀번호 확인 -->
+      <div id="passwordStep1">
+        <p style="margin-bottom: 16px; color: #6b7280; font-size: 14px;">보안을 위해 현재 비밀번호를 입력해주세요.</p>
+        <form id="passwordVerifyForm">
+          <div class="field">
+            <label class="label">현재 비밀번호</label>
+            <input class="input" type="password" id="currentPassword" placeholder="현재 비밀번호를 입력하세요" required>
+          </div>
+          <button class="submit" type="submit">확인</button>
+        </form>
+      </div>
+
+      <!-- 2단계: 새 비밀번호 설정 -->
+      <div id="passwordStep2" style="display: none;">
+        <p style="margin-bottom: 16px; color: #6b7280; font-size: 14px;">새로운 비밀번호를 설정해주세요.</p>
+        <form id="passwordChangeForm">
+          <div class="field">
+            <label class="label">새 비밀번호</label>
+            <input class="input" type="password" id="newPassword" placeholder="새 비밀번호" required>
+          </div>
+          <div class="field">
+            <label class="label">새 비밀번호 확인</label>
+            <input class="input" type="password" id="confirmPassword" placeholder="새 비밀번호 확인" required>
+          </div>
+          <button class="submit" type="submit">비밀번호 변경</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <section class="newsletter-section">
+            </section>
+        <div class="newsletter-content">
+            <div class="newsletter-left">
+                <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
+
+                <div class="newsletter-info">
+                    <div class="newsletter-brand">The Travel</div>
+                    <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
+                </div>
+
+                <div class="newsletter-form">
+                    <input type="email" class="newsletter-input" placeholder="Your email address">
+                    <button class="subscribe-btn">Subscribe</button>
+                </div>
+            </div>
+
+            <div class="mailbox-container">
+                <div class="mailbox-back"></div>
+                <div class="mailbox-base"></div>
+                <div class="mailbox-front"></div>
+                <div class="mailbox-flag"></div>
+                <div class="mailbox-flag2"></div>
+                <div class="mailbox-pole"></div>
+                <div class="mailbox-stand-base"></div>
+                <div class="mailbox-stand-front"></div>
+            </div>
+        </div>
+
+        <div class="footer-content">
+            <div class="social-icons">
+                <span><img src="../hotel_img/facebook.jpg"></span>
+                <span><img src="../hotel_img/twitter.jpg"></span>
+                <span><img src="../hotel_img/youtube.jpg"></span>
+                <span><img src="../hotel_img/instagram.jpg"></span>
+            </div>
+
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Our Destinations</h4>
+                    <a href="#">Canada</a>
+                    <a href="#">Alaksa</a>
+                    <a href="#">France</a>
+                    <a href="#">Iceland</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Our Activities</h4>
+                    <a href="#">Northern Lights</a>
+                    <a href="#">Cruising & sailing</a>
+                    <a href="#">Multi-activities</a>
+                    <a href="#">Kayaking</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Travel Blogs</h4>
+                    <a href="#">Bali Travel Guide</a>
+                    <a href="#">Sri Lanka Travel Guide</a>
+                    <a href="#">Peru Travel Guide</a>
+                    <a href="#">Bali Travel Guide</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>About Us</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Work with us</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Contact Us</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Work with us</a>
+                </div>
+            </div>
+        </div>
+
+
+<script>
+
+     // Dropdown functionality
+        function toggleDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const userProfile = document.querySelector('.user-profile');
+    
+            if (!dropdown.contains(event.target) && !userProfile.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+
+
+        // 탭 전환 기능
+        document.getElementById('tabs').addEventListener('click', (e) => {
+          const tab = e.target.closest('.tab');
+          if (!tab) return;
+        
+          // 모든 탭에서 active 클래스 제거
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          // 클릭된 탭에 active 클래스 추가
+          tab.classList.add('active');
+        
+          // 모든 패널 숨기기
+          document.querySelectorAll('.panels .panel').forEach(p => p.classList.remove('active'));
+          // 해당 패널 표시
+          const target = tab.dataset.target;
+          document.getElementById(target).classList.add('active');
+        });
+
+        // 모달 관련 기능
+        const cardModal = document.getElementById('cardModal');
+        const editModal = document.getElementById('editModal');
+        const passwordModal = document.getElementById('passwordModal');
+            
+        function openCardModal(){
+          cardModal.classList.add('open');
+          document.body.classList.add('modal-open');
+          cardModal.querySelector('input.input').focus();
+        }
+        
+        function closeModal(){
+          cardModal.classList.remove('open');
+          editModal.classList.remove('open');
+          passwordModal.classList.remove('open');
+          document.body.classList.remove('modal-open');
+        
+          // 비밀번호 모달 상태 초기화
+          document.getElementById('passwordStep1').style.display = 'block';
+          document.getElementById('passwordStep2').style.display = 'none';
+          document.getElementById('currentPassword').value = '';
+          document.getElementById('newPassword').value = '';
+          document.getElementById('confirmPassword').value = '';
+        }
+        
+        // 계정 정보 편집 모달 열기
+        function openEditModal(type) {
+          const title = document.getElementById('editModalTitle');
+          const content = document.getElementById('editModalContent');
+          const submitBtn = document.getElementById('editSubmitBtn');
+        
+          if (type === 'password') {
+            passwordModal.classList.add('open');
+            document.body.classList.add('modal-open');
+            document.getElementById('currentPassword').focus();
+            return;
+          }
+          
+          let currentValue = '';
+          let fieldLabel = '';
+          let placeholder = '';
+          let inputType = 'text';
+          
+          switch(type) {
+            case 'name':
+              fieldLabel = '이름';
+              currentValue = document.getElementById('name-value').textContent;
+              placeholder = '이름을 입력하세요';
+              title.textContent = '이름 변경';
+              break;
+            case 'email':
+              fieldLabel = '이메일';
+              currentValue = document.getElementById('email-value').textContent;
+              placeholder = '이메일을 입력하세요';
+              inputType = 'email';
+              title.textContent = '이메일 변경';
+              break;
+            case 'phone':
+              fieldLabel = '전화번호';
+              currentValue = document.getElementById('phone-value').textContent;
+              placeholder = '전화번호를 입력하세요';
+              inputType = 'tel';
+              title.textContent = '전화번호 변경';
+              break;
+            case 'address':
+              fieldLabel = '주소';
+              currentValue = document.getElementById('address-value').textContent;
+              placeholder = '주소를 입력하세요';
+              title.textContent = '주소 변경';
+              break;
+            case 'birth':
+              fieldLabel = '생년월일';
+              currentValue = document.getElementById('birth-value').textContent;
+              placeholder = 'YYYY-MM-DD';
+              inputType = 'date';
+              title.textContent = '생년월일 변경';
+              break;
+          }
+          
+          content.innerHTML = `
+            <div class="field">
+              <label class="label">${fieldLabel}</label>
+              <input class="input" type="${inputType}" id="editInput" value="${currentValue}" placeholder="${placeholder}" required>
+            </div>
+          `;
+        
+          editModal.classList.add('open');
+          document.body.classList.add('modal-open');
+          document.getElementById('editInput').focus();
+        
+          // 폼 제출 이벤트 재설정
+          const editForm = document.getElementById('editForm');
+          editForm.onsubmit = (e) => {
+            e.preventDefault();
+            const newValue = document.getElementById('editInput').value;
+            document.getElementById(`${type}-value`).textContent = newValue;
+            
+            // 이메일이 변경된 경우 프로필 이메일도 업데이트
+            if (type === 'email') {
+              document.querySelector('.profile .email').textContent = newValue;
+            }
+            
+            closeModal();
+            alert(`${fieldLabel}이(가) 변경되었습니다.`);
+          };
+        }
+        
+        // 모달 이벤트 리스너
+        [cardModal, editModal, passwordModal].forEach(modal => {
+          modal.addEventListener('click', (e) => {
+            if(e.target.hasAttribute('data-close')) closeModal();
+          });
+        });
+        
+        document.addEventListener('keydown', (e) => {
+          if(e.key === 'Escape') closeModal();
+        });
+        
+        // 카드 추가 폼
+        document.getElementById('cardForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          closeModal();
+          alert('카드가 추가되었습니다');
+        });
+        
+        // 비밀번호 확인 폼
+        document.getElementById('passwordVerifyForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const currentPassword = document.getElementById('currentPassword').value;
+        
+          // 실제로는 서버에서 비밀번호를 확인해야 하지만, 데모를 위해 간단히 처리
+          if (currentPassword.length < 4) {
+            alert('비밀번호가 올바르지 않습니다.');
+            return;
+          }
+          
+          // 2단계로 이동
+          document.getElementById('passwordStep1').style.display = 'none';
+          document.getElementById('passwordStep2').style.display = 'block';
+          document.getElementById('newPassword').focus();
+        });
+        
+        // 비밀번호 변경 폼
+        document.getElementById('passwordChangeForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const newPassword = document.getElementById('newPassword').value;
+          const confirmPassword = document.getElementById('confirmPassword').value;
+        
+          if (newPassword !== confirmPassword) {
+            alert('새 비밀번호가 일치하지 않습니다.');
+            return;
+          }
+          
+          if (newPassword.length < 6) {
+            alert('비밀번호는 6자 이상이어야 합니다.');
+            return;
+          }
+          
+          closeModal();
+          alert('비밀번호가 변경되었습니다.');
+        });
+        
+        // 외부 클릭시 드롭다운 닫기
+        document.addEventListener('click', (e) => {
+          const dropdown = document.getElementById('dropdown');
+          const userProfile = document.querySelector('.user-profile');
+        
+          if (!userProfile.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+          }
+        });
+</script>
+
+</body>
+</html>
