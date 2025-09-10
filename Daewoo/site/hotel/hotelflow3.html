@@ -1067,6 +1067,9 @@
 
         .star-rating {
             display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
             gap: 4px;
             margin-bottom: 16px;
         }
@@ -1076,6 +1079,25 @@
             color: #E0E0E0;
             cursor: pointer;
             transition: color 0.2s;
+            justify-content: space-between;
+        }
+        .star-rating .star:last-of-type{
+            margin-right: 80px;
+        }
+
+        .star-choice-btn{
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 130px;
+            height: 100%;
+            border: 2px solid #8DD3BB;
+            background-color: white;
+            border-radius: 8px;
+        }
+        .star-choice-btn:hover{
+            background-color: #8DD3BB;
+            cursor: pointer;
         }
 
         .star:hover,
@@ -1836,11 +1858,20 @@
                     <div class="rating-input">
                         <label>평점을 선택해주세요</label>
                         <div class="star-rating" id="starRating">
-                            <span class="star" data-rating="1">★</span>
-                            <span class="star" data-rating="2">★</span>
-                            <span class="star" data-rating="3">★</span>
-                            <span class="star" data-rating="4">★</span>
-                            <span class="star" data-rating="5">★</span>
+                            <div>
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <div>
+                                <span class="star-choice-btn">Very good</span>
+                                <span class="star-choice-btn">Near park</span>
+                                <span class="star-choice-btn">Near nightlife</span>
+                                <span class="star-choice-btn">Near theater</span>
+                                <span class="star-choice-btn">clean Hotel</span>
+                            </div>
                         </div>
                     </div>
                     
