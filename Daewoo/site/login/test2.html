@@ -28,6 +28,7 @@
         /* ===== 이미지 슬라이더 구역 ===== */
         .image-section {
             flex: 1;
+            width: 50%;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -36,11 +37,11 @@
         }
 
         .slider-container {
-            width: 70%;
-            height: 90%;
-            overflow: hidden;
+            width: 488px;
+            height: 816px;
             border-radius: 15px;
             position: relative;
+            overflow: hidden;
         }
 
         .slider-wrapper {
@@ -49,13 +50,16 @@
             height: 100%;
             transition: transform 0.5s ease-in-out;
         }
-
         .slide {
-            width: 33.333%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
+            width: 488px;
+            height: 816px;
             flex-shrink: 0;
+        }
+
+        .slide img{
+            width: 100%;
+            height: 100%;
+
         }
 
         .image-dots {
@@ -96,92 +100,164 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
+            width: 50%;
         }
 
         .form-wrapper {
-            width: 512px;
-            height: 593px;
+            width: 640px;
+            height: 753px;
+            top: 143px;
+            left: 704px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 48px;
         }
 
         /* ===== 폼 헤더 구역 ===== */
         .form-header h1 {
-            font-size: 2rem;
+            font-family: Acme;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 40px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             margin-bottom: 10px;
         }
 
         .form-header p {
-            margin-bottom: 20px;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            margin-bottom: 50px;
             color: #666;
         }
 
-        /* ===== 입력 필드 구역 ===== */
+        /* ===== 공통 입력 필드 구역 ===== */
         .input-group {
             width: 100%;
+            height: 56px;
             margin-bottom: 15px;
+            position: relative;
         }
 
         .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            position: absolute;
+            top: -8px;
+            left: 7px;
+            background: white;
+            padding: 0 5px;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #666;
+            z-index: 1;
         }
 
         .input-group input, 
         .input-group select {
             width: 100%;
-            padding: 10px;
+            height: 100%;
+            padding: 12px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            vertical-align: middle;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #7dd3c0;
+        }
+
+        .input-group input:focus + label,
+        .input-group select:focus + label {
+            color: #7dd3c0;
         }
 
         /* ===== 회원가입 전용 입력 그룹 ===== */
         .signup-name-row {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             width: 100%;
+            height: 56px;
+            margin-bottom: 25px;
         }
 
         .signup-name-row .input-group {
             flex: 1;
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
 
         .signup-contact-row {
             display: flex;
             gap: 20px;
             width: 100%;
+            height: 56px;
+            margin-bottom: 25px;
         }
 
         .signup-contact-row .input-group {
             flex: 1;
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
 
         .signup-password-group {
             display: block;
             width: 100%;
+            margin-bottom: 25px;
         }
 
-        /* ===== 결제수단 전용 입력 그룹 ===== */
-        .payment-card-number {
+        .signup-password-group .input-group{
+            margin-bottom: 25px;
+        }
+
+        .password-input-wrapper {
+            position: relative;
             width: 100%;
+            height: 100%;
         }
 
-        .payment-card-details {
-            display: flex;
-            gap: 20px;
-            width: 100%;
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #79747E;
+            z-index: 2;
         }
 
-        .payment-card-details .input-group {
-            flex: 1;
+        .password-toggle img {
+            width: 22.502033233642578px;
+            height: 15px;
+            top: 4.5px;
+            left: 0.75px;
+            angle: 0 deg;
+            opacity: 1;
         }
 
-        .payment-member-info {
-            display: block;
-            width: 100%;
+        .password-toggle:hover {
+            color: #333;
         }
 
         /* ===== 옵션 및 버튼 구역 ===== */
@@ -191,29 +267,57 @@
         }
 
         .checkbox-group {
-            margin-bottom: 10px;
+            margin-bottom: 30px;
         }
 
         .submit-button {
             width: 100%;
-            padding: 12px;
+            height: 48px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
             background-color: #7dd3c0;
             color: black;
             border: none;
-            border-radius: 5px;
-            font-size: 1rem;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             cursor: pointer;
             margin-bottom: 15px;
         }
 
         /* ===== 구분선 구역 ===== */
         .divider {
-            text-align: center;
-            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
             color: #666;
         }
+        .divider-beeline{
+            width: 249px;
+            height: 0.5px;
+            angle: 0 deg;
+            opacity: 0.25;
+            background: #112211;
+        }
+        .divider span{
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
 
-        /* ===== 소셜 로그인 구역 ===== */
+        /* 소셜 로그인 버튼들 */
         .social-login {
             display: flex;
             gap: 10px;
@@ -222,11 +326,12 @@
         }
 
         .social-btn {
-            width: 160px;
-            height: 50px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            width: 50%;
+            height: 56px;
+            border: 1px solid rgba(141, 211, 187, 1);
+            border-radius: 4px;
             background-color: white;
+            padding: 16px 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -241,6 +346,156 @@
         .social-btn img {
             width: 24px;
             height: 24px;
+        }
+
+        /* ===== 결제수단 전용 스타일 ===== */
+        .payment-form-wrapper {
+            width: 640px;
+            height: 668px;
+        }
+
+        .payment-header {
+            margin-bottom: 40px;
+        }
+
+        .back-button {
+            width: 36px;
+            height: 17px;
+            angle: 0 deg;
+            opacity: 1;
+            background: none;
+            border: none;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #333;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-weight: 500;
+        }
+
+        .back-button:hover {
+            color: #7dd3c0;
+        }
+
+        .back-button span {
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .payment-header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .payment-header p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        /* ===== 결제수단 입력 그룹 - 회원가입과 동일한 스타일 적용 ===== */
+        .payment-row {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: 56px;
+            margin-bottom: 25px;
+        }
+
+        .payment-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* 카드 로고 스타일 */
+        .card-input-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-logo {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1a365d;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            z-index: 2;
+        }
+
+        /* 체크박스 스타일 */
+        .payment-checkbox {
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .payment-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+        }
+
+        .payment-checkbox label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /* 결제수단 추가 버튼 - submit-button과 동일한 스타일 */
+        .payment-submit-button {
+            width: 100%;
+            height: 48px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background-color: #7dd3c0;
+            color: black;
+            border: none;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .payment-submit-button:hover {
+            background: #6bc4a6;
+        }
+
+        .payment-terms {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
         }
 
         /* ===== 화면 전환 제어 ===== */
@@ -262,9 +517,9 @@
         <section class="image-section">
             <div class="slider-container">
                 <div class="slider-wrapper" id="sliderWrapper1">
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
                 </div>
                 <div class="image-dots">
                     <div class="dot active" onclick="slideToImage(0)"></div>
@@ -287,36 +542,46 @@
                     <!-- 이름 입력 구역 -->
                     <div class="signup-name-row">
                         <div class="input-group">
-                            <label for="first-name">First Name</label>
                             <input type="text" id="first-name" placeholder="성" maxlength="50" required>
+                            <label for="first-name">First Name</label>
                         </div>
                         <div class="input-group">
-                            <label for="last-name">Last Name</label>
                             <input type="text" id="last-name" placeholder="이름" maxlength="50" required>
+                            <label for="last-name">Last Name</label>
                         </div>
                     </div>
 
                     <!-- 연락처 입력 구역 -->
                     <div class="signup-contact-row">
                         <div class="input-group">
-                            <label for="signup-email">Email</label>
                             <input type="email" id="signup-email" placeholder="john.doe@gmail.com" maxlength="100" required>
+                            <label for="signup-email">Email</label>
                         </div>
                         <div class="input-group">
-                            <label for="phone-number">Phone Number</label>
                             <input type="text" id="phone-number" placeholder="010-1234-1234" maxlength="30" required>
+                            <label for="phone-number">Phone Number</label>
                         </div>
                     </div>
 
                     <!-- 비밀번호 입력 구역 -->
                     <div class="signup-password-group">
                         <div class="input-group">
+                            <div class="password-input-wrapper">
+                                <input type="password" id="signup-password" placeholder="*************" maxlength="255" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('signup-password')">
+                                    <img src="../login_img/close-eye.jpg" alt="toggle">
+                                </button>
+                            </div>
                             <label for="signup-password">Password</label>
-                            <input type="password" id="signup-password" placeholder="*************" maxlength="255" required>
                         </div>
                         <div class="input-group">
+                            <div class="password-input-wrapper">
+                                <input type="password" id="confirm-password" placeholder="*************" maxlength="255" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')">
+                                    <img src="../login_img/close-eye.jpg" alt="toggle">
+                                </button>
+                            </div>
                             <label for="confirm-password">Confirm Password</label>
-                            <input type="password" id="confirm-password" placeholder="*************" maxlength="255" required>
                         </div>
                     </div>
                     
@@ -332,19 +597,21 @@
                 
                 <!-- 구분선 -->
                 <div class="divider">
+                    <span class="divider-beeline"></span>
                     <span>Or Sign up with</span>
+                    <span class="divider-beeline"></span>
                 </div>
                 
                 <!-- 소셜 로그인 구역 -->
                 <div class="social-login">
                     <button class="social-btn" onclick="loginWithFacebook()">
-                        <span>📘</span>
+                        <img src="../login_img/facebook.jpg">
                     </button>
                     <button class="social-btn" onclick="loginWithGoogle()">
-                        <span>🔍</span>
+                        <img src="../login_img/google.jpg"/>
                     </button>
                     <button class="social-btn" onclick="loginWithApple()">
-                        <span>🍎</span>
+                        <img src="../login_img/apple-logo.jpg">
                     </button>
                 </div>
             </div>
@@ -357,9 +624,9 @@
         <section class="image-section">
             <div class="slider-container">
                 <div class="slider-wrapper" id="sliderWrapper2">
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
-                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
                 </div>
                 <div class="image-dots">
                     <div class="dot active" onclick="slideToImage(0)"></div>
@@ -371,64 +638,68 @@
 
         <!-- 결제수단 폼 구역 -->
         <section class="form-section">
-            <div class="form-wrapper">
-                <!-- 폼 헤더 -->
-                <header class="form-header">
+            <div class="payment-form-wrapper">
+                <!-- Back 버튼과 헤더 -->
+                <header class="payment-header">
+                    <button type="button" class="back-button" onclick="showScreen('sign-up')">
+                        <span>‹</span> Back
+                    </button>
                     <h1>결제수단 추가</h1>
                     <p>결제수단을 추가해주세요</p>
                 </header>
 
                 <form onsubmit="submitPaymentMethod(event)">
                     <!-- 카드번호 입력 구역 -->
-                    <div class="payment-card-number">
-                        <div class="input-group">
-                            <label for="card-number">Card Number</label>
+                    <div class="input-group" style="margin-bottom: 25px;">
+                        <div class="card-input-wrapper">
                             <input type="text" id="card-number" placeholder="4321 4321 4321 4321" inputmode="numeric" maxlength="19" required>
+                            <div class="card-logo">VISA</div>
                         </div>
+                        <label for="card-number">Card Number</label>
                     </div>
 
                     <!-- 카드 상세정보 입력 구역 -->
-                    <div class="payment-card-details">
+                    <div class="payment-row">
                         <div class="input-group">
-                            <label for="exp-date">Exp. Date</label>
                             <input type="text" id="exp-date" maxlength="5" placeholder="02/27" inputmode="numeric" required>
+                            <label for="exp-date">Exp. Date</label>
                         </div>
                         <div class="input-group">
-                            <label for="cvc">CVC</label>
                             <input type="text" id="cvc" placeholder="123" maxlength="3" pattern="[0-9]{3}" required>
+                            <label for="cvc">CVC</label>
                         </div>
                     </div>
 
-                    <!-- 회원정보 입력 구역 -->
-                    <div class="payment-member-info">
-                        <div class="input-group">
-                            <label for="name-card">Name on Card</label>
-                            <input type="text" id="name-card" placeholder="John Doe" maxlength="50" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="country-select">Country or Region</label>
-                            <select name="country" id="country-select" required>
-                                <option value="US" selected>United States</option>
-                                <option value="KR">South Korea</option>
-                            </select>
-                        </div>
+                    <!-- 이름 입력 구역 -->
+                    <div class="input-group" style="margin-bottom: 25px;">
+                        <input type="text" id="name-card" placeholder="John Doe" maxlength="50" required>
+                        <label for="name-card">Name on Card</label>
+                    </div>
+
+                    <!-- 국가 선택 구역 -->
+                    <div class="input-group" style="margin-bottom: 25px;">
+                        <select name="country" id="country-select" required>
+                            <option value="US" selected>United States</option>
+                            <option value="KR">South Korea</option>
+                        </select>
+                        <label for="country-select">Country or Region</label>
                     </div>
                     
-                    <!-- 옵션 및 버튼 구역 -->
-                    <div class="form-options">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="onetouch-checkbox">
-                            <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
-                        </div>
-                        <button type="submit" class="submit-button">결제수단 추가</button>
-                    </div>  
+                    <!-- 체크박스 구역 -->
+                    <div class="payment-checkbox">
+                        <input type="checkbox" id="onetouch-checkbox">
+                        <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
+                    </div>
+
+                    <!-- 결제수단 추가 버튼 -->
+                    <button type="submit" class="payment-submit-button">결제수단 추가</button>
                 </form>
                 
                 <!-- 약관 안내 구역 -->
-                <div class="divider">
-                    <span>By confirming your subscription, you allow The Outdoor inn Crowd Limited to charge</span><br>
-                    <span>your card for this payment and future payments in accordance with their terms. You can</span><br>
-                    <span>always cancel your subscription.</span>
+                <div class="payment-terms">
+                    By confirming your subscription, you allow The Outdoor Inn Crowd Limited to charge<br>
+                    your card for this payment and future payments in accordance with their terms. You can<br>
+                    always cancel your subscription.
                 </div>
             </div>
         </section>
@@ -604,26 +875,43 @@
         }
 
         // ===== 입력 필드 포매팅 =====
-        document.getElementById('card-number').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\s/g, '');
-            let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
-            if (formattedValue.length > 19) {
-                formattedValue = formattedValue.substring(0, 19);
-            }
-            e.target.value = formattedValue;
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('card-number').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '');
+                let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
+                if (formattedValue.length > 19) {
+                    formattedValue = formattedValue.substring(0, 19);
+                }
+                e.target.value = formattedValue;
+            });
+
+            document.getElementById('exp-date').addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+
+            document.getElementById('cvc').addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
         });
 
-        document.getElementById('exp-date').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        // 비밀번호 표시/숨김 토글 함수
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleButton = passwordField.nextElementSibling;
+            const toggleIcon = toggleButton.querySelector('img');
+        
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.src = '../login_img/open-eye.jpg';
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.src = '../login_img/close-eye.jpg';
             }
-            e.target.value = value;
-        });
-
-        document.getElementById('cvc').addEventListener('input', function(e) {
-            e.target.value = e.target.value.replace(/\D/g, '');
-        });
+        }
 
         // ===== 소셜 로그인 기능 =====
         function loginWithFacebook() {
