@@ -66,6 +66,7 @@
         .nav-item {
             font-family: Montserrat;
             font-weight: 600;
+            font-style: SemiBold;
             font-size: 14px;
             line-height: 100%;
             display: flex;
@@ -176,16 +177,6 @@
             line-height: 100%;
             padding: 4px 0;
         }
-        
-        .vertical-line{
-            width: 0.5px;
-            height: 1420px;
-            top: 287px;
-            left: 471px;
-            opacity: 0.25;
-            background: rgba(17, 34, 17, 1);
-
-        }
 
 /* ==================== 메인 컨테이너 ==================== */
 .container {
@@ -197,28 +188,62 @@
 
 /* ==================== 커버 이미지 ==================== */
 .cover {
-  height: 260px;
-  margin-top: 111px;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
-  background: linear-gradient(135deg, #0ea5e9 0%, #0b7285 25%, #f59e0b 55%, #fbbf24 80%);
+  width: 100%;
+  height: 350px;
+  angle: 0 deg;
+  opacity: 1;
+  margin-top: 150px;
+  display: flex;
   position: relative;
+  border-radius: 12px;
+}
+
+.cover img{
+  width: 100%;
+  height: 100%;
   z-index: 0;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .upload {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
-  background: #ecfdf5;
-  border: 1px solid #99f6e4;
-  color: #065f46;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-weight: 700;
+  top: 270px;
+  right: 20px;
+  width: 180px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 4px solid #8DD3BB;
+  border-radius: 4px;
+  background: #8DD3BB;
   cursor: pointer;
-  font-size: 12px;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 14px;
+  color: #112211;
+  z-index: 1;
+}
+.upload img{
+  width: 16px;
+  height: 13.013124465942383px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 1.49px;
+  border-width: 0.05px;
+
+}
+
+.upload:hover {
+  background: #7cc5a8;
+  border-color: #7cc5a8;
+}
+
+.upload svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ==================== 프로필 섹션 ==================== */
@@ -229,12 +254,17 @@
   z-index: 1;
 }
 
+.profile .avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
 .profile .avatar {
   width: 112px;
   height: 112px;
   border-radius: 50%;
   object-fit: cover;
-  border: 6px solid #ffffff;
+  border: 4px solid #FF8682;
   box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
   display: block;
   margin: 0 auto;
@@ -242,51 +272,115 @@
   z-index: 10;
 }
 
+.avatar-edit {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  left: 80px;
+  bottom: 0px;
+  gap: 10px;
+  angle: 0 deg;
+  opacity: 1;
+  border-radius: 45px;
+  background: #FF8682;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 11;
+}
+
+.avatar-edit img{
+  width: 17.437562942504883px;
+  height: 17.437328338623047px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 3.28px;
+  left: 3.28px;
+  border-width: 2.06px;
+
+}
+
+.avatar-edit:hover {
+  background: #7cc5a8;
+}
+
+.avatar-edit svg {
+  width: 14px;
+  height: 14px;
+  color: #112211;
+}
+
 .name {
   margin-top: 10px;
-  font-weight: 700;
-  font-size: 20px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 24px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-align: center;
+
 }
 
 .email {
-  font-size: 14px;
-  color: #6b7280;
+  padding-top: 10px;
+  font-family: Montserrat;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 16px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-align: center;
+  color: #112211;
 }
 
 /* ==================== 탭 메뉴 ==================== */
 .tabs {
   max-width: 1232px;
-  margin: 24px auto 12px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  margin: 24px auto 0;
+  display: flex;
+  gap: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+  padding: 8px;
 }
 
 .tab {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 13px 18px;
+  flex: 1;
+  padding: 16px 24px;
   text-align: center;
   font-weight: 600;
-  color: #111827;
-  position: relative;
+  font-size: 16px;
+  color: #6b7280;
   cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  border: none;
+  background: transparent;
+}
+
+.tab:hover {
+  color: #112211;
+  background: #f9f9f9;
 }
 
 .tab.active {
-  box-shadow: 0 0 0 2px #8DD3BB inset;
-}
-
-.tab.active::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: -1px;
-  height: 4px;
-  border-radius: 2px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 16px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #112211;
   background: #8DD3BB;
+  box-shadow: 0 2px 8px rgba(141, 211, 187, 0.3);
 }
 
 /* ==================== 패널 시스템 ==================== */
@@ -298,14 +392,29 @@
   display: block;
 }
 
+/* ==================== Account 섹션 ==================== */
+.account-title {
+  font-family: Acme;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 32px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #112211;
+  margin: 32px 0 24px;
+  text-align: left;
+}
+
 /* ==================== 카드 컴포넌트 ==================== */
 .card {
   max-width: 1232px;
-  margin: 10px auto 0;
+  margin: 0 auto;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+  margin-bottom: 50px;
 }
 
 .head {
@@ -313,9 +422,18 @@
   border-bottom: 1px solid #e5e7eb;
   font-weight: 800;
   font-size: 20px;
+  display: none; 
 }
 
-.body {
+.content-body {
+  width: 1232px;
+  height: 536px;
+  angle: 0 deg;
+  opacity: 1;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
   padding: 8px 8px;
 }
 
@@ -333,13 +451,27 @@
 }
 
 .meta {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 4px;
+  font-family: Montserrat;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 16px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+
+  color: #112211;
+  margin-bottom: 8px;
 }
 
 .value {
-  font-weight: 700;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 20px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #112211;
 }
 
 .btn {
@@ -356,13 +488,17 @@
 /* ==================== 예약내역 스타일 ==================== */
 .booking-wrap {
   max-width: 1232px;
-  margin: 24px auto 0;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
 }
 
 .booking-title {
   font-weight: 800;
   font-size: 24px;
-  margin: 16px 0 12px;
+  margin: 0 0 12px;
 }
 
 .booking-sub {
@@ -384,7 +520,7 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  box-shadow: 0 4px 12px rgba(17, 34, 17, 0.05);
   padding: 18px;
   display: grid;
   grid-template-columns: 80px 1fr 1fr 1fr auto;
@@ -446,11 +582,11 @@
 /* ==================== 결제수단 스타일 ==================== */
 .billing {
   max-width: 1232px;
-  margin: 24px auto 0;
+  margin: 0 auto;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
 }
 
 .billing .head {
@@ -553,6 +689,11 @@
 
 .add-card span {
   font-weight: 600;
+}
+
+/* ==================== 파일 입력 스타일 ==================== */
+.file-input {
+  display: none;
 }
 
 /* ==================== 모달 스타일 ==================== */
@@ -692,258 +833,294 @@ body.modal-open {
   color: #0f3f2e;
 }
 
-/* ==================== 뉴스레터 섹션 ==================== */
-.newsletter-section {
-  background: rgba(141, 211, 187, 1);
-  padding: 80px 104px;
-  position: relative;
-  height: 422px;
-  display: flex;
-  flex-direction: column;
-  margin-top: 60px;
-  z-index: 0;
-  margin-bottom: -513px;
-}
+/* Newsletter Section */
+        .newsletter-section {
+            background: rgba(141, 211, 187, 1);
+            padding: 80px 104px 80px 104px;
+            position: relative;
+            width: 100%;
+            height: 422px;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+            z-index: 0;
+            margin-bottom: -513px;
+        }
 
-.newsletter-content {
-  background: rgba(205, 234, 225, 1);
-  border-radius: 20px;
-  padding: 48px;
-  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 1232px;
-  height: 305px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-  margin-bottom: 40px;
-}
+        .newsletter-content {
+            background: rgba(205, 234, 225, 1);
+            border-radius: 20px;
+            padding: 48px;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 1232px;
+            height: 305px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 40px;
+        }
 
-.newsletter-left {
-  flex: 1;
-  max-width: 500px;
-}
+        .newsletter-left {
+            flex: 1;
+            max-width: 500px;
+        }
 
-.newsletter-title {
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 900;
-  font-size: 44px;
-  line-height: 54px;
-  color: #112211;
-  margin-bottom: 24px;
-}
+        .newsletter-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: 900;
+            font-size: 44px;
+            line-height: 54px;
+            color: #112211;
+            margin-bottom: 24px;
+        }
 
-.newsletter-info {
-  margin-bottom: 24px;
-}
+        .newsletter-info {
+            margin-bottom: 24px;
+        }
 
-.newsletter-brand {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.8;
-  margin-bottom: 8px;
-}
+        .newsletter-brand {
+            font-family: Acme;
+            font-weight: 400;
+            font-size: 20px;
+            line-height: 100%;
+            color: #112211;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
 
-.newsletter-desc {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.7;
-}
+        .newsletter-desc {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            opacity: 0.7;
+        }
 
-.newsletter-form {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
+        .newsletter-form {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
 
-.newsletter-input {
-  flex: 1;
-  padding: 16px;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 100%;
-  height: 56px;
-}
+        .newsletter-input {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 100%;
+            height: 56px;
+        }
 
-.subscribe-btn {
-  padding: 16px 24px;
-  background: #112211;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 100%;
-  cursor: pointer;
-  height: 56px;
-}
+        .subscribe-btn {
+            padding: 16px 24px;
+            background: #112211;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            cursor: pointer;
+            height: 56px;
+        }
 
-/* ==================== 우편함 디자인 ==================== */
-.mailbox-container {
-  position: relative;
-  width: 400px;
-  height: 305px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
+        /* 우체통 디자인 */
+        .mailbox-container {
+            position: relative;
+            width: 400px;
+            height: 305px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
 
-.mailbox-back {
-  position: absolute;
-  width: 208px;
-  height: 191px;
-  top: 47px;
-  left: 0px;
-  background: rgba(101, 181, 153, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 5;
-}
+        .mailbox-back {
+            position: absolute;
+            width: 208px;
+            height: 191px;
+            top: 47px;
+            left: 0px;
+            background: rgba(101, 181, 153, 1);
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            z-index: 5;
+        }
 
-.mailbox-base {
-  position: absolute;
-  width: 187px;
-  height: 179px;
-  top: 59px;
-  left: 10px;
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  background: rgba(84, 104, 105, 1);
-  z-index: 10;
-}
+        .mailbox-base {
+            position: absolute;
+            width: 187px;
+            height: 179px;
+            top: 59px;
+            left: 10px;
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            background: rgba(84, 104, 105, 1);
+            z-index: 10;
+        }
 
-.mailbox-front {
-  position: absolute;
-  width: 291px;
-  height: 191px;
-  top: 47px;
-  left: 71px;
-  background: rgba(17, 34, 17, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 4;
-}
+        .mailbox-front {
+            position: absolute;
+            width: 291px;
+            height: 191px;
+            top: 47px;
+            left: 71px;
+            background: rgba(17, 34, 17, 1);
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            z-index: 4;
+        }
 
-.mailbox-flag {
-  position: absolute;
-  width: 169px;
-  height: 40px;
-  top: 154px;
-  left: 231px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
+        .mailbox-flag {
+            position: absolute;
+            width: 169px;
+            height: 40px;
+            top: 154px;
+            left: 231px;
+            background: rgba(255, 134, 130, 1);
+            z-index: 6;
+        }
+        .mailbox-flag2 {
+            position: absolute;
+            width: 39px;
+            height: 77px;
+            top: 154px;
+            left: 361px;
+            background: rgba(255, 134, 130, 1);
+            z-index: 6;
+        }
 
-.mailbox-flag2 {
-  position: absolute;
-  width: 39px;
-  height: 77px;
-  top: 154px;
-  left: 361px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
+        .mailbox-pole {
+            position: absolute;
+            width: 47px;
+            height: 188px;
+            top: 117px;
+            left: 194px;
+            background: rgba(164, 128, 109, 1);
+            z-index: 3;
+        }
 
-.mailbox-pole {
-  position: absolute;
-  width: 47px;
-  height: 188px;
-  top: 117px;
-  left: 194px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
+        .mailbox-stand-base {
+            position: absolute;
+            width: 85px;
+            height: 57px;
+            top: 212px;
+            left: 156px;
+            background: rgba(164, 128, 109, 1);
+            z-index: 3;
+        }
 
-.mailbox-stand-base {
-  position: absolute;
-  width: 85px;
-  height: 57px;
-  top: 212px;
-  left: 156px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
+        .mailbox-stand-front {
+            position: absolute;
+            width: 85px;
+            height: 188px;
+            top: 117px;
+            left: 156px;
+            background: rgba(223, 173, 146, 1);
+            z-index: 2;
+        }
 
-.mailbox-stand-front {
-  position: absolute;
-  width: 85px;
-  height: 188px;
-  top: 117px;
-  left: 156px;
-  background: rgba(223, 173, 146, 1);
-  z-index: 2;
-}
+        /* Footer Content */
+        .footer-content {
+            max-width: 1232px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            z-index: 1;
+            gap: 64px;
+            padding-bottom: 40px;
+        }
 
-/* ==================== 푸터 컨텐츠 ==================== */
-.footer-content {
-  max-width: 1232px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  position: relative;
-  z-index: 1;
-  gap: 64px;
-  padding-bottom: 40px;
-}
+        /* Social Icons */
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
 
-.social-icons {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-}
+        /* Footer Columns */
+        .footer-links {
+            display: flex;
+            gap: 60px;
+        }
 
-.social-icons img {
-  width: 24px;
-  height: 24px;
-  object-fit: cover;
-  border-radius: 4px;
-  opacity: 0.85;
-}
+        .footer-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-.footer-links {
-  display: flex;
-  gap: 60px;
-}
+        .footer-column h4 {
+            font-family: Acme;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            margin-bottom: 8px;
+        }
 
-.footer-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+        .footer-column a {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+            text-decoration: none;
+            opacity: 0.7;
+        }
 
-.footer-column h4 {
-  font-family: Acme, system-ui;
-  font-weight: 600;
-  font-size: 16px;
-  color: #112211;
-  margin-bottom: 8px;
-}
+        .footer-column a:hover {
+            opacity: 1;
+        }
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
 
-.footer-column a {
-  font-weight: 500;
-  font-size: 14px;
-  color: #112211;
-  text-decoration: none;
-  opacity: 0.7;
-}
+        .footer-links {
+            display: flex;
+            gap: 60px;
+        }
 
-.footer-column a:hover {
-  opacity: 1;
-}
+        .footer-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-column h4 {
+            font-family: Acme;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .footer-column a {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+            text-decoration: none;
+            opacity: 0.7;
+        }
+
+        .footer-column a:hover {
+            opacity: 1;
+        }
 </style>
 </head>
 <body>
@@ -952,7 +1129,7 @@ body.modal-open {
             <div class="nav-left">
                 <a href="#" class="nav-item">
                     <span><img src="../hotel_img/hotel.jpg"></span>
-                    Find Stays
+                    Hotels
                 </a>
             </div>
             
@@ -982,28 +1159,40 @@ body.modal-open {
         </div>
         <div class="dropdown-menu">
             <a href="#" class="dropdown-item">
-                <span><img src="../hotel_img/account.jpg"></span> 계정
+                <img src="../hotel_img/account.jpg">계정
             </a>
             <a href="#" class="dropdown-item">
-                <span><img src="../hotel_img/card.jpg"></span> 결제내역
+                <img src="../hotel_img/card.jpg">결제내역
             </a>
             <a href="#" class="dropdown-item">
-                <span><img src="../hotel_img/setting.jpg"></span> 설정
+                <img src="../hotel_img/setting.jpg">설정
             </a>
             <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
             <a href="#" class="dropdown-item">
-                <span><img src="../hotel_img/logout.jpg"></span> 로그아웃
+                <img src="../hotel_img/logout.jpg">로그아웃
             </a>
         </div>
     </div>
 
   <main class="container">
+    <!-- 파일 입력 (숨김) -->
+    <input type="file" id="coverImageInput" class="file-input" accept="image/*">
+    <input type="file" id="avatarImageInput" class="file-input" accept="image/*">
+
     <section class="cover">
-      <button class="upload">Upload new cover</button>
+      <img id="coverImage" src="../hotel_account_img/back.jpg" alt="커버 이미지"/>
+      <button class="upload" onclick="document.getElementById('coverImageInput').click()">
+        <img src="../hotel_account_img/file-upload.jpg">Upload new cover
+      </button>
     </section>
 
     <section class="profile">
-      <img class="avatar" src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=300&auto=format&fit=crop" alt="프로필" />
+      <div class="avatar-container">
+        <img class="avatar" id="profileAvatar" src="../hotel_account_img/member.jpg" alt="프로필" />
+        <div class="avatar-edit" onclick="document.getElementById('avatarImageInput').click()">
+          <img src="../hotel_account_img/pencil.jpg">
+        </div>
+      </div>
       <h2 class="name">Tomhoon</h2>
       <div class="email">gnsdj90798@gmail.com</div>
     </section>
@@ -1017,9 +1206,9 @@ body.modal-open {
     <div class="panels">
       <!-- 계정 패널 -->
       <section id="panel-account" class="panel active">
+        <h2 class="account-title">Account</h2>
         <section class="card">
-          <div class="head">Account</div>
-          <div class="body">
+          <div class="content-body">
             <div class="row">
               <div>
                 <div class="meta">Name</div>
@@ -1263,7 +1452,8 @@ body.modal-open {
     </div>
   </div>
 
-  <section class="newsletter-section">
+  <!-- Newsletter Section -->
+    <section class="newsletter-section">
             </section>
         <div class="newsletter-content">
             <div class="newsletter-left">
@@ -1292,56 +1482,56 @@ body.modal-open {
             </div>
         </div>
 
-        <div class="footer-content">
-            <div class="social-icons">
-                <span><img src="../hotel_img/facebook.jpg"></span>
-                <span><img src="../hotel_img/twitter.jpg"></span>
-                <span><img src="../hotel_img/youtube.jpg"></span>
-                <span><img src="../hotel_img/instagram.jpg"></span>
-            </div>
-
-            <div class="footer-links">
-                <div class="footer-column">
-                    <h4>Our Destinations</h4>
-                    <a href="#">Canada</a>
-                    <a href="#">Alaksa</a>
-                    <a href="#">France</a>
-                    <a href="#">Iceland</a>
-                </div>
-
-                <div class="footer-column">
-                    <h4>Our Activities</h4>
-                    <a href="#">Northern Lights</a>
-                    <a href="#">Cruising & sailing</a>
-                    <a href="#">Multi-activities</a>
-                    <a href="#">Kayaking</a>
-                </div>
-
-                <div class="footer-column">
-                    <h4>Travel Blogs</h4>
-                    <a href="#">Bali Travel Guide</a>
-                    <a href="#">Sri Lanka Travel Guide</a>
-                    <a href="#">Peru Travel Guide</a>
-                    <a href="#">Bali Travel Guide</a>
-                </div>
-
-                <div class="footer-column">
-                    <h4>About Us</h4>
-                    <a href="#">Our Story</a>
-                    <a href="#">Work with us</a>
-                </div>
-
-                <div class="footer-column">
-                    <h4>Contact Us</h4>
-                    <a href="#">Our Story</a>
-                    <a href="#">Work with us</a>
-                </div>
-            </div>
+    <!-- Static Footer -->
+    <div class="footer-content">
+        <div class="social-icons">
+            <img src="/site/hotel_img/facebook.jpg"/>
+            <img src="/site/hotel_img/twitter.jpg"/>
+            <img src="/site/hotel_img/youtube.jpg"/>
+            <img src="/site/hotel_img/instagram.jpg"/>
         </div>
 
+        <div class="footer-links">
+            <div class="footer-column">
+                <h4>Our Destinations</h4>
+                <a href="#">Canada</a>
+                <a href="#">Alaska</a>
+                <a href="#">France</a>
+                <a href="#">Iceland</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>Our Activities</h4>
+                <a href="#">Northern Lights</a>
+                <a href="#">Cruising & sailing</a>
+                <a href="#">Multi-activities</a>
+                <a href="#">Kayaking</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>Travel Blogs</h4>
+                <a href="#">Bali Travel Guide</a>
+                <a href="#">Sri Lanka Travel Guide</a>
+                <a href="#">Peru Travel Guide</a>
+                <a href="#">Bali Travel Guide</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>About Us</h4>
+                <a href="#">Our Story</a>
+                <a href="#">Work with us</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <a href="#">Our Story</a>
+                <a href="#">Work with us</a>
+            </div>
+        </div>
+    </div>
+  </section>
 
 <script>
-
      // Dropdown functionality
         function toggleDropdown() {
             const dropdown = document.getElementById('userDropdown');
@@ -1358,7 +1548,28 @@ body.modal-open {
             }
         });
 
+        // 파일 업로드 처리
+        document.getElementById('coverImageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('coverImage').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
+        document.getElementById('avatarImageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileAvatar').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
         // 탭 전환 기능
         document.getElementById('tabs').addEventListener('click', (e) => {
@@ -1537,16 +1748,6 @@ body.modal-open {
           
           closeModal();
           alert('비밀번호가 변경되었습니다.');
-        });
-        
-        // 외부 클릭시 드롭다운 닫기
-        document.addEventListener('click', (e) => {
-          const dropdown = document.getElementById('dropdown');
-          const userProfile = document.querySelector('.user-profile');
-        
-          if (!userProfile.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-          }
         });
 </script>
 

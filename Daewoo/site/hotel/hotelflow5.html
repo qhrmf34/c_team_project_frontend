@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking - Confirmation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #FAFBFC;
+            min-width: 1440px;
+            max-width: 1440px;
+            min-height: 100vh;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            overflow-x: scroll;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 21px 104px;
+            background: #FFFFFF;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 87px;
+            width: 100%;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1232px;
+            margin: 0 auto;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-left img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-item {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #112211;
+            text-decoration: none;
+        }
+
+        .nav-item img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: #D9D9D9;
+            border: 1px solid #000000;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .online-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #112211;
+            border-radius: 50%;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 87px;
+            padding: 40px 104px 60px;
+            max-width: 1440px;
+            margin: 87px auto 0;
+            flex: 1;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #FF6B6B;
+            text-decoration: none;
+        }
+
+        .breadcrumb span {
+            color: #666666;
+        }
+
+        /* Hotel Header */
+        .hotel-header {
+            margin-bottom: 32px;
+        }
+
+        .hotel-name {
+            font-family: Noto Sans;
+            font-weight: 700;
+            font-size: 32px;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .hotel-address {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 16px;
+            color: #666666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .location-icon {
+            width: 16px;
+            height: 16px;
+            background: #8DD3BB;
+            border-radius: 50%;
+        }
+
+        .price-tag {
+            position: absolute;
+            right: 104px;
+            top: 160px;
+            background: #FF6B6B;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .download-btn {
+            position: absolute;
+            right: 104px;
+            top: 200px;
+            background: #8DD3BB;
+            color: #112211;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Booking Card */
+        .booking-card {
+            background: #8DD3BB;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .booking-content {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .guest-info {
+            flex: 1;
+        }
+
+        .guest-avatar {
+            width: 80px;
+            height: 80px;
+            background: #D9D9D9;
+            border-radius: 50%;
+            margin-bottom: 16px;
+        }
+
+        .guest-name {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 20px;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .room-type {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            color: #112211;
+        }
+
+        .check-dates {
+            display: flex;
+            gap: 60px;
+        }
+
+        .date-section {
+            text-align: center;
+        }
+
+        .date-label {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 24px;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .date-sub {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            color: #112211;
+            margin-bottom: 16px;
+        }
+
+        .check-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            color: #112211;
+        }
+
+        .check-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-icon {
+            width: 20px;
+            height: 20px;
+            background: #112211;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+        }
+
+        /* Flight Info Section */
+        .flight-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+        }
+
+        .flight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .flight-title {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 18px;
+            color: #112211;
+        }
+
+        .hotel-logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-text {
+            font-family: Noto Sans;
+            font-weight: 700;
+            font-size: 20px;
+            color: #112211;
+        }
+
+        .logo-subtext {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 12px;
+            color: #666666;
+        }
+
+        .flight-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .flight-info {
+            text-align: center;
+        }
+
+        .flight-code {
+            font-family: Montserrat;
+            font-weight: 700;
+            font-size: 32px;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .flight-label {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 12px;
+            color: #666666;
+        }
+
+        .flight-path {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 40px;
+        }
+
+        .flight-line {
+            width: 200px;
+            height: 2px;
+            background: #E0E0E0;
+            position: relative;
+        }
+
+        .flight-arrow {
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #E0E0E0;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+
+        /* Barcode Section */
+        .barcode-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .barcode {
+            width: 250px;
+            height: 60px;
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            margin: 0 auto 16px;
+            border-radius: 4px;
+        }
+
+        .barcode-number {
+            font-family: monospace;
+            font-size: 14px;
+            color: #666666;
+            letter-spacing: 2px;
+        }
+
+        /* Terms Section */
+        .terms-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 40px;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+        }
+
+        .section-title {
+            font-family: Montserrat;
+            font-weight: 700;
+            font-size: 20px;
+            color: #112211;
+            margin-bottom: 24px;
+        }
+
+        .terms-content {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666666;
+        }
+
+        .terms-subsection {
+            margin-bottom: 20px;
+        }
+
+        .terms-subtitle {
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 16px;
+            color: #112211;
+            margin-bottom: 12px;
+        }
+
+        .contact-info {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .contact-details {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666666;
+        }
+
+        /* Newsletter Section */
+        .newsletter-section {
+            background: rgba(141, 211, 187, 1);
+            padding: 80px 104px;
+            position: relative;
+            height: 422px;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+            z-index: 0;
+            margin-bottom: -513px;
+        }
+
+        .newsletter-content {
+            background: rgba(205, 234, 225, 1);
+            border-radius: 20px;
+            padding: 48px;
+            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 1232px;
+            height: 305px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 40px;
+        }
+
+        .newsletter-left {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .newsletter-title {
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: 900;
+            font-size: 44px;
+            line-height: 54px;
+            color: #112211;
+            margin-bottom: 24px;
+        }
+
+        .newsletter-info {
+            margin-bottom: 24px;
+        }
+
+        .newsletter-brand {
+            font-family: Acme;
+            font-weight: 400;
+            font-size: 20px;
+            line-height: 100%;
+            color: #112211;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .newsletter-desc {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            opacity: 0.7;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 100%;
+            height: 56px;
+        }
+
+        .subscribe-btn {
+            padding: 16px 24px;
+            background: #112211;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 100%;
+            cursor: pointer;
+            height: 56px;
+        }
+
+        /* Footer */
+        .footer-content {
+            max-width: 1232px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            z-index: 1;
+            gap: 64px;
+            padding-bottom: 40px;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .social-icons img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 60px;
+        }
+
+        .footer-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-column h4 {
+            font-family: Acme;
+            font-weight: 400;
+            font-size: 16px;
+            line-height: 100%;
+            color: #112211;
+            margin-bottom: 8px;
+        }
+
+        .footer-column a {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 100%;
+            color: #112211;
+            text-decoration: none;
+            opacity: 0.7;
+        }
+
+        .footer-column a:hover {
+            opacity: 1;
+        }
+
+        /* Mailbox Design */
+        .mailbox-container {
+            position: relative;
+            width: 400px;
+            height: 305px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .mailbox-back {
+            position: absolute;
+            width: 208px;
+            height: 191px;
+            top: 47px;
+            left: 0px;
+            background: rgba(101, 181, 153, 1);
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            z-index: 5;
+        }
+
+        .mailbox-base {
+            position: absolute;
+            width: 187px;
+            height: 179px;
+            top: 59px;
+            left: 10px;
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            background: rgba(84, 104, 105, 1);
+            z-index: 10;
+        }
+
+        .mailbox-front {
+            position: absolute;
+            width: 291px;
+            height: 191px;
+            top: 47px;
+            left: 71px;
+            background: rgba(17, 34, 17, 1);
+            border-top-left-radius: 70px; 
+            border-top-right-radius: 70px; 
+            z-index: 4;
+        }
+
+        .mailbox-flag {
+            position: absolute;
+            width: 169px;
+            height: 40px;
+            top: 154px;
+            left: 231px;
+            background: rgba(255, 134, 130, 1);
+            z-index: 6;
+        }
+
+        .mailbox-flag2 {
+            position: absolute;
+            width: 39px;
+            height: 77px;
+            top: 154px;
+            left: 361px;
+            background: rgba(255, 134, 130, 1);
+            z-index: 6;
+        }
+
+        .mailbox-pole {
+            position: absolute;
+            width: 47px;
+            height: 188px;
+            top: 117px;
+            left: 194px;
+            background: rgba(164, 128, 109, 1);
+            z-index: 3;
+        }
+
+        .mailbox-stand-base {
+            position: absolute;
+            width: 85px;
+            height: 57px;
+            top: 212px;
+            left: 156px;
+            background: rgba(164, 128, 109, 1);
+            z-index: 3;
+        }
+
+        .mailbox-stand-front {
+            position: absolute;
+            width: 85px;
+            height: 188px;
+            top: 117px;
+            left: 156px;
+            background: rgba(223, 173, 146, 1);
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav>
+            <div class="nav-left">
+                <img src="data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9 22V12H15V22' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="Hotel">
+                <span class="nav-item">Find Stays</span>
+            </div>
+            
+            <div class="nav-right">
+                <a href="#" class="nav-item">
+                    <img src="data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.84 4.61A5.5 5.5 0 0 0 12 2.5A5.5 5.5 0 0 0 3.16 4.61C1.84 5.95 1.84 8.1 3.16 9.44L12 18.5L20.84 9.44C22.16 8.1 22.16 5.95 20.84 4.61Z' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="찜하기">
+                    찜하기
+                </a>
+                <span>|</span>
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <div class="online-dot"></div>
+                    </div>
+                    <span>Tomhoon</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="breadcrumb">
+            <a href="#">Turkey</a>
+            <span>></span>
+            <a href="#">Istanbul</a>
+            <span>></span>
+            <span>해튼호텔</span>
+        </div>
+
+        <div class="hotel-header">
+            <h1 class="hotel-name">해튼호텔</h1>
+            <div class="hotel-address">
+                <div class="location-icon"></div>
+                <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
+            </div>
+            <div class="price-tag">₩240,000/night</div>
+            <button class="download-btn">Download</button>
+        </div>
+
+        <div class="booking-card">
+            <div class="booking-content">
+                <div class="guest-info">
+                    <div class="guest-avatar"></div>
+                    <div class="guest-name">James Doe</div>
+                    <div class="room-type">Superior room - 1 더블베드 or 2 twin beds</div>
+                </div>
+
+                <div class="check-dates">
+                    <div class="date-section">
+                        <div class="date-label">Thur, Dec 8</div>
+                        <div class="date-sub">Check-In</div>
+                        <div class="check-info">
+                            <div class="check-time">
+                                <div class="time-icon">🕐</div>
+                                <span>체크인</span>
+                            </div>
+                            <span>12:00pm</span>
+                        </div>
+                        <div class="check-info">
+                            <div class="check-time">
+                                <div class="time-icon">🕐</div>
+                                <span>체크아웃</span>
+                            </div>
+                            <span>11:30pm</span>
+                        </div>
+                        <div class="check-info">
+                            <div class="check-time">
+                                <div class="time-icon">📋</div>
+                                <span>탑승관련</span>
+                            </div>
+                            <span>On arrival</span>
+                        </div>
+                    </div>
+
+                    <div class="date-section">
+                        <div class="date-label">Fri, Dec 9</div>
+                        <div class="date-sub">Check-Out</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flight-section">
+            <div class="flight-header">
+                <div class="flight-title">EK</div>
+                <div class="hotel-logo">
+                    <div>
+                        <div class="logo-text">CVK</div>
+                        <div class="logo-text">PARK BOSPHORUS HOTEL</div>
+                        <div class="logo-subtext">ISTANBUL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flight-details">
+                <div class="flight-info">
+                    <div class="flight-code">ABC12345</div>
+                </div>
+            </div>
+
+            <div class="barcode-section">
+                <div class="barcode"></div>
+                <div class="barcode-number">|||||||||||||||||||||||||||</div>
+            </div>
+        </div>
+
+        <div class="terms-section">
+            <h2 class="section-title">Terms and Conditions</h2>
+            
+            <div class="terms-subsection">
+                <h3 class="terms-subtitle">Payments</h3>
+                <div class="terms-content">
+                    • If you are purchasing your ticket using a debit or credit card via the Website, we will process these payments via the automated secure common payment gateway which will be subject to fraud screening purposes.<br><br>
+                    
+                    • If you do not supply the correct card billing address and/or cardholder information, your booking will not be confirmed and the overall cost may increase. We reserve the right to cancel your booking if payment is declined for any reason or if you have supplied incorrect card information. If we become aware of, or is notified of, any fraud or illegal activity associated with the payment for the booking, the booking will be cancelled and you will be charged a cancellation fee up to the full value of the booking. without prejudice to any action that may be taken against us.<br><br>
+                    
+                    • Golobe may require the card holder to provide additional payment verification upon request by either submitting an online form or visiting the nearest Golobe office, or at the airport at the time of check-in. Golobe reserves the right to deny boarding or to collect a guarantee payment (in cash or from another credit card) if the card originally used for the purchase cannot be presented by the cardholder at check-in or when collecting the tickets, or in the event that the credit card used for payment has been withheld or disputed by the card issuing bank. Credit card details are held in a secured environment and transferred through an internationally accepted system.
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h3 class="terms-subtitle">Contact Us</h3>
+                <div class="contact-details">
+                    If you have any questions about our Website or our Terms of Use, please contact:<br>
+                    Golobe Group Q.C.S.C<br>
+                    Golobe Tower<br>
+                    P.O. Box: 22550<br>
+                    Doha, State of Qatar<br>
+                    Further contact details can be found at golobe.com/help
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter-section">
+        <div class="newsletter-content">
+            <div class="newsletter-left">
+                <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
+
+                <div class="newsletter-info">
+                    <div class="newsletter-brand">The Travel</div>
+                    <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
+                </div>
+
+                <div class="newsletter-form">
+                    <input type="email" class="newsletter-input" placeholder="Your email address">
+                    <button class="subscribe-btn">Subscribe</button>
+                </div>
+            </div>
+
+            <div class="mailbox-container">
+                <div class="mailbox-back"></div>
+                <div class="mailbox-base"></div>
+                <div class="mailbox-front"></div>
+                <div class="mailbox-flag"></div>
+                <div class="mailbox-flag2"></div>
+                <div class="mailbox-pole"></div>
+                <div class="mailbox-stand-base"></div>
+                <div class="mailbox-stand-front"></div>
+            </div>
+        </div>
+
+        <div class="footer-content">
+            <div class="social-icons">
+                <img src="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 2H15C13.6739 2 12.4021 2.52678 11.4645 3.46447C10.5268 4.40215 10 5.67392 10 7V10H7V14H10V22H14V14H17L18 10H14V7C14 6.73478 14.1054 6.48043 14.2929 6.29289C14.4804 6.10536 14.7348 6 15 6H18V2Z' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="Facebook">
+                <img src="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M23 3A10.9 10.9 0 0 1 20.1 4.7A4.48 4.48 0 0 0 22.46 2A9 9 0 0 1 19.36 3.74A4.48 4.48 0 0 0 12.6 7.58V8.5A10.66 10.66 0 0 1 3 4S-1 13 8 17A11.64 11.64 0 0 1 0 14A4.48 4.48 0 0 0 8 19C13 19 17 15 17 8.5C17 8.17 17 7.83 16.95 7.5A7.72 7.72 0 0 0 23 3Z' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="Twitter">
+                <img src="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M22.46 6C21.69 6.35 20.86 6.58 20 6.69C20.88 6.16 21.56 5.32 21.88 4.31C21.05 4.81 20.13 5.16 19.16 5.36C18.37 4.5 17.26 4 16 4C13.65 4 11.73 5.92 11.73 8.29C11.73 8.63 11.77 8.96 11.84 9.27C8.28 9.09 5.11 7.38 3 4.79C2.63 5.42 2.42 6.16 2.42 6.94C2.42 8.43 3.17 9.75 4.33 10.5C3.62 10.5 2.96 10.3 2.38 10C2.38 10 2.38 10 2.38 10.03C2.38 12.11 3.86 13.85 5.82 14.24C5.46 14.34 5.08 14.39 4.69 14.39C4.42 14.39 4.15 14.36 3.89 14.31C4.43 16 6 17.26 7.89 17.29C6.43 18.45 4.58 19.13 2.56 19.13C2.22 19.13 1.88 19.11 1.54 19.07C3.44 20.29 5.7 21 8.12 21C16 21 20.33 14.46 20.33 8.79C20.33 8.6 20.33 8.42 20.32 8.23C21.16 7.63 21.88 6.87 22.46 6Z' fill='%23112211'/%3E%3C/svg%3E" alt="YouTube">
+                <img src="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='2' y='2' width='20' height='20' rx='5' ry='5' stroke='%23112211' stroke-width='2'/%3E%3Cpath d='M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37Z' stroke='%23112211' stroke-width='2'/%3E%3Cpath d='M17.5 6.5H17.51' stroke='%23112211' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="Instagram">
+            </div>
+
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Our Destinations</h4>
+                    <a href="#">Canada</a>
+                    <a href="#">Alaksa</a>
+                    <a href="#">France</a>
+                    <a href="#">Iceland</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Our Activities</h4>
+                    <a href="#">Northern Lights</a>
+                    <a href="#">Cruising & sailing</a>
+                    <a href="#">Multi-activities</a>
+                    <a href="#">Kayaking</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Travel Blogs</h4>
+                    <a href="#">Bali Travel Guide</a>
+                    <a href="#">Sri Lanka Travel Guide</a>
+                    <a href="#">Peru Travel Guide</a>
+                    <a href="#">Bali Travel Guide</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>About Us</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Work with us</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Contact Us</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Work with us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
