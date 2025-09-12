@@ -406,6 +406,7 @@
 
 .panels .panel.active {
   display: block;
+  margin-bottom: 100px;
 }
 
 /* ==================== Account 섹션 ==================== */
@@ -433,12 +434,19 @@
   margin-bottom: 50px;
 }
 
-.head {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  font-weight: 800;
-  font-size: 20px;
-  display: none; 
+.payment-title {
+  width: 118px;
+  height: 41px;
+  angle: 0 deg;
+  opacity: 1;
+  font-family: Acme;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 32px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  margin: 32px 0 24px;
 }
 
 .content-body {
@@ -516,8 +524,7 @@
   leading-trim: NONE;
   line-height: 100%;
   letter-spacing: 0%;
-  margin-top: 40px;
-  margin-bottom: 30px;
+  margin: 32px 0 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -794,96 +801,191 @@
   font-size: 20px;
 }
 
+/* ==================== 그리드 ==================== */
 .billing .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, 378px); /* 카드 너비 고정 */
+  grid-auto-rows: 212px; /* 한 줄 높이 고정 */
   gap: 16px;
-  padding: 18px 24px 24px;
+  padding: 24px;
 }
 
-/* ==================== 신용카드 스타일 ==================== */
+/* ==================== 신용카드 ==================== */
 .credit-card {
-  background: #CDEAE1;
-  border-radius: 16px;
-  padding: 20px;
+  width: 378px;
+  height: 100%; /* 카드 높이 고정 */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 160px;
-  border: 1px solid rgba(17, 34, 17, 0.08);
+  align-self: center; /* 행 내 수직 중앙 */
+  padding: 20px;
+  border-radius: 16px;
+  background: #8DD3BB;
 }
 
 .cc-top {
+  width: 346px;
+  height: 61.5px;
+  angle: 0 deg;
+  opacity: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.cc-chip {
-  width: 34px;
-  height: 24px;
-  border-radius: 6px;
-  background: #a7f3d0;
 }
 
 .cc-number {
-  font-weight: 800;
-  font-size: 28px;
-  letter-spacing: 2px;
-  color: #0f3f2e;
+  width: 71px;
+  height: 39px;
+  angle: 0 deg;
+  opacity: 1;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 32px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  color: #112211;
+}
+.cc-star{
+  width: 200px;
+  height: 29px;
+  angle: 0 deg;
+  opacity: 1;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 24px;
+  leading-trim: NONE;
+  letter-spacing: 0%;
+
 }
 
 .cc-bottom {
+  width: 346px;
+  height: 61.5px;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 16px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: 16px;
 }
 
-.cc-meta {
+
+.cc-meta{
+  width: 62px;
+  height: 15px;
+  angle: 0 deg;
+  opacity: 1;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: Medium;
   font-size: 12px;
-  color: #0f3f2e;
-  opacity: 0.8;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  color: #112211;
 }
 
-.cc-brand {
-  width: 52px;
-  height: 36px;
-  border-radius: 6px;
-  background: #0f3f2e;
-  color: #ffffff;
+.cc-meta-vold{
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 20px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  color: #112211;
+}
+
+.cc-brand{
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
 }
 
-.add-card {
-  border: 2px dashed #9ca3af;
-  border-radius: 16px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 160px;
-  color: #6b7280;
+.cc-brand img{
+  width: 51.77358627319336px;
+  height: 32.51381301879883px;
+  angle: 0 deg;
+  opacity: 1;
+
+}
+
+/* 삭제 버튼 */
+.cc-delete{
+  align-self: flex-start; 
+}
+
+.cc-delete img{
+  width: 24px;
+  height: 24px;
+  angle: 0 deg;
+  opacity: 1;
   cursor: pointer;
 }
 
-.add-card .plus {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px dashed #9ca3af;
+/* ==================== 카드 추가 버튼 ==================== */
+.add-card {
+  width: 378px;
+  height: 212px; /* 카드 높이 고정 */
+  gap: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  margin-right: 12px;
+  flex-direction: column;
+  align-self: center; /* 행 내 수직 중앙 */
+  border-radius: 16px;
+  background: #fff;
+  border-radius: 16px;
+  border-width: 2px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px dashed #8DD3BB; 
 }
 
-.add-card span {
-  font-weight: 600;
+
+.add-card:hover {
+  background: #f3f4f6;
+}
+
+.add-card .plus {
+  width: 48px;
+  height: 48px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 8px;
+  left: 8px;
+  border: 2px solid #8DD3BB;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 100;
+  color: #8DD3BB;
+  padding-bottom: 8px;
+}
+
+.new-card{
+  width: 96px;
+  height: 15px;
+  angle: 0 deg;
+  opacity: 0.75;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: Medium;
+  font-size: 12px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  vertical-align: middle;
+
 }
 
 /* ==================== 파일 입력 스타일 ==================== */
@@ -952,6 +1054,165 @@ body.modal-open {
   flex-direction: column;
   gap: 14px;
 }
+
+
+        /*카드 모달*/
+        .card-modal {
+          display: none;
+          position: fixed;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 2000;
+        }
+        
+        .card-modal.active {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .modal-full {
+          width: 640px;
+          height: 686.2418823242188px;
+          border-radius: 12px;
+          background: #fff;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .modal-content {
+          width: 512px;
+          height: 590px;
+          display: flex;
+          flex-direction: column;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+
+        /* Header */
+        .modal-header {
+          display: flex;
+          justify-content: flex-end;
+        }
+        
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #666;
+        }
+
+        /* Title */
+        .modal-title {
+          font-family: Noto Sans, sans-serif;
+          font-weight: 700;
+          font-size: 32px;
+          margin: 16px 0 24px;
+          color: #112211;
+        }
+
+        /* Form */
+        .form-group {
+          margin-bottom: 20px;
+          position: relative;
+        }
+        
+        .form-label {
+          position: absolute;
+          top: -8px;
+          left: 12px;
+          background: #FFFFFF;
+          padding: 0 4px;
+          font-family: Montserrat, sans-serif;
+          font-weight: 500;
+          font-size: 14px;
+          color: #112211;
+          z-index: 1;
+        }
+        
+        .form-input {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-family: Montserrat, sans-serif;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+        
+        .form-row {
+          display: flex;
+          gap: 16px;
+        }
+        
+        .form-row .form-group {
+          flex: 1;
+        }
+
+        /* Card Number + VISA */
+        .card-input-wrapper {
+          position: relative;
+        }
+        
+        .card-input-wrapper input {
+          padding-right: 50px;
+          height: 56px;
+        }
+        
+        .card-logo {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 20px;
+        }
+
+        /* Checkbox */
+        .checkbox-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: Montserrat, sans-serif;
+          font-size: 14px;
+          color: #112211;
+          margin-bottom: 20px;
+          padding-left: 0;
+        }
+        
+        .checkbox-group label {
+          position: static;
+          background: none;
+          padding: 0;
+        }
+
+        /* Button */
+        .save-card-btn {
+          width: 100%;
+          height: 48px;
+          padding: 8px 16px;
+          gap: 4px;
+          background: #8dd3bb;
+          border: none;
+          border-radius: 4px;
+          font-family: Montserrat, sans-serif;
+          font-weight: 600;
+          font-size: 16px;
+          color: #112211;
+          cursor: pointer;
+          font-family: Montserrat;
+          font-weight: 600;
+          font-style: SemiBold;
+          font-size: 14px;
+          leading-trim: NONE;
+          line-height: 100%;
+          letter-spacing: 0%;
+
+        }
+
 
 /* ==================== 폼 요소 스타일 ==================== */
 .field {
@@ -1628,36 +1889,130 @@ body.modal-open {
         </div>
       </section>
 
-      <!-- 결제수단 패널 -->
-      <section id="panel-payments" class="panel">
-        <section class="billing">
-          <div class="head">결제수단</div>
-          <div class="grid">
-            <div class="credit-card">
-              <div class="cc-top">
-                <div class="cc-chip"></div>
-                <div class="cc-meta">VISA</div>
+          <!-- 결제수단 패널 -->
+    <section id="panel-payments" class="panel">
+      <div class="payment-title">결제수단</div>
+    
+      <section class="billing">
+        <div class="grid">
+          <!-- 기존 카드 -->
+          <div class="credit-card">
+            <div class="cc-top">
+              <div>
+                <div class="cc-star">**** **** ****</div>
+                <div class="cc-number">4321</div>
               </div>
-              <div class="cc-number">**** **** **** 4321</div>
-              <div class="cc-bottom">
-                <div>
-                  <div class="cc-meta">Valid Thru</div>
-                  <div class="cc-meta" style="font-weight:700">02/27</div>
-                </div>
-                <div class="cc-brand">VISA</div>
+              <div class="cc-delete">
+                 <img src="../hotel_account_img/garbage.jpg"/>
               </div>
             </div>
-            <div class="add-card" onclick="openCardModal()">
-              <div class="plus">+</div>
-              <span>Add a new card</span>
+            <div class="cc-bottom">
+              <div class="cc-valid">
+                <div class="cc-meta">Valid Thru</div>
+                <div class="cc-meta-bold">02/27</div>
+              </div>
+              <div class="cc-brand"><img src="../hotel_account_img/hotel_account_visa.jpg"/></div>
             </div>
           </div>
-        </section>
+        
+          <!-- 카드 추가 버튼 -->
+          <div class="add-card" onclick="openAddCardModal()">
+            <div class="plus">+</div>
+            <div class="new-card">Add a new card</div>
+          </div>
+        
+          <!-- 필요시 추가 카드도 같은 구조 반복 -->
+        </div>
       </section>
+    </section>
+
     </div>
   </main>
-
-  <!-- 카드 추가 모달 -->
+<!-- 카드추가 모달 -->
+    <div class="card-modal" id="addCardModal">
+      <div class="modal-full">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button class="close-btn" onclick="closeAddCardModal()">&times;</button>
+          </div>
+          <div class="modal-card">
+            <div class="modal-title">카드추가</div>
+        
+            <form onsubmit="addNewCard(event)">
+              <!-- Card Number -->
+              <div class="form-group card-number-group">
+                <label class="form-label">Card Number</label>
+                <div class="card-input-wrapper">
+                  <input
+                    type="text"
+                    class="form-input"
+                    placeholder="4321 4321 4321 4321"
+                    maxlength="19"
+                    id="cardNumber"
+                  />
+                  <img src="../hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
+                </div>
+              </div>
+          
+              <!-- Exp & CVC -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Exp. Date</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    placeholder="MM/YY"
+                    maxlength="5"
+                    id="expDate"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">CVC</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    placeholder="123"
+                    maxlength="3"
+                    id="cvc"
+                  />
+                </div>
+              </div>
+          
+              <!-- Name -->
+              <div class="form-group">
+                <label class="form-label">Name on Card</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  placeholder="John Doe"
+                  id="cardName"
+                />
+              </div>
+          
+              <!-- Country -->
+              <div class="form-group">
+                <label class="form-label">Country or Region</label>
+                <select class="form-input" id="country">
+                  <option>United States</option>
+                  <option>Korea</option>
+                  <option>Japan</option>
+                </select>
+              </div>
+          
+              <!-- Checkbox -->
+              <div class="form-group checkbox-group">
+                <input type="checkbox" id="saveInfo" />
+                <label for="saveInfo">정보 저장하기</label>
+              </div>
+          
+              <!-- Button -->
+              <button type="submit" class="save-card-btn">Add Card</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <!-- 카드 추가 모달
   <div class="modal" id="cardModal" aria-hidden="true">
     <div class="backdrop" data-close></div>
     <div class="card" role="dialog" aria-modal="true" aria-labelledby="cardAddTitle">
@@ -1705,7 +2060,7 @@ body.modal-open {
         <button class="submit" type="submit">Add Card</button>
       </form>
     </div>
-  </div>
+  </div> -->
 
   <!-- 계정 정보 편집 모달 -->
   <div class="modal" id="editModal" aria-hidden="true">
@@ -1898,18 +2253,34 @@ body.modal-open {
         });
 
         // 모달 관련 기능
-        const cardModal = document.getElementById('cardModal');
         const editModal = document.getElementById('editModal');
         const passwordModal = document.getElementById('passwordModal');
             
-        function openCardModal(){
-          cardModal.classList.add('open');
-          document.body.classList.add('modal-open');
-          cardModal.querySelector('input.input').focus();
+         function openAddCardModal() {
+            document.getElementById('addCardModal').classList.add('active');
         }
+
+        function closeAddCardModal() {
+            document.getElementById('addCardModal').classList.remove('active');
+        }
+
+        function addNewCard(event) {
+            event.preventDefault();
+            // Here you would typically send the card data to your server
+            // For now, just close the modal
+            closeAddCardModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addCardModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddCardModal();
+            }
+        });
         
+
+
         function closeModal(){
-          cardModal.classList.remove('open');
           editModal.classList.remove('open');
           passwordModal.classList.remove('open');
           document.body.classList.remove('modal-open');
@@ -2005,7 +2376,7 @@ body.modal-open {
         }
         
         // 모달 이벤트 리스너
-        [cardModal, editModal, passwordModal].forEach(modal => {
+        [editModal, passwordModal].forEach(modal => {
           modal.addEventListener('click', (e) => {
             if(e.target.hasAttribute('data-close')) closeModal();
           });
