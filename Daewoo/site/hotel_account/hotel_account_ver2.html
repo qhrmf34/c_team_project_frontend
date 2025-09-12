@@ -504,11 +504,8 @@
 /* ==================== 예약내역 스타일 ==================== */
 .booking-wrap {
   max-width: 1232px;
-  margin: 0 auto;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+  height: auto;
+  margin-bottom: 100px;
 }
 
 .booking-title {
@@ -521,15 +518,79 @@
   letter-spacing: 0%;
   margin-top: 40px;
   margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sort-container {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+
+.custom-select-wrapper {
+  position: relative;  
+
+}
+
+.sort-select {
+  appearance: none;
+  border: none;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 14px;
+  leading-trim: NONE;
+  line-height: normal;
+  letter-spacing: 0%;
+  text-align: left;
+  margin-right: -30px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.select-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 14px;
+  color: #112211;
+  right: 1px;
+  top: 22px;
 }
 
 .booking-sub {
+  width: 1232px;
+  height: 56px;
+  border-radius: 12px;
+  padding: 16px 24px;
+  gap: 12px;
+  angle: 0 deg;
+  opacity: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
   color: #111827;
-  font-weight: 600;
   margin-bottom: 12px;
+  background: #FFFFFF;
+  box-shadow: 0px 4px 16px 0px #1122110D;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
+  font-size: 16px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+}
+.booking-sub img{
+  width: 21px;
+  height: 16.5px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 3.75px;
 }
 
 .booking-list {
@@ -539,67 +600,179 @@
 }
 
 .booking-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  width: 1232px;
+  height: 144px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(17, 34, 17, 0.05);
-  padding: 18px;
+  padding: 32px 24px;
+  background: #FFFFFF;
+  box-shadow: 0px 4px 16px 0px #1122110D;
   display: grid;
   grid-template-columns: 80px 1fr 1fr 1fr auto;
-  gap: 16px;
   align-items: center;
+  gap: 16px;
 }
 
+/* 로고 */
 .bc-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background: #eef7f3;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  border: 0.5px solid #8DD3BB;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  color: #0f3f2e;
+  padding: 10px;
 }
 
-.bc-col .label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 6px;
+.bc-logo img {
+  width: 70px;
+  height: 70px;
 }
 
-.bc-col .val {
-  font-weight: 800;
-}
-
-.bc-dl {
+/* 날짜 */
+.bc-dates {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.bc-date-section .label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.bc-date-section .val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.bc-separator {
+  width: 20px;
+  height: 0px;
+  angle: 0 deg;
+  opacity: 1;
+  border: 1px solid black;
+}
+
+.bc-beeline{
+  width: 0px;
+  height: 48.00000000000004px;
+  angle: -90 deg;
+  opacity: 1;
+  border-width: 1px;
+  border: 1px solid #D7E2EE;
+}
+
+/* 시간 */
+.bc-times {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.bc-btn {
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #e6f5ef;
-  border: 1px solid #bfe8d6;
-  color: #0f3f2e;
-  font-weight: 700;
+.bc-time-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bc-time-info .label {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: SemiBold;
   font-size: 12px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #112211;
+}
+
+.bc-time-info .val {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: Medium;
+  font-size: 16px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #111827;
+}
+
+.bc-guest{
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+
+}
+.time-icon{
+  width: 32px;
+  height: 32px;
+  angle: 0 deg;
+  opacity: 1;
+  border-radius: 4px;
+
+}
+
+/* 버튼 */
+.bc-actions {
+  width: 216px;
+  height: 48px;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 16px;
+  display: flex;
+}
+
+.bc-btn {
+  width: 152px;
+  height: 100%;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 8px 16px;
   cursor: pointer;
+  background: #8DD3BB;
+  border: none;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: Medium;
+  font-size: 14px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+
 }
 
 .bc-next {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  width: 48px;
+  height: 100%;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
   cursor: pointer;
+  border: 1px solid #8DD3BB;
+  border-radius: 4px;
 }
+.bc-next img{
+  width: 4.5px;
+  height: 9px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 3.5px;
+  left: 6px;
+  border-width: 1.5px;
+
+}
+.bc-next:hover{
+  background-color: #8DD3BB;
+}
+
 
 /* ==================== 결제수단 스타일 ==================== */
 .billing {
@@ -1279,66 +1452,178 @@ body.modal-open {
         </section>
       </section>
 
+
       <!-- 내역 패널 -->
       <section id="panel-history" class="panel">
-        <div class="booking-title">예약내역</div>
-        <div class="booking-sub">객실</div>
+        <div class="booking-title">
+          예약내역
+           <div class="sort-container">
+            <div class="custom-select-wrapper">
+              <select class="sort-select">
+                <option>Upcoming</option>
+                <option>Date: Recent First</option>
+                <option>Date: Oldest First</option>
+                <option>Hotel Name</option>
+              </select>
+              <span class="select-arrow">∨</span>
+            </div>
+            </div>
+        </div>
+        <div class="booking-sub"><img src="../hotel_account_img/bedroom.jpg"/>객실</div>
         <div class="booking-wrap">
 
-          <div class="booking-list">
-            <div class="booking-card">
-              <div class="bc-logo">CVK</div>
-              <div class="bc-col">
-                <div class="label">Check-In — Check Out</div>
-                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
+        <div class="booking-list">
+          <div class="booking-card">
+            <div class="bc-logo"><img src="../hotel_account_img/cvk.jpg"></div>
+              
+                  <!-- 날짜 -->
+              <div class="bc-dates">
+                <div class="bc-date-section">
+                  <div class="label">Check-In</div>
+                  <div class="val">Thur, Dec 8</div>
+                </div>
+                <div class="bc-separator"></div>
+                <div class="bc-date-section">
+                  <div class="label">Check Out</div>
+                  <div class="val">Fri, Dec 9</div>
+                </div>
+                <div class="bc-beeline"></div>
               </div>
-              <div class="bc-col">
-                <div class="label">체크인</div>
-                <div>12:00pm</div>
-                <div class="label" style="margin-top:4px;">체크아웃</div>
-                <div>11:30am</div>
+              <!-- 시간 -->
+              <div class="bc-times">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크인</div>
+                    <div class="val">12:00pm</div>
+                  </div>
+                </div>
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크아웃</div>
+                    <div class="val">11:30am</div>
+                  </div>
+                </div>
               </div>
-              <div class="bc-col">
-                <div class="label">명단</div>
-                <div>On arrival</div>
-              </div>
-              <div class="bc-dl">
-                <button class="bc-btn">Download Ticket</button>
-                <div class="bc-next">›</div>
-              </div>
+            
+            <!-- 방번호 -->
+             <div class="bc-guest">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/room.jpg">
+                  <div>
+                    <div class="label">방번호</div>
+                    <div class="val">On arrival</div>
+                  </div>
+                </div>
+          </div>
+            <!-- 버튼 -->
+            <div class="bc-actions">
+              <button class="bc-btn">Download Ticket</button>
+              <div class="bc-next"><img src="../hotel_account_img/right.jpg"/></div>
             </div>
+          </div>
+          <div class="booking-card">
+            <div class="bc-logo"><img src="../hotel_account_img/cvk.jpg"></div>
+              
+                  <!-- 날짜 -->
+              <div class="bc-dates">
+                <div class="bc-date-section">
+                  <div class="label">Check-In</div>
+                  <div class="val">Thur, Dec 8</div>
+                </div>
+                <div class="bc-separator"></div>
+                <div class="bc-date-section">
+                  <div class="label">Check Out</div>
+                  <div class="val">Fri, Dec 9</div>
+                </div>
+                <div class="bc-beeline"></div>
+              </div>
+              <!-- 시간 -->
+              <div class="bc-times">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크인</div>
+                    <div class="val">12:00pm</div>
+                  </div>
+                </div>
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크아웃</div>
+                    <div class="val">11:30am</div>
+                  </div>
+                </div>
+              </div>
+            
+            <!-- 방번호 -->
+             <div class="bc-guest">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/room.jpg">
+                  <div>
+                    <div class="label">방번호</div>
+                    <div class="val">On arrival</div>
+                  </div>
+                </div>
+          </div>
+            <!-- 버튼 -->
+            <div class="bc-actions">
+              <button class="bc-btn">Download Ticket</button>
+              <div class="bc-next"><img src="../hotel_account_img/right.jpg"/></div>
+            </div>
+          </div>
+          <div class="booking-card">
+            <div class="bc-logo"><img src="../hotel_account_img/cvk.jpg"></div>
+              
+                  <!-- 날짜 -->
+              <div class="bc-dates">
+                <div class="bc-date-section">
+                  <div class="label">Check-In</div>
+                  <div class="val">Thur, Dec 8</div>
+                </div>
+                <div class="bc-separator"></div>
+                <div class="bc-date-section">
+                  <div class="label">Check Out</div>
+                  <div class="val">Fri, Dec 9</div>
+                </div>
+                <div class="bc-beeline"></div>
+              </div>
+              <!-- 시간 -->
+              <div class="bc-times">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크인</div>
+                    <div class="val">12:00pm</div>
+                  </div>
+                </div>
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/check.jpg">
+                  <div>
+                    <div class="label">체크아웃</div>
+                    <div class="val">11:30am</div>
+                  </div>
+                </div>
+              </div>
+            
+            <!-- 방번호 -->
+             <div class="bc-guest">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="../hotel_account_img/room.jpg">
+                  <div>
+                    <div class="label">방번호</div>
+                    <div class="val">On arrival</div>
+                  </div>
+                </div>
+          </div>
+            <!-- 버튼 -->
+            <div class="bc-actions">
+              <button class="bc-btn">Download Ticket</button>
+              <div class="bc-next"><img src="../hotel_account_img/right.jpg"/></div>
+            </div>
+          </div>          
 
-            <div class="booking-card">
-              <div class="bc-logo">CVK</div>
-              <div class="bc-col">
-                <div class="label">Check-In — Check Out</div>
-                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
-              </div>
-              <div class="bc-col">
-                <div class="label">체크인</div><div>12:00pm</div>
-                <div class="label" style="margin-top:4px;">체크아웃</div><div>11:30am</div>
-              </div>
-              <div class="bc-col">
-                <div class="label">명단</div><div>On arrival</div>
-              </div>
-              <div class="bc-dl"><button class="bc-btn">Download Ticket</button><div class="bc-next">›</div></div>
-            </div>
-
-            <div class="booking-card">
-              <div class="bc-logo">CVK</div>
-              <div class="bc-col">
-                <div class="label">Check-In — Check Out</div>
-                <div class="val">Thur, Dec 8 &nbsp;—&nbsp; Fri, Dec 9</div>
-              </div>
-              <div class="bc-col">
-                <div class="label">체크인</div><div>12:00pm</div>
-                <div class="label" style="margin-top:4px;">체크아웃</div><div>11:30am</div>
-              </div>
-              <div class="bc-col">
-                <div class="label">명단</div><div>On arrival</div>
-              </div>
-              <div class="bc-dl"><button class="bc-btn">Download Ticket</button><div class="bc-next">›</div></div>
-            </div>
           </div>
         </div>
       </section>
