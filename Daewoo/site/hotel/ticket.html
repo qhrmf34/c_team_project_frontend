@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hotel Ticket</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      gap: 15px; /* 두 카드 사이 여백 */
+    }
+    .ticket {
+      display: flex;
+      width: 650px;
+      height: 250px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    /* 왼쪽 날짜 구역 */
+    .ticket-left {
+      width: 180px;
+      background: #e5f2ed;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-weight: bold;
+      color: #333;
+    }
+    .ticket-left div {
+      margin-bottom: 20px;
+    }
+    .ticket-left small {
+      display: block;
+      font-weight: normal;
+      color: #777;
+    }
+
+    /* 중앙 메인 구역 */
+    .ticket-center {
+      flex: 1;
+      padding: 20px;
+      position: relative;
+    }
+    .top-bar {
+      background: #9fd2c8;
+      border-radius: 8px;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .guest {
+      display: flex;
+      align-items: center;
+    }
+    .guest img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      margin-right: 10px;
+      background: #ddd;
+    }
+    .info-grid {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      font-size: 14px;
+    }
+    .info-item span {
+      display: block;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .barcode {
+      width: 250px;
+      height: 50px;
+      background: repeating-linear-gradient(
+        90deg,
+        black,
+        black 2px,
+        white 2px,
+        white 4px
+      );
+      margin-top: 20px;
+    }
+
+    /* 오른쪽 호텔 로고 (독립 카드) */
+    .ticket-right {
+      width: 220px;
+      height: 250px;
+      margin-left: -14px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .ticket-right h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: normal;
+    }
+    .ticket-right small {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- 왼쪽 티켓 -->
+  <div class="ticket">
+    <!-- 좌측 날짜 -->
+    <div class="ticket-left">
+      <div>
+        Thur, Dec 8
+        <small>Check-In</small>
+      </div>
+      <div>
+        Fri, Dec 9
+        <small>Check-Out</small>
+      </div>
+    </div>
+
+    <!-- 중앙 -->
+    <div class="ticket-center">
+      <div class="top-bar">
+        <div class="guest">
+          <img src="" alt="">
+          <strong>James Doe</strong>
+        </div>
+        <div>Superior room - 1 double bed or 2 twin beds</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          체크인 <span>12:00pm</span>
+        </div>
+        <div class="info-item">
+          체크아웃 <span>11:30pm</span>
+        </div>
+        <div class="info-item">
+          방번호 <span>On arrival</span>
+        </div>
+      </div>
+
+      <div class="info-item">
+        EK <span>ABC12345</span>
+      </div>
+
+      <div class="barcode"></div>
+    </div>
+  </div>
+
+  <!-- 오른쪽 CVK 카드 -->
+  <div class="ticket-right">
+    <div>
+      <h2>CVK</h2>
+      <small>PARK BOSPHORUS HOTEL</small>
+      <small>ISTANBUL</small>
+    </div>
+  </div>
+</body>
+</html>
