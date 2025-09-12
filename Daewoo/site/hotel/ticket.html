@@ -5,81 +5,221 @@
   <title>Hotel Ticket</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      font-family: 'Montserrat', system-ui, -apple-system, "Noto Sans KR", Arial, sans-serif;
+      color: #112211;
+      background: #FAFBFC;
+      min-width: 1440px;
+      max-width: 1440px;
+      margin: 0 auto;
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
-      padding: 20px;
-      gap: 15px; /* 두 카드 사이 여백 */
+      flex-direction: column;
+      overflow-x: scroll;
     }
     .ticket {
       display: flex;
-      width: 650px;
-      height: 250px;
-      background: white;
-      border-radius: 12px;
+      width: 1231px;
+      height: 309px;
       overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin: 0 auto; 
     }
     /* 왼쪽 날짜 구역 */
     .ticket-left {
-      width: 180px;
+      width: 246px;
+      height: 100%;
       background: #e5f2ed;
-      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: flex-start;
       font-weight: bold;
       color: #333;
+      border-radius: 12px 0 0 12px;
     }
-    .ticket-left div {
-      margin-bottom: 20px;
+
+    .ticket-left-updown{
+      width: 188px;
+      height: 58px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 4px;
+      padding-left: 20px;
     }
-    .ticket-left small {
-      display: block;
-      font-weight: normal;
-      color: #777;
+    
+    .left-label{
+      width: 188px;
+      height: 39px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 32px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
     }
+    .left-check{
+      width: 55px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: right;
+    }
+
+    .left-image{
+      width: 36px;
+      height: 92px;
+      angle: -0 deg;
+      opacity: 1;
+      gap: 8px;
+      border-radius: 4px;
+      padding-left: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+
 
     /* 중앙 메인 구역 */
     .ticket-center {
-      flex: 1;
-      padding: 20px;
+      width: 610px;
+      height: 309px;
+      angle: 0 deg;
+      opacity: 1;
       position: relative;
+      border-radius: 0 12px 12px 0;
+      background-color: white;
     }
     .top-bar {
-      background: #9fd2c8;
-      border-radius: 8px;
-      padding: 10px 15px;
+      width: 100%;
+      height: 96px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 46px;
+      border-radius: 0px 12px 0 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      background: #8DD3BB;
+    }
+    .top-bar > div {
+      margin: 0 14px; /* 각 요소에 좌우 여백 */
     }
     .guest {
       display: flex;
       align-items: center;
     }
     .guest img {
-      width: 35px;
-      height: 35px;
+      width: 48px;
+      height: 48px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 1px solid #FFFFFF;
       border-radius: 50%;
       margin-right: 10px;
-      background: #ddd;
     }
+    .guest span{
+      width: 141px;
+      height: 25px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+    }
+
+    .center-bedroom{
+      width: 228px;
+      height: 36px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: right;
+
+    }
+
     .info-grid {
+      width: 610px;
+      height: 83px;
+      angle: 0 deg;
+      opacity: 1;
+      top: 96px;
+      gap: 32px;
+      padding: 24px;
       display: flex;
-      gap: 30px;
       margin-bottom: 20px;
     }
     .info-item {
-      font-size: 14px;
+      width: 108px;
+      height: 35px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 8px;
+
     }
-    .info-item span {
-      display: block;
-      font-weight: bold;
-      margin-top: 5px;
+    .info-item-img{
+      width: 32px;
+      height: 32px;
+      angle: 0 deg;
+      opacity: 1;
+      border-radius: 4px;
     }
+    .info-item-content {
+      width: 68px;
+      height: 35px;
+      angle: 0 deg;
+      opacity: 1;
+    }
+
+    .info-item-check{
+      width: 34px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+    }
+
+    .info-item-time{
+      width: 68px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+    }
+
+
     .barcode {
       width: 250px;
       height: 50px;
@@ -95,27 +235,23 @@
 
     /* 오른쪽 호텔 로고 (독립 카드) */
     .ticket-right {
-      width: 220px;
-      height: 250px;
-      margin-left: -14px;
+      width: 375px;
+      height: 100%;
       background: white;
       border-radius: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
-      text-align: center;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-left: 2px;
     }
-    .ticket-right h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: normal;
-    }
-    .ticket-right small {
-      display: block;
-      margin-top: 4px;
-      font-size: 12px;
-      color: #555;
+    .ticket-right img{
+      width: 161px;
+      height: 161px;
+      angle: 0 deg;
+      opacity: 1;
+      top: 74px;
+      left: 107px;
     }
   </style>
 </head>
@@ -124,13 +260,24 @@
   <div class="ticket">
     <!-- 좌측 날짜 -->
     <div class="ticket-left">
-      <div>
-        Thur, Dec 8
-        <small>Check-In</small>
+      <div class="ticket-left-updown">
+        <div class="left-label">
+          Thur, Dec 8
+        </div>
+        <div class="left-check">
+          Check-In
+        </div>
       </div>
       <div>
-        Fri, Dec 9
-        <small>Check-Out</small>
+        <img src="../hotel_account_img/travel.jpg" class="left-image"/>
+      </div>
+      <div class="ticket-left-updown">
+        <div class="left-label">
+          Thur, Dec 9
+        </div>
+        <div class="left-check">
+          Check-Out
+        </div>
       </div>
     </div>
 
@@ -139,21 +286,54 @@
       <div class="top-bar">
         <div class="guest">
           <img src="" alt="">
-          <strong>James Doe</strong>
+          <span>James Doe</span>
         </div>
-        <div>Superior room - 1 double bed or 2 twin beds</div>
+        <div class="center-bedroom">Superior room - 1 double bed or 2 twin beds</div>
       </div>
 
       <div class="info-grid">
         <div class="info-item">
-          체크인 <span>12:00pm</span>
+          <div>
+            <img src="../hotel_account_img/check.jpg" class="info-item-img"/>
+          </div>
+          <div class="info-item-content">
+            <div class="info-check">
+              체크인
+            </div>          
+             <div class="info-item-time">
+              12:00pm
+            </div>
+          </div>
         </div>
+
         <div class="info-item">
-          체크아웃 <span>11:30pm</span>
+          <div>
+            <img src="../hotel_account_img/check.jpg" class="info-item-img"/>
+          </div>
+          <div class="info-item-content">
+            <div class="info-check">
+              체크아웃
+            </div>  
+             <div class="info-item-time">
+              11:30pm
+            </div>
+          </div>
         </div>
+
         <div class="info-item">
-          방번호 <span>On arrival</span>
+          <div>
+            <img src="../hotel_account_img/room.jpg" class="info-item-img"/>
+          </div>
+          <div class="info-item-content">
+            <div class="info-check">
+              방번호
+            </div>   
+             <div class="info-item-time">
+              12:00pm
+            </div>
+          </div>
         </div>
+
       </div>
 
       <div class="info-item">
@@ -162,15 +342,15 @@
 
       <div class="barcode"></div>
     </div>
-  </div>
 
-  <!-- 오른쪽 CVK 카드 -->
-  <div class="ticket-right">
-    <div>
-      <h2>CVK</h2>
-      <small>PARK BOSPHORUS HOTEL</small>
-      <small>ISTANBUL</small>
+      <!-- 오른쪽 CVK 카드 -->
+    <div class="ticket-right">
+      <div>
+        <img src="../hotel_account_img/cvk.jpg"/>
+      </div>
     </div>
   </div>
+
+
 </body>
 </html>
