@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Booking - Confirmation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>Hotel Ticket - Travel Website</title>
     <style>
         * {
             margin: 0;
@@ -13,14 +14,14 @@
 
         body {
             font-family: 'Montserrat', sans-serif;
-            background: #FAFBFC;
-            min-width: 1440px;
+            background: rgba(250, 251, 252, 1);
             max-width: 1440px;
+            min-width: 1440px;
             min-height: 100vh;
             margin: 0 auto;
+            overflow-x: scroll;
             display: flex;
             flex-direction: column;
-            overflow-x: scroll;
         }
 
         /* Header */
@@ -103,7 +104,7 @@
             bottom: 2px;
             right: 2px;
         }
-
+        
         /* User Dropdown */
         .user-dropdown {
             position: fixed;
@@ -175,359 +176,632 @@
             padding: 4px 0;
         }
 
-        /* Main Content */
-        .main-content {
-            margin-top: 87px;
-            padding: 40px 104px 60px;
-            max-width: 1440px;
-            margin: 87px auto 0;
-            flex: 1;
-        }
-
         /* Breadcrumb */
         .breadcrumb {
-            display: flex;
-            align-items: center;
+            width: 244px;
+            height: 24px;
             gap: 8px;
-            margin-bottom: 32px;
+            background: #F8F9FA;
+            margin-top: 135px;
             font-family: Montserrat;
             font-weight: 400;
             font-size: 14px;
-        }
+            color: #666666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 80px;
+            margin-bottom: 30px;
+        }     
 
         .breadcrumb a {
-            color: #FF6B6B;
-            text-decoration: none;
-        }
-
-        .breadcrumb span {
             color: #666666;
+            text-decoration: none;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
         }
 
-        /* Confirmation Container */
-        .confirmation-container {
-            max-width: 953px;
-            margin: 0 auto;
+        .breadcrumb a:hover {
+            color: #112211;
         }
 
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px 104px;
+            max-width: 1440px;
+            width: 100%;
+        }
+
+        /* Hotel Header */
         .hotel-header {
-            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-radius: 12px;
+            gap: 32px;
+            margin-bottom: 30px;
+        }
+
+        /* 왼쪽 호텔 정보 */
+        .hotel-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
         }
 
         .hotel-title {
-            font-family: Noto Sans;
-            font-weight: 700;
-            font-size: 24px;
-            line-height: 100%;
+            font-family: 'ABeeZee', sans-serif;
+            font-weight: 400;
+            font-size: 20px;
             color: #112211;
-            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 12px;
         }
 
-        .hotel-location {
+        .hotel-location-line {
             display: flex;
             align-items: center;
             gap: 8px;
             font-family: Montserrat;
-            font-weight: 400;
+            font-weight: 500;
+            font-style: Medium;
             font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             color: #666666;
         }
-
-        .price-tag {
-            float: right;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 24px;
-            color: #FF6B6B;
-            margin-top: -60px;
+        .hotel-location-line img{
+            width: 11.25px;
+            height: 15.749412536621094px;
+            top: 1.13px;
+            left: 3.38px;
+            angle: 0 deg;
+            opacity: 1;
         }
 
-        .download-btn {
-            background: #8DD3BB;
-            color: #112211;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin-left: 16px;
-        }
-
-        /* Booking Card */
-        .booking-card {
-            background: #8DD3BB;
-            border-radius: 12px;
-            padding: 32px;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .booking-header {
+        /* 오른쪽 가격 & 버튼 */
+        .hotel-actions {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 32px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
-        .guest-info {
+        .hotel-price {
+            text-align: right;
+        }
+
+        .price-amount {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 32px;
+            color: rgba(255, 134, 130, 1);
+        }
+
+        .price-unit {
+            font-size: 24px;
+            color: rgba(255, 134, 130, 1);
+        }
+
+        .hotel-buttons {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
-        .guest-avatar {
+        .action-btn {
+            background: none;
+            border: 1px solid #8DD3BB;
+            border-radius: 4px;
+            color: #112211;
+            cursor: pointer;
             width: 48px;
             height: 48px;
-            background: #CCCCCC;
-            border-radius: 50%;
+            gap: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 12px;
             display: flex;
-            align-items: center;
+            align-items: center;    
             justify-content: center;
-            font-size: 18px;
-            color: #666;
+            
         }
-
-        .guest-details h3 {
+        
+        .action-btn img{
+            width: 15.001760482788086px;
+            height: 16.24186897277832px;
+            top: 1.88px;
+            left: 2.5px;
+            angle: 0 deg;
+            opacity: 1;
+            border-width: 0.05px;
+        }
+        
+        .action-btn-download{
+            width: 150px;
+            height: 48px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 4px;
+            border-radius: 4px;
+            padding: 8px 16px;
+            background: rgba(141, 211, 187, 1);
+            border: none;
             font-family: Montserrat;
             font-weight: 600;
-            font-size: 16px;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .room-type {
-            font-family: Montserrat;
-            font-weight: 500;
+            font-style: SemiBold;
             font-size: 14px;
-            color: #112211;
-            opacity: 0.8;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            cursor: pointer;
+
         }
 
-        .booking-dates {
+        /* Ticket styles from first code */
+        .ticket-container {
             display: flex;
-            gap: 80px;
-            margin-bottom: 32px;
+            justify-content: center;
+            margin: 40px 0;
         }
 
-        .date-info {
-            text-align: center;
+        .ticket {
+            display: flex;
+            width: 1231px;
+            height: 309px;
+            overflow: hidden;
+            margin: 0 auto; 
+        }
+        /* 왼쪽 날짜 구역 */
+        .ticket-left {
+            width: 246px;
+            height: 100%;
+            background: #e5f2ed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            font-weight: bold;
+            color: #333;
+            border-radius: 12px 0 0 12px;
         }
 
-        .date-info h4 {
+        .ticket-left-updown{
+            width: 188px;
+            height: 58px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 4px;
+            padding-left: 20px;
+        }
+        
+        .left-label{
+            width: 188px;
+            height: 39px;
+            angle: 0 deg;
+            opacity: 1;
             font-family: Montserrat;
             font-weight: 600;
-            font-size: 18px;
-            color: #112211;
-            margin-bottom: 4px;
+            font-style: SemiBold;
+            font-size: 32px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
         }
-
-        .date-info p {
+        .left-check{
+            width: 55px;
+            height: 15px;
+            angle: 0 deg;
+            opacity: 0.6;
             font-family: Montserrat;
             font-weight: 500;
-            font-size: 14px;
-            color: #112211;
-            opacity: 0.7;
+            font-style: Medium;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: right;
         }
 
-        .booking-details {
+        .left-image{
+            width: 36px;
+            height: 92px;
+            angle: -0 deg;
+            opacity: 1;
+            gap: 8px;
+            border-radius: 4px;
+            padding-left: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* 중앙 메인 구역 */
+        .ticket-center {
+            width: 610px;
+            height: 309px;
+            angle: 0 deg;
+            opacity: 1;
+            position: relative;
+            border-radius: 0 12px 12px 0;
+            background-color: white;
+        }
+        .top-bar {
+            width: 100%;
+            height: 96px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 46px;
+            border-radius: 0px 12px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            padding: 16px 24px;
+            background: #8DD3BB;
         }
-
-        .booking-times {
+        .top-bar > div {
+            margin: 0 14px; /* 각 요소에 좌우 여백 */
+        }
+        .guest {
             display: flex;
-            gap: 48px;
+            align-items: center;
         }
-
-        .time-info {
-            text-align: center;
+        .guest img {
+            width: 48px;
+            height: 48px;
+            angle: 0 deg;
+            opacity: 1;
+            border: 1px solid #FFFFFF;
+            border-radius: 50%;
+            margin-right: 10px;
         }
-
-        .time-label {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 12px;
-            color: #112211;
-            opacity: 0.7;
-            margin-bottom: 4px;
-        }
-
-        .time-value {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            color: #112211;
-        }
-
-        .arrival-info {
-            text-align: center;
-        }
-
-        .arrival-label {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 12px;
-            color: #112211;
-            opacity: 0.7;
-            margin-bottom: 4px;
-        }
-
-        .arrival-value {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            color: #112211;
-        }
-
-        .cvk-logo {
-            position: absolute;
-            top: 32px;
-            right: 32px;
-            text-align: center;
-        }
-
-        .cvk-text {
-            font-family: Montserrat;
-            font-weight: 700;
-            font-size: 14px;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .cvk-subtitle {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 10px;
-            color: #112211;
-            opacity: 0.6;
-        }
-
-        /* QR Code Section */
-        .qr-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 40px;
-        }
-
-        .qr-left {
-            flex: 1;
-        }
-
-        .confirmation-code {
-            margin-bottom: 32px;
-        }
-
-        .code-label {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 18px;
-            color: #112211;
-            margin-bottom: 8px;
-        }
-
-        .code-value {
+        .guest span{
+            width: 141px;
+            height: 25px;
+            angle: 0 deg;
+            opacity: 1;
             font-family: Acme;
             font-weight: 400;
-            font-size: 16px;
+            font-style: Regular;
+            font-size: 20px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             color: #112211;
-            opacity: 0.7;
         }
 
-        .qr-code {
-            width: 150px;
-            height: 150px;
-            border: 2px solid #112211;
+        .center-bedroom{
+            width: 228px;
+            height: 36px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Acme;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: right;
+
+        }
+
+        .info-grid {
+            width: 610px;
+            height: 83px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 32px;
+            padding: 24px;
+            display: flex;
+        }
+
+        .info-item {
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            gap: 4px;
-            padding: 20px;
+            width: 108px;
+            height: 35px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 8px;
+
         }
+        .info-item-img{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            angle: 0 deg;
+            opacity: 1;
+            border-radius: 4px;
+        }
+        .info-item-content {
+            width: 68px;
+            height: 35px;
+            angle: 0 deg;
+            opacity: 1;
+        }
+
+        .info-item-check{
+            width: 34px;
+            height: 15px;
+            angle: 0 deg;
+            opacity: 0.6;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        .info-item-time{
+            width: 68px;
+            height: 20px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+
+        }
+
+        .info-check{
+            width: 50px;
+            height: 15px;
+            angle: 0 deg;
+            opacity: 0.6;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+
+        }
+
+        .info-item-time{
+            width: 68px;
+            height: 20px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 16px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+
+        }
+
+        .ticket-number{
+            height: 130px;
+            width: 610px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-air{
+            width: 45px;
+            height: 39px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 32px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            padding-left: 30px;
+        }
+        .ticket-num{
+            width: 60px;
+            height: 15px;
+            angle: 0 deg;
+            opacity: 0.6;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            margin-top: 10px;
+        }
+
 
         .barcode {
-            width: 100%;
-            height: 60px;
-            background: repeating-linear-gradient(
-                to right,
-                #112211 0px,
-                #112211 2px,
-                transparent 2px,
-                transparent 4px
-            );
+            width: 248px;
+            height: 100%;
+            angle: 0 deg;
+            opacity: 1;
+            display: flex;
+            flex-direction: column;   
+            justify-content: flex-end; 
+            align-items: center; 
         }
 
-        /* Terms Section */
+        .barcode img{
+            height: 81px;
+       }
+
+        /* 오른쪽 호텔 로고 (독립 카드) */
+        .ticket-right {
+            width: 375px;
+            height: 100%;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-left: 2px;
+        }
+        .ticket-right img{
+            width: 161px;
+            height: 161px;
+            angle: 0 deg;
+            opacity: 1;
+            top: 74px;
+            left: 107px;
+        }
+
+        /* Terms and Conditions Section */
         .terms-section {
-            margin-top: 60px;
+            width: 1232px;
+            height: 549px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 34px;  
+            margin: 60px auto;
         }
 
         .terms-title {
+            width: 100%;
+            height: 29px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 8px;
+            angle: 0 deg;
+            opacity: 1;
             font-family: Montserrat;
             font-weight: 600;
-            font-size: 20px;
+            font-style: SemiBold;
+            font-size: 24px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             color: #112211;
-            margin-bottom: 24px;
-        }
-
-        .terms-content {
             margin-bottom: 32px;
         }
 
-        .terms-subtitle {
+        .terms-payment {
+            width: 1232px;
+            height: 272px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 16px;
+
+        }
+
+        .section-title {
+            width: 103px;
+            height: 24px;
+            angle: 0 deg;
+            opacity: 1;
             font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 20px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
             color: #112211;
             margin-bottom: 16px;
+            margin-top: 32px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
         }
 
         .terms-text {
             font-family: Montserrat;
             font-weight: 400;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #112211;
             margin-bottom: 16px;
         }
 
-        .contact-section {
-            margin-top: 40px;
+        .terms-list {
+            margin: 16px 0;
+            padding-left: 20px;
         }
 
-        .contact-title {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            color: #112211;
-            margin-bottom: 16px;
-        }
-
-        .contact-text {
+        .terms-list li {
             font-family: Montserrat;
             font-weight: 400;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #112211;
             margin-bottom: 8px;
         }
 
+        .contact-info {
+            width: 1232px;
+            height: 180px;
+            angle: 0 deg;
+            opacity: 1;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .contact-title {
+            width: 112px;
+            height: 24px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 20px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #112211;
+            margin-bottom: 12px;
+        }
+
+        .contact-details {
+            width: 100%;
+            height: 140px;
+            angle: 0 deg;
+            opacity: 1;
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 20px;
+            letter-spacing: 0%;
+            color: #112211;
+        }
+
         .contact-link {
-            color: #FF6B6B;
+            color: rgba(17, 34, 17, 1);
+;
             text-decoration: none;
+        }
+
+        .contact-link:hover {
+            text-decoration: underline;
         }
 
         /* Newsletter Section */
         .newsletter-section {
             background: rgba(141, 211, 187, 1);
-            padding: 80px 104px;
+            padding: 80px 104px 80px 104px;
             position: relative;
             height: 422px;
             display: flex;
@@ -622,7 +896,7 @@
             height: 56px;
         }
 
-        /* Mailbox Design */
+        /* 우체통 디자인 */
         .mailbox-container {
             position: relative;
             width: 400px;
@@ -678,7 +952,6 @@
             background: rgba(255, 134, 130, 1);
             z-index: 6;
         }
-
         .mailbox-flag2 {
             position: absolute;
             width: 39px;
@@ -732,12 +1005,14 @@
             padding-bottom: 40px;
         }
 
+        /* Social Icons */
         .social-icons {
             display: flex;
             gap: 16px;
             margin-bottom: 32px;
         }
 
+        /* Footer Columns */
         .footer-links {
             display: flex;
             gap: 60px;
@@ -778,14 +1053,14 @@
         <nav>
             <div class="nav-left">
                 <a href="#" class="nav-item">
-                    <span>🏨</span>
+                    <span><img src="../hotel_img/hotel.jpg"></span>
                     Find Stays
                 </a>
             </div>
             
             <div class="nav-right">
                 <a href="#" class="nav-item">
-                    <span>❤️</span>
+                    <span><img src="../hotel_img/heart.jpg"></span>
                     찜하기
                 </a>
                 <span>|</span>
@@ -809,140 +1084,178 @@
         </div>
         <div class="dropdown-menu">
             <a href="#" class="dropdown-item">
-                <span>👤</span> 계정
+                <span><img src="../hotel_img/account.jpg"></span> 계정
             </a>
             <a href="#" class="dropdown-item">
-                <span>💳</span> 결제내역
+                <span><img src="../hotel_img/card.jpg"></span> 결제내역
             </a>
             <a href="#" class="dropdown-item">
-                <span>⚙️</span> 설정
+                <span><img src="../hotel_img/setting.jpg"></span> 설정
             </a>
             <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
             <a href="#" class="dropdown-item">
-                <span>🚪</span> 로그아웃
+                <span><img src="../hotel_img/logout.jpg"></span> 로그아웃
             </a>
         </div>
     </div>
 
-    <main class="main-content">
-        <div class="breadcrumb">
-            <a href="#">Turkey</a>
-            <span>></span>
-            <a href="#">Istanbul</a>
-            <span>></span>
-            <span>해튼호텔</span>
-        </div>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="#" style="color: rgba(255, 134, 130, 1);">Turkey</a> > <a href="#" style="color: rgba(255, 134, 130, 1);">Istanbul</a> > <span>해튼호텔</span>
+    </div>
 
-        <div class="confirmation-container">
-            <div class="hotel-header">
+    <div class="main-content">
+        <!-- Hotel Header -->
+        <div class="hotel-header">
+            <div class="hotel-info">
                 <h1 class="hotel-title">해튼호텔</h1>
-                <div class="hotel-location">
-                    📍 Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
-                </div>
-                <div class="price-tag">
-                    ₩240,000/night
-                    <button class="download-btn">Download</button>
+                <div class="hotel-location-line">
+                    <span><img src="../hotel_img/map.jpg"></span>
+                    <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
                 </div>
             </div>
-
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div class="guest-info">
-                        <div class="guest-avatar">JD</div>
-                        <div class="guest-details">
-                            <h3>James Doe</h3>
-                            <div class="room-type">Superior room - 1 더블베드 or 2 twin beds</div>
-                        </div>
-                    </div>
-                    <div class="cvk-logo">
-                        <div class="cvk-text">CVK</div>
-                        <div class="cvk-subtitle">PARK BOSPHORUS HOTEL<br>ISTANBUL</div>
-                    </div>
+        
+            <div class="hotel-actions">
+                <div class="hotel-price">
+                    <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
                 </div>
-
-                <div class="booking-dates">
-                    <div class="date-info">
-                        <h4>Thur, Dec 8</h4>
-                        <p>Check-in</p>
-                    </div>
-                    <div class="date-info">
-                        <h4>Fri, Dec 9</h4>
-                        <p>Check-out</p>
-                    </div>
-                </div>
-
-                <div class="booking-details">
-                    <div class="booking-times">
-                        <div class="time-info">
-                            <div class="time-label">체크인</div>
-                            <div class="time-value">12:00pm</div>
-                        </div>
-                        <div class="time-info">
-                            <div class="time-label">체크아웃</div>
-                            <div class="time-value">11:30pm</div>
-                        </div>
-                    </div>
-                    <div class="arrival-info">
-                        <div class="arrival-label">방문예상</div>
-                        <div class="arrival-value">On arrival</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="qr-section">
-                <div class="qr-left">
-                    <div class="confirmation-code">
-                        <div class="code-label">EK</div>
-                        <div class="code-value">ABC1234</div>
-                    </div>
-                </div>
-                <div class="qr-code">
-                    <div class="barcode"></div>
-                </div>
-            </div>
-
-            <div class="terms-section">
-                <h2 class="terms-title">Terms and Conditions</h2>
-                
-                <div class="terms-content">
-                    <h3 class="terms-subtitle">Payments</h3>
-                    <p class="terms-text">
-                        If you are purchasing your ticket using a debit or credit card via the Website, we will process these payments via the automated secure common payment gateway which will be subject to fraud screening purposes.
-                    </p>
-                    <p class="terms-text">
-                        If you do not supply the correct card billing address and/or cardholder information, your booking will not be confirmed and the overall cost may increase. We reserve the right to cancel your booking if payment is declined for any reason or if you have supplied incorrect card information. If we become aware of, or is notified of, any fraud or illegal activity associated with the payment for, or the use of your booking we reserve the right to cancel your booking without any penalty or fees levied against us.
-                    </p>
-                    <p class="terms-text">
-                        Golobe may require the card holder to provide additional payment verification upon request by either submitting an online form or visiting the nearest Golobe office, or at the airport at the time of check-in. Golobe reserves the right to deny boarding or to collect a guarantee payment in cash or from another credit card if the card originally used for the purchase cannot be presented by the cardholder at check-in or when collecting the tickets, or in the case that the original payment has been withheld or disputed by the card issuing bank. Credit card details are held in a secured environment and transferred through an internationally accepted system.
-                    </p>
-                </div>
-
-                <div class="contact-section">
-                    <h3 class="contact-title">Contact Us</h3>
-                    <p class="contact-text">
-                        If you have any questions about our Website or our Terms of Use, please contact:<br>
-                        Golobe Group QCSC<br>
-                        Golobe Tower<br>
-                        P.O. Box: 22550<br>
-                        Doha, State of Qatar<br>
-                        Further contact details can be found at <a href="#" class="contact-link">golobe.com/help</a>
-                    </p>
+                <div class="hotel-buttons">
+                    <button class="action-btn"><img src="../hotel_img/share.jpg"></button>
+                    <button class="action-btn-download" onclick="downloadTicket()">Download</button>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Newsletter Section -->
+        <!-- Ticket -->
+        <div class="ticket-container">
+            <div class="ticket">
+                <!-- 좌측 날짜 -->
+                <div class="ticket-left">
+                    <div class="ticket-left-updown">
+                        <div class="left-label">
+                            Thur, Dec 8
+                        </div>
+                        <div class="left-check">
+                            Check-In
+                        </div>
+                    </div>
+                    <div>
+                        <img src="../hotel_account_img/travel.jpg" class="left-image"/>
+                    </div>
+                    <div class="ticket-left-updown">
+                        <div class="left-label">
+                            Fri, Dec 9
+                        </div>
+                        <div class="left-check">
+                            Check-Out
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 중앙 -->
+                <div class="ticket-center">
+                    <div class="top-bar">
+                        <div class="guest">
+                            <img src="" alt="">
+                            <span>James Doe</span>
+                        </div>
+                        <div class="center-bedroom">Superior room - 1 double bed or 2 twin beds</div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div>
+                                <img src="../hotel_account_img/check.jpg" class="info-item-img"/>
+                            </div>
+                            <div class="info-item-content">
+                                <div class="info-check">
+                                    체크인
+                                </div>          
+                                 <div class="info-item-time">
+                                    12:00pm
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div>
+                                <img src="../hotel_account_img/check.jpg" class="info-item-img"/>
+                            </div>
+                            <div class="info-item-content">
+                                <div class="info-check">
+                                    체크아웃
+                                </div>  
+                                 <div class="info-item-time">
+                                    11:30pm
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div>
+                                <img src="../hotel_account_img/room.jpg" class="info-item-img"/>
+                            </div>
+                            <div class="info-item-content">
+                                <div class="info-check">
+                                    방번호
+                                </div>   
+                                 <div class="info-item-time">
+                                    12:00pm
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-number">
+                        <div class="ticket-air">EK <div class="ticket-num">ABC12345</div></div>
+                        <div class="barcode"><img src="../hotel_account_img/barcode.jpg"/></div>
+                    </div>
+                </div>
+                
+                <!-- 오른쪽 CVK 카드 -->
+                <div class="ticket-right">
+                    <div>
+                        <img src="../hotel_account_img/cvk.jpg"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions Section -->
+        <div class="terms-section">
+            <h2 class="terms-title">Terms and Conditions</h2>
+            
+            <div class="terms-payment">
+                <h3 class="section-title">Payments</h3>
+                <ul class="terms-list">
+                    <li>If you are purchasing your ticket using a debit or credit card via the Website, we will process these payments via the automated secure common payment gateway which will be subject to fraud screening purposes.</li>
+                    <li>If you do not supply the correct card billing address and/or cardholder information, your booking will not be confirmed and the overall cost may increase. We reserve the right to cancel your booking if payment is declined for any reason or if you have supplied incorrect card information. If we become aware of, or is notified of, any fraud or illegal activity associated with the payment for the booking, the booking will be cancelled and you will be charged a cancellation fee along with any other costs arising from such cancellation, without prejudice to any action that may be taken against us.</li>
+                    <li>Golobe may require the card holder to provide additional payment verification upon request by either submitting an online form or visiting the nearest Golobe office, or at the airport at the time of check-in. Golobe reserves the right to deny boarding or to collect a guarantee payment (in cash or from another credit card) if the card originally used for the purchase cannot be presented by the cardholder at check-in or when collecting the tickets, or in the event that the credit card on which the original payment was made has been withheld or disputed by the card issuing bank. Credit card details are held in a secured environment and transferred through an internationally accepted system.</li>
+                </ul>
+            </div>
+            <div class="contact-info">
+                <h4 class="contact-title">Contact Us</h4>
+                <div class="contact-details">
+                    If you have any questions about our Website or our Terms of Use, please contact:
+                    Golobe Group QCSC<br>
+                    Golobe Tower<br>
+                    P.O. Box: 22550<br>
+                    Doha, State of Qatar<br>
+                    Further contact details can be found at <a href="#" class="contact-link"><u>golobe.com/help</u></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <section class="newsletter-section">
+            </section>
         <div class="newsletter-content">
             <div class="newsletter-left">
                 <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
-
                 <div class="newsletter-info">
                     <div class="newsletter-brand">The Travel</div>
                     <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
                 </div>
-
                 <div class="newsletter-form">
                     <input type="email" class="newsletter-input" placeholder="Your email address">
                     <button class="subscribe-btn">Subscribe</button>
@@ -963,13 +1276,37 @@
 
         <div class="footer-content">
             <div class="social-icons">
-                <span>📘</span>
-                <span>🐦</span>
-                <span>📺</span>
-                <span>📷</span>
+                <span><img src="../hotel_img/facebook.jpg"></span>
+                <span><img src="../hotel_img/twitter.jpg"></span>
+                <span><img src="../hotel_img/youtube.jpg"></span>
+                <span><img src="../hotel_img/instagram.jpg"></span>
             </div>
 
             <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Our Destinations</h4>
+                    <a href="#">Canada</a>
+                    <a href="#">Alaksa</a>
+                    <a href="#">France</a>
+                    <a href="#">Iceland</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Our Activities</h4>
+                    <a href="#">Northern Lights</a>
+                    <a href="#">Cruising & sailing</a>
+                    <a href="#">Multi-activities</a>
+                    <a href="#">Kayaking</a>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Travel Blogs</h4>
+                    <a href="#">Bali Travel Guide</a>
+                    <a href="#">Sri Lanka Travel Guide</a>
+                    <a href="#">Peru Travel Guide</a>
+                    <a href="#">Bali Travel Guide</a>
+                </div>
+
                 <div class="footer-column">
                     <h4>About Us</h4>
                     <a href="#">Our Story</a>
@@ -983,20 +1320,44 @@
                 </div>
             </div>
         </div>
-    </section>
-
+        
     <script>
+        // 기존 script 태그에 추가할 함수들
+        function downloadTicket() {
+            const ticketElement = document.querySelector('.ticket');
+            
+            // html2canvas로 티켓 영역 캡처
+            html2canvas(ticketElement, {
+                backgroundColor: null,
+                scale: 2, // 고해상도를 위한 스케일
+                useCORS: true,
+                allowTaint: false
+            }).then(canvas => {
+                // 캔버스를 이미지로 변환
+                const link = document.createElement('a');
+                link.download = `hotel-ticket-${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL();
+                
+                // 자동 다운로드 실행
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(err => {
+                console.error('티켓 다운로드 중 오류가 발생했습니다:', err);
+                alert('티켓 다운로드에 실패했습니다. 다시 시도해주세요.');
+            });
+        }
         // Dropdown functionality
         function toggleDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('active');
         }
-
+        
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('userDropdown');
             const userProfile = document.querySelector('.user-profile');
-
+    
             if (!dropdown.contains(event.target) && !userProfile.contains(event.target)) {
                 dropdown.classList.remove('active');
             }

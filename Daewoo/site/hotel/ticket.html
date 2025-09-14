@@ -158,15 +158,14 @@
     }
 
     .info-grid {
-      width: 610px;
-      height: 83px;
+      width: 562px;
+      height: 35px;
       angle: 0 deg;
       opacity: 1;
-      top: 96px;
       gap: 32px;
       padding: 24px;
       display: flex;
-      margin-bottom: 20px;
+      box-sizing: border-box;
     }
 
     .info-item {
@@ -181,7 +180,7 @@
 
     }
     .info-item-img{
-            display: flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       width: 32px;
@@ -226,19 +225,88 @@
 
     }
 
+    .info-check{
+      width: 50px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+    }
+
+    .info-item-time{
+      width: 68px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+    }
+
+    .ticket-number{
+      height: 130px;
+      width: 610px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ticket-air{
+      width: 45px;
+      height: 39px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 32px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      padding-left: 30px;
+    }
+    .ticket-num{
+      width: 60px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      margin-top: 10px;
+    }
+
 
     .barcode {
-      width: 250px;
-      height: 50px;
-      background: repeating-linear-gradient(
-        90deg,
-        black,
-        black 2px,
-        white 2px,
-        white 4px
-      );
-      margin-top: 20px;
+      width: 248px;
+      height: 100%;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      flex-direction: column;   
+      justify-content: flex-end; 
+      align-items: center; 
     }
+
+    .barcode img{
+      height: 81px;
+   }
 
     /* 오른쪽 호텔 로고 (독립 카드) */
     .ticket-right {
@@ -343,13 +411,11 @@
 
       </div>
 
-      <div class="info-item">
-        EK <span>ABC12345</span>
+    <div class="ticket-number">
+        <div class="ticket-air">EK <div class="ticket-num">ABC12345</div></div>
+        <div class="barcode"><img src="../hotel_account_img/barcode.jpg"/></div>
       </div>
-
-      <div class="barcode"></div>
     </div>
-
       <!-- 오른쪽 CVK 카드 -->
     <div class="ticket-right">
       <div>
