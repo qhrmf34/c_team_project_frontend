@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login App</title>
+    <style>
+        /* 기본 설정 */
+        body {
+            background: rgba(255, 255, 255, 1);
+            max-width: 1440px;
+            min-width: 1440px;
+            overflow-x: scroll;
+            display: flex;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* 좌측 폼 영역 - 모든 화면에서 동일한 구조 */
+        .form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50%;
+        }
+
+        /* 폼 내부 콘텐츠 - 모든 화면에서 동일한 크기 */
+        .form-section-content {
+            width: 512px;
+            height: 593px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 우측 이미지 영역 */
+        .image-section {
+            flex: 1;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            width: 50%;
+        }
+
+        /* 슬라이더 컨테이너 */
+        .slider-container {
+            width: 618px;
+            height: 816px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        .slide {
+            width: 618px;
+            height: 816px;
+            flex-shrink: 0;
+        }
+        /* 슬라이드 래퍼 */
+        .slider-wrapper {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        /* 각 슬라이드 */
+        .slide img {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 슬라이더 점들 */
+        .image-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: #7dd3c0;
+            width: 32px;
+            height: 10px;
+            angle: 0 deg;
+            opacity: 1;
+            border-radius: 5px;
+        }
+
+        .dot:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 폼 스타일 */
+        h1 {
+            font-family: 'Acme', sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            font-size: 40px;
+            line-height: 100%;
+            letter-spacing: normal;
+            margin-bottom: 7px;
+            margin-top: -8px;
+        }
+
+        .p {
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 16px;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        .find-password{
+            margin-bottom: 50px;
+        }
+        .email-retransmit{
+            margin-bottom: 50px;
+        }
+        .password-reset{
+            margin-bottom: 50px;
+        }
+
+        /* 개선된 입력 필드 스타일 */
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 12px;
+            top: -8px;
+            background: white;
+            padding: 0 4px;
+            font-size: 12px;
+            color: #79747E;
+            font-weight: 500;
+            z-index: 1;
+        }
+
+        .input-group input {
+            width: 100%;
+            height: 56px;
+            padding: 16px 12px;
+            border: 1px solid #79747E;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background: transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #7dd3c0;
+            border-width: 2px;
+        }
+
+        .input-group input:focus + label {
+            color: #7dd3c0;
+        }
+
+        /* 비밀번호 필드 특별 스타일 */
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #79747E;
+            font-size: 18px;
+        }
+        .password-toggle img{
+            width: 22.502033233642578px;
+            height: 15px;
+            top: 4.5px;
+            left: 0.75px;
+            angle: 0 deg;
+            opacity: 1;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        .options {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .retransmit{
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            color: #112211;
+            margin-top: -3px;
+        }
+        .retransmit:hover{
+            color: black;
+            cursor: pointer;
+        }
+
+        .remember-forgot{
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .remember-me {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        .forgot-password {
+            color: #ff6b6b;
+            text-decoration: none;
+            cursor: pointer;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        /* 모든 버튼을 동일하게 스타일링 */
+        .login-button,
+        .forgot-password-button,
+        .forgot-password-verify-button,
+        .set-password-button {
+            width: 100%;
+            height: 48px;
+            gap: 4px;
+            padding: 8px 16px;
+            background-color: #7dd3c0;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-style: SemiBold;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        .signup-link {
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            text-align: center;
+            display: block;
+            text-align: center;
+            color: #333;
+            text-decoration: none;
+            margin-bottom: 40px;
+        }
+
+        .divider {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            color: #666;
+        }
+        .divider-beeline{
+            width: 194px;
+            height: 0.5px;
+            angle: 0 deg;
+            opacity: 0.25;
+            background: #112211;
+        }
+        .divider span{
+            font-family: Montserrat;
+            font-weight: 400;
+            font-style: Regular;
+            font-size: 14px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+        }
+
+        /* 소셜 로그인 버튼들 */
+        .social-login {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .social-btn {
+            width: 160px;
+            height: 56px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            padding: 16px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .social-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .social-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /*링크 스타일 꾸며주기*/
+        .back-link {
+            text-decoration: none;
+            color: rgba(17, 34, 17, 1);
+            font-family: Montserrat;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            color: #007bff;
+        }
+
+        /* 화면 숨김/표시 */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div class="container screen active" id="login-screen">
+        <!-- 좌측 로그인 폼 -->
+        <div class="form-section">
+            <div class="form-section-content">
+                <h1>Login</h1>
+                <p>로그인해주세요</p>
+                <form>
+                    <div class="input-group">
+                        <input type="email" id="email" value="" placeholder="john.doe@gmail.com" maxlength="100">
+                        <label for="email">Email</label>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-input-wrapper">
+                            <input type="password" id="password" value="" placeholder="••••••••••••••••" maxlength="255">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                <img src="../login_img/close-eye.jpg" alt="toggle">
+                            </button>
+                        </div>
+                        <label for="password">Password</label>
+                    </div>
+                    
+                    <div class="options">
+                        <div class="remember-forgot">
+                            <span class="remember-me">
+                                <input type="checkbox" id="remember-checkbox">
+                                <label for="remember-checkbox">비밀번호 기억하기</label>
+                            </span>
+                            <a href="#" class="forgot-password" onclick="showScreen('forgot-password')">Forgot Password</a>
+                        </div>
+                        <button type="submit" class="login-button">Login</button>
+                        <a href="#" class="signup-link">회원가입</a>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span class="divider-beeline"></span>
+                    <span>Or login with</span>
+                    <span class="divider-beeline"></span>
+                </div>
+                
+                <!-- 소셜 로그인 버튼들 -->
+                <div class="social-login">
+                    <button class="social-btn" onclick="loginWithFacebook()">
+                        <img src="../login_img/facebook.jpg">
+                    </button>
+                    <button class="social-btn" onclick="loginWithGoogle()">
+                        <img src="../login_img/google.jpg"/>
+                    </button>
+                    <button class="social-btn" onclick="loginWithApple()">
+                        <img src="../login_img/apple-logo.jpg">
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 우측 이미지 영역 -->
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper">
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 찾기 화면 -->
+    <div id="forgot-password-screen" class="container screen">
+        <!-- 좌측 비밀번호 찾기 폼 -->
+        <div class="form-section">
+            <div class="form-section-content">
+                <a href="#" class="back-link" onclick="showScreen('login')">
+                    &lt; Back to login
+                </a>
+                <h1>비밀번호 찾기</h1>
+                <p class="find-password">비밀번호를 찾아보세요</p>
+                <form onsubmit="submitForgotPassword(event)">
+                    <div class="input-group">
+                        <input type="email" id="forgot-email" value="" placeholder="john.doe@gmail.com" maxlength="100">
+                        <label for="forgot-email">Email</label>
+                    </div>
+                                     
+                    <div class="options">
+                        <button type="submit" class="forgot-password-button">제출</button>
+                    </div>
+                </form>
+                                 
+                <div class="divider">
+                    <span class="divider-beeline"></span>
+                    <span>Or login with</span>
+                    <span class="divider-beeline"></span>
+                </div>
+                                 
+                <!-- 소셜 로그인 버튼들 -->
+                <div class="social-login">
+                    <button class="social-btn" onclick="loginWithFacebook()">
+                        <img src="../login_img/facebook.jpg">
+                    </button>
+                    <button class="social-btn" onclick="loginWithGoogle()">
+                        <img src="../login_img/google.jpg"/>
+                    </button>
+                    <button class="social-btn" onclick="loginWithApple()">
+                        <img src="../login_img/apple-logo.jpg">
+                    </button>
+                </div>
+            </div>
+        </div>
+                 
+        <!-- 우측 이미지 영역 -->
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper2">
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 인증하기 화면 -->
+    <div id="verify-code-screen" class="container screen">
+        <!-- 좌측 인증 폼 -->
+        <div class="form-section">
+            <div class="form-section-content">
+                <a href="#" class="back-link" onclick="showScreen('login')">
+                    &lt; Back to login
+                </a>
+                <h1>인증하기</h1>
+                <p class="email-retransmit">이메일로 받은 인증번호를 입력해주세요</p>
+                <form onsubmit="submitVerifyCode(event)">
+                    <div class="input-group">
+                        <input type="text" id="enter-code" placeholder="7789BM6X" maxlength="8">
+                        <label for="enter-code">Enter Code</label>
+                    </div>
+                    <div class="retransmit" onclick="retransmit()">재전송하기</div>      
+                    <div class="options">
+                        <button type="submit" class="forgot-password-verify-button">인증하기</button>
+                    </div>
+                </form>
+                                 
+            </div>
+        </div>
+                 
+        <!-- 우측 이미지 영역 -->
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper3">
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 설정 화면 -->
+    <div id="set-password-screen" class="container screen">
+        <!-- 좌측 비밀번호 설정 폼 -->
+        <div class="form-section">
+            <div class="form-section-content">
+                <h1>비밀번호 설정</h1>
+                <p class="password-reset">비밀번호 다시 설정하기</p>
+                <form onsubmit="submitSetPassword(event)">
+                    <div class="input-group">
+                        <div class="password-input-wrapper">
+                            <input type="password" id="create-password" placeholder="••••••••••••••••" maxlength="255">
+                            <button type="button" class="password-toggle" onclick="togglePassword('create-password')">
+                                <img src="../login_img/close-eye.jpg" alt="toggle">
+                            </button>
+                        </div>
+                        <label for="create-password">Create Password</label>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-input-wrapper">
+                            <input type="password" id="re-enter-password" placeholder="••••••••••••••••" maxlength="255">
+                            <button type="button" class="password-toggle" onclick="togglePassword('re-enter-password')">
+                                <img src="../login_img/close-eye.jpg" alt="toggle">
+                            </button>
+                        </div>
+                        <label for="re-enter-password">Re-enter Password</label>
+                    </div>
+                                     
+                    <div class="options">
+                        <button type="submit" class="set-password-button">비밀번호설정</button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+                 
+        <!-- 우측 이미지 영역 -->
+        <div class="image-section">
+            <div class="slider-container">
+                <div class="slider-wrapper" id="sliderWrapper4">
+                    <div class="slide"><img src="../login_img/slide1.jpg"></div>
+                    <div class="slide"><img src="../login_img/slide2.jpg"></div>
+                    <div class="slide"><img src="../hotel_img/paris.jpg"></div>
+                </div>
+                <div class="image-dots">
+                    <div class="dot active" onclick="slideToImage(0)"></div>
+                    <div class="dot" onclick="slideToImage(1)"></div>
+                    <div class="dot" onclick="slideToImage(2)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 비밀번호 표시/숨김 토글 함수
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleButton = passwordField.nextElementSibling; // 버튼
+            const toggleIcon = toggleButton.querySelector('img'); // 버튼 안 img 선택
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.src = '../login_img/open-eye.jpg'; // 비밀번호 보일 때 이미지
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.src = '../login_img/close-eye.jpg'; // 비밀번호 숨길 때 이미지
+            }
+        }
+
+        // 이미지 슬라이더 기능
+        class ImageSlider {
+            constructor(config = {}) {
+                this.currentSlideIndex = 0;
+                this.totalSlides = config.totalSlides || 3;
+                this.autoSlideInterval = config.autoSlideInterval || null;
+                this.autoSlideTimer = null;
+                
+                this.init();
+            }
+            
+            init() {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+                } else {
+                    this.setupEventListeners();
+                }
+            }
+            
+            setupEventListeners() {
+                window.slideToImage = (index) => this.slideToImage(index);
+                
+                if (this.autoSlideInterval) {
+                    this.startAutoSlide();
+                }
+            }
+            
+            slideToImage(index) {
+                const currentScreen = document.querySelector('.screen.active');
+                const sliderWrapper = currentScreen.querySelector('.slider-wrapper');
+                const dots = currentScreen.querySelectorAll('.dot');
+                
+                if (!sliderWrapper || dots.length === 0) {
+                    console.error('슬라이더 요소를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                if (dots[this.currentSlideIndex]) {
+                    dots[this.currentSlideIndex].classList.remove('active');
+                }
+                
+                this.currentSlideIndex = index;
+                const translateX = -index * (100 / this.totalSlides);
+                sliderWrapper.style.transform = `translateX(${translateX}%)`;
+                
+                if (dots[this.currentSlideIndex]) {
+                    dots[this.currentSlideIndex].classList.add('active');
+                }
+            }
+            
+            nextSlide() {
+                const nextIndex = (this.currentSlideIndex + 1) % this.totalSlides;
+                this.slideToImage(nextIndex);
+            }
+            
+            prevSlide() {
+                const prevIndex = (this.currentSlideIndex - 1 + this.totalSlides) % this.totalSlides;
+                this.slideToImage(prevIndex);
+            }
+            
+            startAutoSlide() {
+                if (this.autoSlideTimer) {
+                    clearInterval(this.autoSlideTimer);
+                }
+                this.autoSlideTimer = setInterval(() => {
+                    this.nextSlide();
+                }, this.autoSlideInterval);
+            }
+            
+            stopAutoSlide() {
+                if (this.autoSlideTimer) {
+                    clearInterval(this.autoSlideTimer);
+                    this.autoSlideTimer = null;
+                }
+            }
+        }
+        
+        //재전송하기 버튼 클릭
+        function retransmit(){
+            alert("재전송 되었습니다!")
+        }
+
+        // 슬라이더 초기화
+        const slider = new ImageSlider({
+            totalSlides: 3
+        });
+
+        // 화면 전환 함수
+        function showScreen(screenName) {
+            // 모든 화면 숨기기
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // 선택된 화면 표시
+            const targetScreen = document.getElementById(screenName + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                
+                // 슬라이더 초기화
+                const dots = targetScreen.querySelectorAll('.dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.remove('active');
+                    if (index === 0) dot.classList.add('active');
+                });
+                
+                const sliderWrapper = targetScreen.querySelector('.slider-wrapper');
+                if (sliderWrapper) {
+                    sliderWrapper.style.transform = 'translateX(0%)';
+                }
+            }
+        }
+
+        // 비밀번호 찾기 폼 제출
+        function submitForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            
+            if (email) {
+                alert('인증번호가 ' + email + '로 전송되었습니다.');
+                showScreen('verify-code');
+            } else {
+                alert('이메일을 입력해주세요.');
+            }
+        }
+
+        // 인증 코드 확인 폼 제출
+        function submitVerifyCode(event) {
+            event.preventDefault();
+            const code = document.getElementById('enter-code').value;
+            
+            if (code) {
+                if (code === '7789BM6X') {
+                    alert('인증이 완료되었습니다!');
+                    showScreen('set-password');
+                } else {
+                    alert('잘못된 인증번호입니다. (힌트: 7789BM6X)');
+                }
+            } else {
+                alert('인증번호를 입력해주세요.');
+            }
+        }
+
+        // 비밀번호 설정 폼 제출
+        function submitSetPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('create-password').value;
+            const confirmPassword = document.getElementById('re-enter-password').value;
+            
+            if (password && confirmPassword) {
+                if (password === confirmPassword) {
+                    alert('비밀번호가 성공적으로 설정되었습니다!');
+                    showScreen('login');
+                } else {
+                    alert('비밀번호가 일치하지 않습니다.');
+                }
+            } else {
+                alert('모든 필드를 입력해주세요.');
+            }
+        }
+
+        // 소셜 로그인 함수들
+        function loginWithFacebook() {
+            alert('Facebook 로그인 기능');
+        }
+        
+        function loginWithGoogle() {
+            alert('Google 로그인 기능');
+        }
+        
+        function loginWithApple() {
+            alert('Apple 로그인 기능');
+        }
+    </script>
+</body>
+</html>
