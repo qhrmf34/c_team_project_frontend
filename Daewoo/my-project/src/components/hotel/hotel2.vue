@@ -51,7 +51,7 @@
     </div>
 
     <section class="search-bar">
-      <div class="search-form">
+      <div class="search-form2">
         <div class="form-field destination-field">
           <label>Enter Destination</label>
           <input type="text" placeholder="신라스테이 춘천, 서울" v-model="searchData.destination">
@@ -805,13 +805,14 @@ export default {
             justify-content: center;
         }
 
-        .search-form {
+        .search-form2 {
             display: flex;
             gap: 16px;
             align-items: center;
             max-width: 1232px;
             margin: 0 auto;
             margin-top: 0px;
+            width: 100%;
         }
 
         .form-field {

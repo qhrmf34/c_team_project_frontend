@@ -1,5 +1,4 @@
 <template>
-  <div class="hotel-page">
     <header class="header">
       <nav>
         <div class="nav-left">
@@ -264,7 +263,6 @@
           </div>
         </div>
       </div>
-  </div>
 </template>
 
 <script>
@@ -313,13 +311,13 @@ export default {
 </script>
 
 <style>
-* {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
+        #app {
             font-family: 'Montserrat', sans-serif;
             background: #FAFBFC;
             min-width: 1440px;
