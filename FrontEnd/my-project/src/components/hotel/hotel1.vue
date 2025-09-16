@@ -313,23 +313,6 @@ export default {
 </script>
 
 <style scoped>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        #app {
-            font-family: 'Montserrat', sans-serif;
-            background: #FAFBFC;
-            min-width: 1440px;
-            max-width: 1440px;
-            min-height: 100vh;
-            margin: 0 auto;
-            overflow-x: scroll;
-            display: flex;
-            flex-direction: column;
-        }
 
         /* Header */
         .header {
@@ -1043,7 +1026,7 @@ export default {
 
         /* Footer Content */
         .footer-content {
-            width: 970.78px;
+            max-width: 1232px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;

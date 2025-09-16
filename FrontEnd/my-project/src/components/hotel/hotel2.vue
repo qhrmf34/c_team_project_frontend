@@ -606,26 +606,8 @@ export default {
 }
 </script>
 
-<style scoped>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: #FAFBFC;
-            min-width: 1440px;
-            max-width: 1440px;            
-            min-height: 100vh;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            overflow-x: scroll;
-            
-        }
-
+  <style scoped>
+       
         /* Header */
         .header {
             display: flex;

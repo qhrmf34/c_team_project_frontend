@@ -321,7 +321,7 @@ export default {
       freebiesList: [],
       freebiesLoading: false,
       freebiesError: null,
-      apiBaseUrl: 'http://localhost:8080/api' // 백엔드 서버 URL
+      apiBaseUrl: 'http://localhost:8080/api/test' // 백엔드 서버 URL
     }
   },
   
@@ -417,24 +417,7 @@ export default {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* 기존 모든 스타일 유지 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-#app {
-  font-family: 'Montserrat', sans-serif;
-  background: #FAFBFC;
-  min-width: 1440px;
-  max-width: 1440px;
-  min-height: 100vh;
-  margin: 0 auto;
-  overflow-x: scroll;
-  display: flex;
-  flex-direction: column;
-}
 
 /* Header */
 .header {
