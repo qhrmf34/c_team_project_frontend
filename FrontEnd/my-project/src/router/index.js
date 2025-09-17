@@ -5,6 +5,7 @@ import HotelThree from '../components/hotel/hotel3.vue'
 import HotelFour from '../components/hotel/hotel4.vue'
 import HotelFive from '../components/hotel/hotel5.vue'
 import HotelSix from '../components/hotel/hotel6.vue'
+import HotelAccount from '../components/hotel_account/hotel_account.vue'
 import HotelTest from '../components/hotel/hoteltest.vue'
 
 
@@ -43,7 +44,13 @@ const routes = [
     path: '/hotelsix', 
     name: 'HotelSix',
     component: HotelSix 
+  },
+    { 
+    path: '/hotelaccount', 
+    name: 'HotelAccount',
+    component: HotelAccount 
   }
+  
 ]
 
 const router = createRouter({
