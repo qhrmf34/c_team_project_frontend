@@ -10,7 +10,7 @@
       <section class="section">
         <h2 class="section-title">Hotel Pages</h2>
         <div class="card-grid">
-          <div class="nav-card" @click="navigateTo('/')">
+          <div class="nav-card" @click="navigateTo('/hotelone')">
             <div class="card-icon">🏨</div>
             <h3>Hotel One</h3>
             <p>메인 호텔 페이지</p>

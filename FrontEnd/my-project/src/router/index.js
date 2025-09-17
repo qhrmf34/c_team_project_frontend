@@ -16,12 +16,17 @@ const routes = [
   { 
     path: '/', 
     name: 'Home',
-    component: HotelOne 
+    component: HotelMaster 
   },
-  { 
+   { 
     path: '/hoteltest', 
     name: 'HotelTest',
     component: HotelTest 
+  },
+  { 
+    path: '/hotelone', 
+    name: 'HotelOne',
+    component: HotelOne 
   },
     { 
     path: '/hoteltwo', 
@@ -62,13 +67,7 @@ const routes = [
     path: '/signup', 
     name: 'HotelSignup',
     component: HotelSignup
-  },
-    { 
-    path: '/hotelmaster', 
-    name: 'HotelMaster',
-    component: HotelMaster
   }
-  
 ]
 
 const router = createRouter({
