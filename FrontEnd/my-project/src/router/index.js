@@ -6,6 +6,9 @@ import HotelFour from '../components/hotel/hotel4.vue'
 import HotelFive from '../components/hotel/hotel5.vue'
 import HotelSix from '../components/hotel/hotel6.vue'
 import HotelAccount from '../components/hotel_account/hotel_account.vue'
+import HotelLogin from '../components/login/login.vue'
+import HotelSignup from '../components/login/signup.vue'
+import HotelMaster from '../components/hotelmaster.vue'
 import HotelTest from '../components/hotel/hoteltest.vue'
 
 
@@ -49,6 +52,21 @@ const routes = [
     path: '/hotelaccount', 
     name: 'HotelAccount',
     component: HotelAccount 
+  },
+    { 
+    path: '/login', 
+    name: 'HotelLogin',
+    component: HotelLogin 
+  },
+    { 
+    path: '/signup', 
+    name: 'HotelSignup',
+    component: HotelSignup
+  },
+    { 
+    path: '/hotelmaster', 
+    name: 'HotelMaster',
+    component: HotelMaster
   }
   
 ]
