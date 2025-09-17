@@ -1133,252 +1133,254 @@ export default {
             text-decoration: underline;
         }
 
-        /* Newsletter Section */
-        .newsletter-section {
-            background: rgba(141, 211, 187, 1);
-            padding: 80px 104px 80px 104px;
-            position: relative;
-            height: 422px;
-            display: flex;
-            flex-direction: column;
-            margin-top: 60px;
-            z-index: 0;
-            margin-bottom: -513px;
-        }
+/* Newsletter Section */
+.newsletter-section {
+  background: rgba(141, 211, 187, 1);
+  padding: 80px 104px 80px 104px;
+  position: relative;
+  width: 100%;
+  height: 422px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 60px;
+  z-index: 0;
+  margin-bottom: -513px;
+}
 
-        .newsletter-content {
-            background: rgba(205, 234, 225, 1);
-            border-radius: 20px;
-            padding: 48px;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 1232px;
-            height: 305px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-            margin-bottom: 40px;
-        }
+.newsletter-content {
+  background: rgba(205, 234, 225, 1);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 1232px;
+  height: 305px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 40px;
+}
 
-        .newsletter-left {
-            flex: 1;
-            max-width: 500px;
-        }
+.newsletter-left {
+  flex: 1;
+  max-width: 500px;
+}
 
-        .newsletter-title {
-            font-family: 'Noto Sans', sans-serif;
-            font-weight: 900;
-            font-size: 44px;
-            line-height: 54px;
-            color: #112211;
-            margin-bottom: 24px;
-        }
+.newsletter-title {
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 900;
+  font-size: 44px;
+  line-height: 54px;
+  color: #112211;
+  margin-bottom: 24px;
+}
 
-        .newsletter-info {
-            margin-bottom: 24px;
-        }
+.newsletter-info {
+  margin-bottom: 24px;
+}
 
-        .newsletter-brand {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 20px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.8;
-            margin-bottom: 8px;
-        }
+.newsletter-brand {
+  font-family: Acme;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 100%;
+  color: #112211;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
 
-        .newsletter-desc {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.7;
-        }
+.newsletter-desc {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 100%;
+  color: #112211;
+  opacity: 0.7;
+}
 
-        .newsletter-form {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
+.newsletter-form {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
 
-        .newsletter-input {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            height: 56px;
-        }
+.newsletter-input {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 100%;
+  height: 56px;
+}
 
-        .subscribe-btn {
-            padding: 16px 24px;
-            background: #112211;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            cursor: pointer;
-            height: 56px;
-        }
+.subscribe-btn {
+  padding: 16px 24px;
+  background: #112211;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 100%;
+  cursor: pointer;
+  height: 56px;
+}
 
-        /* 우체통 디자인 */
-        .mailbox-container {
-            position: relative;
-            width: 400px;
-            height: 305px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
+/* 우체통 디자인 */
+.mailbox-container {
+  position: relative;
+  width: 400px;
+  height: 305px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
 
-        .mailbox-back {
-            position: absolute;
-            width: 208px;
-            height: 191px;
-            top: 47px;
-            left: 0px;
-            background: rgba(101, 181, 153, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 5;
-        }
+.mailbox-back {
+  position: absolute;
+  width: 208px;
+  height: 191px;
+  top: 47px;
+  left: 0px;
+  background: rgba(101, 181, 153, 1);
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  z-index: 5;
+}
 
-        .mailbox-base {
-            position: absolute;
-            width: 187px;
-            height: 179px;
-            top: 59px;
-            left: 10px;
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            background: rgba(84, 104, 105, 1);
-            z-index: 10;
-        }
+.mailbox-base {
+  position: absolute;
+  width: 187px;
+  height: 179px;
+  top: 59px;
+  left: 10px;
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  background: rgba(84, 104, 105, 1);
+  z-index: 10;
+}
 
-        .mailbox-front {
-            position: absolute;
-            width: 291px;
-            height: 191px;
-            top: 47px;
-            left: 71px;
-            background: rgba(17, 34, 17, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 4;
-        }
+.mailbox-front {
+  position: absolute;
+  width: 291px;
+  height: 191px;
+  top: 47px;
+  left: 71px;
+  background: rgba(17, 34, 17, 1);
+  border-top-left-radius: 70px;
+  border-top-right-radius: 70px;
+  z-index: 4;
+}
 
-        .mailbox-flag {
-            position: absolute;
-            width: 169px;
-            height: 40px;
-            top: 154px;
-            left: 231px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
-        .mailbox-flag2 {
-            position: absolute;
-            width: 39px;
-            height: 77px;
-            top: 154px;
-            left: 361px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
+.mailbox-flag {
+  position: absolute;
+  width: 169px;
+  height: 40px;
+  top: 154px;
+  left: 231px;
+  background: rgba(255, 134, 130, 1);
+  z-index: 6;
+}
 
-        .mailbox-pole {
-            position: absolute;
-            width: 47px;
-            height: 188px;
-            top: 117px;
-            left: 194px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
+.mailbox-flag2 {
+  position: absolute;
+  width: 39px;
+  height: 77px;
+  top: 154px;
+  left: 361px;
+  background: rgba(255, 134, 130, 1);
+  z-index: 6;
+}
 
-        .mailbox-stand-base {
-            position: absolute;
-            width: 85px;
-            height: 57px;
-            top: 212px;
-            left: 156px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
+.mailbox-pole {
+  position: absolute;
+  width: 47px;
+  height: 188px;
+  top: 117px;
+  left: 194px;
+  background: rgba(164, 128, 109, 1);
+  z-index: 3;
+}
 
-        .mailbox-stand-front {
-            position: absolute;
-            width: 85px;
-            height: 188px;
-            top: 117px;
-            left: 156px;
-            background: rgba(223, 173, 146, 1);
-            z-index: 2;
-        }
+.mailbox-stand-base {
+  position: absolute;
+  width: 85px;
+  height: 57px;
+  top: 212px;
+  left: 156px;
+  background: rgba(164, 128, 109, 1);
+  z-index: 3;
+}
 
-        /* Footer Content */
-        .footer-content {
-            max-width: 1232px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
-            z-index: 1;
-            gap: 64px;
-            padding-bottom: 40px;
-        }
+.mailbox-stand-front {
+  position: absolute;
+  width: 85px;
+  height: 188px;
+  top: 117px;
+  left: 156px;
+  background: rgba(223, 173, 146, 1);
+  z-index: 2;
+}
 
-        /* Social Icons */
-        .social-icons {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
+/* Footer Content */
+.footer-content {
+  max-width: 1232px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+  gap: 64px;
+  padding-bottom: 40px;
+}
 
-        /* Footer Columns */
-        .footer-links {
-            display: flex;
-            gap: 60px;
-        }
+/* Social Icons */
+.social-icons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
 
-        .footer-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+/* Footer Columns */
+.footer-links {
+  display: flex;
+  gap: 60px;
+}
 
-        .footer-column h4 {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 8px;
-        }
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-        .footer-column a {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            text-decoration: none;
-            opacity: 0.7;
-        }
+.footer-column h4 {
+  font-family: Acme;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 100%;
+  color: #112211;
+  margin-bottom: 8px;
+}
 
-        .footer-column a:hover {
-            opacity: 1;
-        }
-    </style>
+.footer-column a {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  color: #112211;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.footer-column a:hover {
+  opacity: 1;
+}
+</style>

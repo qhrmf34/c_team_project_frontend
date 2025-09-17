@@ -1266,7 +1266,7 @@ nav {
 
 /* Footer Content */
 .footer-content {
-  max-width: 1232px;
+  width: 1232px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;

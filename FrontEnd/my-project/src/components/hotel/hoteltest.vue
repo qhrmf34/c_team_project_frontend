@@ -321,7 +321,7 @@ export default {
       freebiesList: [],
       freebiesLoading: false,
       freebiesError: null,
-      apiBaseUrl: 'http://localhost:8080/api/test' // 백엔드 서버 URL
+      apiBaseUrl: '/api/test' // 백엔드 서버 URL
     }
   },
   
@@ -363,7 +363,7 @@ export default {
       
       try {
         const response = await axios.get(`${this.apiBaseUrl}/freebies`);
-        this.freebiesList = response.data;
+        this.freebiesList = response.data.responseData;
         
         // 데이터가 없는 경우 기본 메시지
         if (this.freebiesList.length === 0) {
