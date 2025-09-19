@@ -300,6 +300,10 @@
     </div>
 </template>
 
+// HotelOne.vue의 script 부분을 다음과 같이 수정
+
+// HotelOne.vue의 script 부분을 다음과 같이 수정
+
 <script>
 import axios from 'axios'
 
@@ -321,12 +325,18 @@ export default {
       freebiesList: [],
       freebiesLoading: false,
       freebiesError: null,
-      apiBaseUrl: '/api/test' // 백엔드 서버 URL
+      // 환경 변수를 제대로 사용하도록 수정
+      apiBaseUrl: process.env.VUE_APP_API_URL || 'http://localhost:8089/api/test'
     }
   },
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
+    // 디버깅을 위한 로그 추가
+    console.log('환경:', process.env.NODE_ENV);
+    console.log('API URL:', this.apiBaseUrl);
+    console.log('전체 환경변수:', process.env);
+    
     // 컴포넌트 마운트 시 무료시설 데이터 로드
     await this.loadFreebies();
   },
@@ -356,28 +366,70 @@ export default {
       }
     },
     
-    // 무료시설 데이터 로드
+    // 무료시설 데이터 로드 (디버깅 강화)
     async loadFreebies() {
       this.freebiesLoading = true;
       this.freebiesError = null;
       
       try {
-        const response = await axios.get(`${this.apiBaseUrl}/freebies`);
-        this.freebiesList = response.data.responseData;
+        console.log('API 호출 시작:', `${this.apiBaseUrl}/freebies`);
+        
+        // axios 요청에 더 자세한 설정 추가
+        const response = await axios({
+          method: 'get',
+          url: `${this.apiBaseUrl}/freebies`,
+          timeout: 10000, // 10초 타임아웃
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        
+        console.log('API 응답 전체:', response);
+        console.log('API 응답 데이터:', response.data);
+        
+        // API 응답 구조에 맞게 데이터 추출
+        // ApiResponse 구조: { code: 200, message: "success", data: [...] }
+        if (response.data && response.data.data) {
+          this.freebiesList = response.data.data;
+        } else if (response.data && Array.isArray(response.data)) {
+          this.freebiesList = response.data;
+        } else {
+          console.warn('예상과 다른 응답 구조:', response.data);
+          this.freebiesList = [];
+        }
         
         // 데이터가 없는 경우 기본 메시지
         if (this.freebiesList.length === 0) {
           this.freebiesError = '현재 표시할 무료시설이 없습니다.';
         }
         
-        console.log('무료시설 데이터:', this.freebiesList);
+        console.log('처리된 무료시설 데이터:', this.freebiesList);
+        
       } catch (error) {
         console.error('무료시설 데이터 로드 실패:', error);
-        this.freebiesError = '무료시설 정보를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.';
+        
+        // 에러 타입별로 다른 메시지 표시
+        if (error.code === 'ECONNABORTED') {
+          this.freebiesError = '요청 시간이 초과되었습니다. 서버 상태를 확인해주세요.';
+        } else if (error.response) {
+          // 서버에서 응답은 왔지만 에러 상태
+          console.log('에러 응답 상태:', error.response.status);
+          console.log('에러 응답 데이터:', error.response.data);
+          this.freebiesError = `서버 에러 (${error.response.status}): ${error.response.data?.message || '알 수 없는 에러'}`;
+        } else if (error.request) {
+          // 요청은 보냈지만 응답을 받지 못함
+          console.log('응답 없음:', error.request);
+          this.freebiesError = '서버와 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.';
+        } else {
+          // 요청 설정 중에 에러 발생
+          console.log('요청 설정 에러:', error.message);
+          this.freebiesError = `요청 에러: ${error.message}`;
+        }
         
         // 개발 환경에서 더 자세한 에러 정보 표시
         if (process.env.NODE_ENV === 'development') {
-          console.log('Error details:', error.response?.data || error.message);
+          console.log('Error details:', error);
         }
       } finally {
         this.freebiesLoading = false;
