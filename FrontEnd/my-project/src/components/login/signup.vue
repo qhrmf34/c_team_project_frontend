@@ -161,10 +161,8 @@
           
           <!-- Social Login Section -->
           <div class="social-login">
-            <button class="social-btn" @click="loginWithFacebook">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
+            <button class="social-btn kakao-btn" @click="loginWithKakao">
+              <img src="../../assets/login_img/kakao_login_medium_narrow.png" alt="카카오 로그인" width="24" height="24">
             </button>
             <button class="social-btn" @click="loginWithGoogle">
               <svg width="24" height="24" viewBox="0 0 24 24">
@@ -362,6 +360,22 @@ export default {
     }
   },
   mounted() {
+    // 카카오 로그인 결과 처리 추가
+    const urlParams = new URLSearchParams(window.location.search);
+    const loginStatus = urlParams.get('login');
+    const provider = urlParams.get('provider');
+  
+    if (loginStatus === 'success' && provider === 'kakao') {
+      const userId = urlParams.get('userId');
+      const name = urlParams.get('name');
+      alert(`카카오 로그인 성공! 환영합니다, ${name}님`);
+       alert(`카카오 로그인 성공! 환영합니다, ${name}님 (ID: ${userId})`);
+      // 성공 후 처리 로직 (예: 다른 페이지로 이동)
+    } else if (loginStatus === 'error' && provider === 'kakao') {
+      const message = urlParams.get('message');
+      alert(`카카오 로그인 실패: ${message}`);
+    }
+
     // Auto slide images
     setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
@@ -460,12 +474,12 @@ export default {
     },
     
     // Social login functions
-    loginWithFacebook() {
-      alert('Facebook 로그인 기능');
+    loginWithKakao() {
+    window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
     },
     
     loginWithGoogle() {
-      alert('Google 로그인 기능');
+      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
     },
     
     loginWithApple() {

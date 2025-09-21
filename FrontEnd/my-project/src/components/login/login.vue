@@ -494,12 +494,12 @@ export default {
     },
     
   // Social login functions
-  loginWithKakao() {
-    window.location.href = 'http://localhost:8089/auth/kakao/login';
-  },
+    loginWithKakao() {
+      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+    },
     
     loginWithGoogle() {
-      alert('Google 로그인 기능');
+      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
     },
     
     loginWithApple() {
