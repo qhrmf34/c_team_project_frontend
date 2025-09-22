@@ -380,7 +380,7 @@
                 </div>
               </div>
           
-              <!-- Exp & CVC -->
+              <!-- Exp & CVC 부분 수정 -->
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Exp. Date</label>
@@ -393,13 +393,14 @@
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">CVC</label>
+                 <label class="form-label">카드 비밀번호 (앞 2자리)</label>
                   <input
-                    type="text"
+                    type="password"
                     class="form-input"
-                    placeholder="123"
-                    maxlength="3"
-                    v-model="cardForm.cvc"
+                    placeholder="12"
+                    maxlength="2"
+                    v-model="cardForm.cardPassword"
+                    @input="formatCardPassword"
                   />
                 </div>
               </div>
@@ -530,13 +531,14 @@ export default {
       modalActive: false,
       phoneNumber: '',
       email: '',
+      savedCards: [], 
       cardForm: {
-        cardNumber: '',
-        expDate: '',
-        cvc: '',
-        cardName: '',
-        country: 'United States',
-        saveInfo: false
+      cardNumber: '',
+      expDate: '',
+      cardPassword: '', // cvc를 cardPassword로 변경
+      cardName: '',
+      country: 'United States',
+      saveInfo: false
       }
     }
   },
@@ -568,12 +570,175 @@ export default {
         this.closeAddCardModal()
       }
     },
-    addNewCard(event) {
-      event.preventDefault()
-      // 여기서 카드 데이터를 서버로 전송
-      console.log('Card added:', this.cardForm)
-      this.closeAddCardModal()
-    },
+// HotelFour.vue의 methods에 추가/수정
+
+// addNewCard 메서드에서 URL 수정
+async addNewCard(event) {
+    event.preventDefault();
+    
+    try {
+        if (!this.validateCardForm()) {
+            return;
+        }
+        
+        const [expMonth, expYear] = this.cardForm.expDate.split('/');
+        
+        const cardData = {
+            cardNumber: this.cardForm.cardNumber.replace(/\s/g, ''),
+            cardExpirationYear: expYear,
+            cardExpirationMonth: expMonth.padStart(2, '0'),
+            cardPassword: this.cardForm.cardPassword,
+            customerName: this.cardForm.cardName,
+            customerEmail: 'test@hotel.com'
+        };
+        
+        // 올바른 URL 구성
+        const apiUrl = process.env.VUE_APP_API_URL || 'http://localhost:8089';
+        const fullUrl = `${apiUrl}/api/payment-methods/register`;
+        
+        console.log('요청 URL:', fullUrl); // 디버깅용
+        console.log('전송 데이터:', cardData);
+        
+        const response = await fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cardData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.code === 200) {
+            alert('결제수단이 성공적으로 등록되었습니다!');
+            this.closeAddCardModal();
+            this.resetCardForm();
+        } else {
+            alert('결제수단 등록 실패: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('결제수단 등록 오류:', error);
+        alert('결제수단 등록 중 오류가 발생했습니다: ' + error.message);
+    }
+},
+
+validateCardForm() {
+    // 카드번호 검증
+    const cleanCardNumber = this.cardForm.cardNumber.replace(/\s/g, '');
+    if (!/^\d{16}$/.test(cleanCardNumber)) {
+        alert('카드번호는 16자리 숫자를 입력해주세요.');
+        return false;
+    }
+    
+    // 만료일 검증
+    if (!this.cardForm.expDate.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
+        alert('올바른 만료일을 입력해주세요. (MM/YY)');
+        return false;
+    }
+    
+    // 카드 비밀번호 검증 (2자리) - 필드명 수정
+    if (!/^\d{2}$/.test(this.cardForm.cardPassword)) {
+        alert('카드 비밀번호 앞 2자리를 입력해주세요.');
+        return false;
+    }
+    
+    return true;
+}},
+
+resetCardForm() {
+    this.cardForm = {
+        cardNumber: '',
+        expDate: '',
+        cardPassword: '',
+        cardName: '',
+        country: 'United States',
+        saveInfo: false
+    };
+},
+
+async loadPaymentMethods() {
+    try {
+        const response = await fetch(`/api/payment-methods?memberId=${this.getCurrentMemberId()}`);
+        const result = await response.json();
+        
+        if (result.code === 200) {
+            this.savedCards = result.data || [];
+        }
+    } catch (error) {
+        console.error('결제수단 조회 오류:', error);
+    }
+},
+
+getCurrentMemberId() {
+    // 실제로는 로그인한 사용자 ID를 반환
+    return localStorage.getItem('memberId') || 1;
+},
+
+// 결제 처리 메서드
+async processPayment() {
+    try {
+        if (this.selectedCard === -1) {
+            alert('결제수단을 선택해주세요.');
+            return;
+        }
+        
+        if (this.selectedPaymentMethod === -1) {
+            alert('결제 방식을 선택해주세요.');
+            return;
+        }
+        
+        // 선택된 카드 정보
+        const selectedCardData = this.savedCards[this.selectedCard];
+        
+        // 결제 요청 데이터
+        const paymentData = {
+            reservationsId: this.getReservationId(),
+            paymentMethodId: selectedCardData.id,
+            paymentAmount: this.getTotalAmount(),
+            orderName: '호텔 예약 결제',
+            paymentType: this.selectedPaymentMethod === 0 ? 'full' : 'partial'
+        };
+        
+        // 결제 처리 요청
+        const response = await fetch('/api/payments/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.code === 200) {
+            alert('결제가 완료되었습니다!');
+            console.log('결제 정보:', result.data);
+            // 결제 완료 페이지로 이동
+            this.$router.push('/payment/success');
+        } else {
+            alert('결제 실패: ' + result.message);
+        }
+        
+    } catch (error) {
+        console.error('결제 처리 오류:', error);
+        alert('결제 처리 중 오류가 발생했습니다.');
+    }
+},
+
+getReservationId() {
+    // 실제로는 예약 ID를 반환
+    return localStorage.getItem('reservationId') || 1;
+},
+
+getTotalAmount() {
+    // 실제 총 결제 금액 계산
+    return 265000; // 예시 금액
+},
     toggleDropdown() {
       this.dropdownActive = !this.dropdownActive
     },
@@ -592,7 +757,7 @@ export default {
       }
     }
   }
-}
+
 </script>
 
 <style scoped>
