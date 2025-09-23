@@ -81,7 +81,7 @@
                 <input 
                   type="text" 
                   id="phone-number" 
-                  v-model="signupForm.phone"
+                  v-model="signupForm.phoneNumber"
                   placeholder="010-1234-1234" 
                   maxlength="30" 
                   required
@@ -148,7 +148,9 @@
                 <input type="checkbox" id="agreement-checkbox" v-model="signupForm.agreement" required>
                 <label for="agreement-checkbox">동의 하기</label>
               </div>
-              <button type="submit" class="submit-button">계정 생성</button>
+              <button type="submit" class="submit-button" :disabled="isLoading">
+                {{ isLoading ? '가입 중...' : '계정 생성' }}
+              </button>
             </div>
           </form>
           
@@ -302,8 +304,17 @@
               <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
             </div>
 
-            <!-- Payment Submit Button -->
-            <button type="submit" class="payment-submit-button">결제수단 추가</button>
+            <!-- Payment Buttons Section -->
+            <div class="payment-buttons">
+              <button type="submit" class="payment-submit-button" :disabled="isLoading">
+                {{ isLoading ? '추가 중...' : '결제수단 추가' }}
+              </button>
+              
+              <!-- 다음에 하기 버튼 추가 -->
+              <button type="button" class="skip-payment-button" @click="skipPayment" :disabled="isLoading">
+                다음에 하기
+              </button>
+            </div>
           </form>
           
           <!-- Terms Section -->
@@ -319,31 +330,33 @@
 </template>
 
 <script>
+// commonAxios에서 memberAPI 불러오기
+import { memberAPI } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelSignup',
+  
   data() {
     return {
       currentScreen: 'signup',
       currentSlideIndex: 0,
+      isLoading: false,
       
-      // Password visibility states
       showPassword: {
         signup: false,
         confirm: false
       },
       
-      // Sign up form data
       signupForm: {
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
+        phoneNumber: '',
         password: '',
         confirmPassword: '',
         agreement: false
       },
       
-      // Payment form data
       paymentForm: {
         cardNumber: '',
         expDate: '',
@@ -354,47 +367,28 @@ export default {
       }
     }
   },
-  mounted() {
-    // 카카오 로그인 결과 처리 추가
-    const urlParams = new URLSearchParams(window.location.search);
-    const loginStatus = urlParams.get('login');
-    const provider = urlParams.get('provider');
   
-    if (loginStatus === 'success' && provider === 'kakao') {
-      const userId = urlParams.get('userId');
-      const name = urlParams.get('name');
-      alert(`카카오 로그인 성공! 환영합니다, ${name}님`);
-       alert(`카카오 로그인 성공! 환영합니다, ${name}님 (ID: ${userId})`);
-      // 성공 후 처리 로직 (예: 다른 페이지로 이동)
-    } else if (loginStatus === 'error' && provider === 'kakao') {
-      const message = urlParams.get('message');
-      alert(`카카오 로그인 실패: ${message}`);
-    }
-
-    // Auto slide images
+  mounted() {
     setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
     }, 5000);
   },
+  
   methods: {
-    // Screen navigation
     showScreen(screenName) {
       this.currentScreen = screenName;
-      this.currentSlideIndex = 0; // Reset slider when changing screens
+      this.currentSlideIndex = 0;
     },
     
-    // Image slider
     slideToImage(index) {
       this.currentSlideIndex = index;
     },
     
-    // Password visibility toggle
     togglePassword(fieldType) {
       this.showPassword[fieldType] = !this.showPassword[fieldType];
     },
     
-    // Form submissions
-    submitSignUp() {
+    async submitSignUp() {
       if (!this.signupForm.agreement) {
         alert('약관에 동의해주세요.');
         return;
@@ -410,33 +404,59 @@ export default {
         return;
       }
       
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.signupForm.email)) {
         alert('올바른 이메일 형식을 입력해주세요.');
         return;
       }
+
+      this.isLoading = true;
       
-      console.log('Sign up data:', this.signupForm);
-      alert('회원가입이 완료되었습니다! 이제 결제수단을 추가해주세요.');
-      this.showScreen('payment');
+      try {
+        const result = await memberAPI.signup({
+          firstName: this.signupForm.firstName,
+          lastName: this.signupForm.lastName,
+          email: this.signupForm.email,
+          phoneNumber: this.signupForm.phoneNumber,
+          password: this.signupForm.password,
+          confirmPassword: this.signupForm.confirmPassword,
+          agreement: this.signupForm.agreement
+        });
+        
+        if (result.data && result.data.token) {
+          // JWT 토큰과 사용자 정보 저장
+          localStorage.setItem('jwt_token', result.data.token);
+          localStorage.setItem('user_info', JSON.stringify({
+            id: result.data.memberId,
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            email: result.data.email,
+            provider: result.data.provider
+          }));
+          
+          alert('회원가입이 완료되었습니다!');
+          this.showScreen('payment');
+        }
+      } catch (error) {
+        console.error('회원가입 실패:', error);
+        alert(error.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
     },
     
     submitPaymentMethod() {
-      // Validate card number
       const cleanCardNumber = this.paymentForm.cardNumber.replace(/\s/g, '');
       if (cleanCardNumber.length !== 16) {
         alert('올바른 카드번호를 입력해주세요.');
         return;
       }
       
-      // Validate CVC
       if (this.paymentForm.cvc.length !== 3) {
         alert('올바른 CVC를 입력해주세요.');
         return;
       }
       
-      // Validate expiry date format
       if (!this.paymentForm.expDate.match(/^\d{2}\/\d{2}$/)) {
         alert('올바른 만료일을 입력해주세요. (MM/YY)');
         return;
@@ -444,6 +464,15 @@ export default {
       
       console.log('Payment data:', this.paymentForm);
       alert('결제수단이 성공적으로 추가되었습니다!');
+      
+      // 호텔1 화면으로 이동
+      this.$router.push('/hotelone');
+    },
+    
+    // 다음에 하기 버튼 클릭 시
+    skipPayment() {
+      alert('결제수단은 나중에 추가할 수 있습니다.');
+      this.$router.push('/hotelone'); // 호텔1 화면으로 이동
     },
     
     // Input formatting methods
@@ -468,17 +497,29 @@ export default {
       this.paymentForm.cvc = this.paymentForm.cvc.replace(/\D/g, '');
     },
     
-  // Social login functions
-    loginWithKakao() {
-      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
-    },
-    
+    // Social login functions
     loginWithGoogle() {
       window.location.href = 'http://localhost:8089/oauth2/authorization/google';
     },
     
+    loginWithKakao() {
+      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+    },
+    
     loginWithNaver() {
-      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';    
+      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
+    }
+  },
+  
+  created() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('login') === 'success') {
+      alert('소셜 로그인이 완료되었습니다!');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+    } else if (urlParams.get('error') === 'oauth_failed') {
+      alert('소셜 로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 }
@@ -756,6 +797,11 @@ export default {
   background-color: #6bc4a6;
 }
 
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 /* ===== 구분선 구역 ===== */
 .divider {
   display: flex;
@@ -779,198 +825,228 @@ export default {
 }
 
 /* 소셜 로그인 버튼들 */
-        .social-login {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            width: 100%;
-        }
+.social-login {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
 
-        .social-btn {
-            width: 50%;
-            height: 56px;
-            border: 1px solid rgba(141, 211, 187, 1);
-            border-radius: 4px;
-            background-color: white;
-            padding: 16px 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s;
-        }
+.social-btn {
+  width: 50%;
+  height: 56px;
+  border: 1px solid rgba(141, 211, 187, 1);
+  border-radius: 4px;
+  background-color: white;
+  padding: 16px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
 
-        .social-btn:hover {
-            background-color: #f5f5f5;
-        }
+.social-btn:hover {
+  background-color: #f5f5f5;
+}
 
-        .social-btn img {
-            width: 24px;
-            height: 24px;
-        }
+.social-btn img {
+  width: 24px;
+  height: 24px;
+}
 
-        /* ===== 결제수단 전용 스타일 ===== */
-        .payment-form-wrapper {
-            width: 640px;
-            height: 668px;
-        }
+/* ===== 결제수단 전용 스타일 ===== */
+.payment-form-wrapper {
+  width: 640px;
+  height: 668px;
+}
 
-        .payment-header {
-            margin-bottom: 40px;
-        }
+.payment-header {
+  margin-bottom: 40px;
+}
 
-        .back-button {
-            width: 36px;
-            height: 17px;
-            angle: 0 deg;
-            opacity: 1;
-            background: none;
-            border: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #333;
-            cursor: pointer;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 0;
-            font-weight: 500;
-        }
+.back-button {
+  width: 36px;
+  height: 17px;
+  angle: 0 deg;
+  opacity: 1;
+  background: none;
+  border: none;
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: Medium;
+  font-size: 14px;
+  leading-trim: NONE;
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: #333;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-weight: 500;
+}
 
-        .back-button:hover {
-            color: #7dd3c0;
-        }
+.back-button:hover {
+  color: #7dd3c0;
+}
 
-        .back-button span {
-            font-size: 24px;
-            font-weight: bold;
-            line-height: 1;
-        }
+.back-button span {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+}
 
-        .payment-header h1 {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
-        }
+.payment-header h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
 
-        .payment-header p {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 0;
-        }
+.payment-header p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 0;
+}
 
-        /* ===== 결제수단 입력 그룹 - 회원가입과 동일한 스타일 적용 ===== */
-        .payment-row {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            height: 56px;
-            margin-bottom: 25px;
-        }
+/* ===== 결제수단 입력 그룹 - 회원가입과 동일한 스타일 적용 ===== */
+.payment-row {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 56px;
+  margin-bottom: 25px;
+}
 
-        .payment-row .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
+.payment-row .input-group {
+  flex: 1;
+  margin-bottom: 0;
+}
 
-        /* 카드 로고 스타일 */
-        .card-input-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
+/* 카드 로고 스타일 */
+.card-input-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
-        .card-logo {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            border-radius: 4px;
-            z-index: 2;
-        }
+.card-logo {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  z-index: 2;
+}
 
-        .card-logo img{
-            width: 24px;
-            height: 15.072000503540039px;
-            angle: 0 deg;
-            opacity: 1;
-            top: 4.46px;
+.card-logo img{
+  width: 24px;
+  height: 15.072000503540039px;
+  angle: 0 deg;
+  opacity: 1;
+  top: 4.46px;
 
-        }
+}
 
-        /* 체크박스 스타일 */
-        .payment-checkbox {
-            margin: 30px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+/* 체크박스 스타일 */
+.payment-checkbox {
+  margin: 30px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-        .payment-checkbox input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin: 0;
-        }
+.payment-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
 
-        .payment-checkbox label {
-            font-size: 14px;
-            color: #333;
-            cursor: pointer;
-        }
+.payment-checkbox label {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
 
-        /* 결제수단 추가 버튼 - submit-button과 동일한 스타일 */
-        .payment-submit-button {
-            width: 100%;
-            height: 48px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background-color: #7dd3c0;
-            color: black;
-            border: none;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
+/* 결제 버튼들 */
+.payment-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+}
 
-        .payment-submit-button:hover {
-            background: #6bc4a6;
-        }
+.payment-submit-button {
+  width: 100%;
+  height: 48px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #7dd3c0;
+  color: black;
+  border: none;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 
-        .payment-terms {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            text-align: center;
-        }
+.payment-submit-button:hover {
+  background: #6bc4a6;
+}
 
-        /* ===== 화면 전환 제어 ===== */
-        .screen {
-            display: none;
-        }
+.payment-submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
 
-        .screen.active {
-            display: flex;
-            height: 100vh;
-            width: 100%;
-        }
-    </style>
+/* 다음에 하기 버튼 스타일 */
+.skip-payment-button {
+  width: 100%;
+  height: 48px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #7dd3c0;
+  border: 2px solid #7dd3c0;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.skip-payment-button:hover {
+  background-color: #7dd3c0;
+  color: white;
+}
+
+.skip-payment-button:disabled {
+  background-color: transparent;
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.payment-terms {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 100%;
+  text-align: center;
+}
+
+/* ===== 화면 전환 제어 ===== */
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+</style>

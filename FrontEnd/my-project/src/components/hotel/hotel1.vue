@@ -19,7 +19,7 @@
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
-            <span>Tomhoon</span>
+            <span>{{ displayUserName }}</span>
           </div>
         </div>
       </nav>
@@ -29,12 +29,12 @@
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
         <div class="dropdown-info">
-          <h3>Tomhoon</h3>
-          <p>Online</p>
+          <h3>{{ displayUserName }}</h3>
+          <p>{{ userStatus }}</p>
         </div>
       </div>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
+        <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="@/assets/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
@@ -44,7 +44,7 @@
           <img src="@/assets/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item">
+        <a href="#" class="dropdown-item" @click="handleLogout">
           <img src="@/assets/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
@@ -268,6 +268,9 @@
 </template>
 
 <script>
+// authUtils 불러오기
+import { authUtils } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelOne',
   data() {
@@ -281,13 +284,45 @@ export default {
       },
       newsletter: {
         email: ''
-      }
+      },
+      // 사용자 정보
+      userInfo: null,
+      isLoggedIn: false
     }
   },
+  
+  computed: {
+    // 표시할 사용자 이름 계산
+    displayUserName() {
+      if (this.isLoggedIn && this.userInfo) {
+        // firstName과 lastName이 모두 있는 경우
+        if (this.userInfo.firstName && this.userInfo.lastName) {
+          return `${this.userInfo.firstName} ${this.userInfo.lastName}`;
+        }
+        // firstName만 있는 경우
+        else if (this.userInfo.firstName) {
+          return this.userInfo.firstName;
+        }
+        // 이메일의 @ 앞부분 사용
+        else if (this.userInfo.email) {
+          return this.userInfo.email.split('@')[0];
+        }
+      }
+      // 로그인하지 않은 경우 기본 이름
+      return 'Guest';
+    },
+    
+    // 사용자 상태 표시
+    userStatus() {
+      return this.isLoggedIn ? 'Online' : 'Offline';
+    }
+  },
+  
   methods: {
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
+    
     subscribe() {
       if (this.newsletter.email) {
         alert('구독이 완료되었습니다!');
@@ -296,18 +331,61 @@ export default {
         alert('이메일을 입력해주세요.');
       }
     },
+    
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
+    },
+    
+    // 사용자 정보 로드
+    loadUserInfo() {
+      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      
+      if (this.isLoggedIn) {
+        this.userInfo = authUtils.getUserInfo();
+        console.log('사용자 정보:', this.userInfo);
+      } else {
+        this.userInfo = null;
+      }
+    },
+    
+    // 로그아웃 처리
+    handleLogout() {
+      if (confirm('로그아웃하시겠습니까?')) {
+        authUtils.logout();
+        this.loadUserInfo(); // 사용자 정보 다시 로드
+        alert('로그아웃되었습니다.');
+        this.$router.push('/login');
+      }
+    },
+    
+    // 계정 페이지로 이동
+    goToAccount() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
     }
   },
+  
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
+    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
   },
+  
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
+  },
+  
+  // 라우터 변경 시에도 사용자 정보 다시 확인
+  watch: {
+    '$route'() {
+      this.loadUserInfo();
+    }
   }
 }
 </script>
@@ -465,6 +543,11 @@ export default {
             font-size: 14px;
             line-height: 100%;
             padding: 4px 0;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            color: #7dd3c0;
         }
 
 .hero-section {
@@ -1043,8 +1126,6 @@ export default {
             gap: 16px;
             margin-bottom: 32px;
         }
-
-    
 
         /* Footer Columns */
         .footer-links {
