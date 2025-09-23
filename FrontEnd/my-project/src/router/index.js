@@ -10,6 +10,7 @@ import HotelLogin from '../components/login/login.vue'
 import HotelSignup from '../components/login/signup.vue'
 import HotelMaster from '../components/hotelmaster.vue'
 import HotelTest from '../components/hotel/hoteltest.vue'
+import AuthCallback from '../components/login/AuthCallback.vue'
 
 
 const routes = [
@@ -67,7 +68,11 @@ const routes = [
     path: '/signup', 
     name: 'HotelSignup',
     component: HotelSignup
-  }
+  },{
+  path: '/auth/callback',
+  name: 'AuthCallback',
+  component: AuthCallback
+}
 ]
 
 const router = createRouter({

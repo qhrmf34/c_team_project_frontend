@@ -58,12 +58,6 @@ export const memberAPI = {
     return response.data
   },
 
-  // 소셜 로그인 (NEW)
-  async socialLogin(socialLoginData) {
-    const response = await apiClient.post('/api/member/social-login', socialLoginData)
-    return response.data
-  },
-
   // 로그아웃 (NEW)
   async logout() {
     const response = await apiClient.post('/api/member/logout')
