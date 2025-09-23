@@ -50,8 +50,10 @@
                 </span>
                 <a href="#" class="forgot-password" @click="showScreen('forgot-password')">Forgot Password</a>
               </div>
-              <button type="submit" class="login-button">Login</button>
-              <a href="#" class="signup-link">회원가입</a>
+              <button type="submit" class="login-button" :disabled="isLoading">
+                {{ isLoading ? '로그인 중...' : 'Login' }}
+              </button>
+              <a href="#" class="signup-link" @click="goToSignup">회원가입</a>
             </div>
           </form>
           
@@ -63,23 +65,15 @@
           
           <!-- Social Login Buttons -->
           <div class="social-login">
-            <button class="social-btn" @click="loginWithFacebook">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
+            <!-- 카카오 버튼-->
+            <button class="social-btn kakao-btn" @click="loginWithKakao">
+              <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
             <button class="social-btn" @click="loginWithGoogle">
-              <svg width="24" height="24" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
+              <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
-            <button class="social-btn" @click="loginWithApple">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
+            <button class="social-btn" @click="loginWithNaver">
+                <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
           </div>
         </div>
@@ -130,12 +124,15 @@
                 v-model="forgotPasswordForm.email"
                 placeholder="john.doe@gmail.com" 
                 maxlength="100"
+                required
               >
               <label for="forgot-email">Email</label>
             </div>
                                  
             <div class="options">
-              <button type="submit" class="forgot-password-button">제출</button>
+              <button type="submit" class="forgot-password-button" :disabled="isLoading">
+                {{ isLoading ? '전송 중...' : '제출' }}
+              </button>
             </div>
           </form>
                                
@@ -147,23 +144,16 @@
                                
           <!-- Social Login Buttons -->
           <div class="social-login">
-            <button class="social-btn" @click="loginWithFacebook">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
+            <!-- 카카오 버튼-->
+            <button class="social-btn kakao-btn" @click="loginWithKakao">
+              <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
             <button class="social-btn" @click="loginWithGoogle">
-              <svg width="24" height="24" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
+              <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
+
             </button>
-            <button class="social-btn" @click="loginWithApple">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
+            <button class="social-btn" @click="loginWithNaver">
+                <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
           </div>
         </div>
@@ -201,25 +191,29 @@
       <!-- Left Form Section -->
       <div class="form-section">
         <div class="form-section-content">
-          <a href="#" class="back-link" @click="showScreen('login')">
-            &lt; Back to login
+          <a href="#" class="back-link" @click="showScreen('forgot-password')">
+            &lt; Back to forgot password
           </a>
           <h1>인증하기</h1>
-          <p class="email-retransmit">이메일로 받은 인증번호를 입력해주세요</p>
+          <p class="email-retransmit">{{ forgotPasswordForm.email }}로 받은 인증번호를 입력해주세요</p>
           <form @submit.prevent="submitVerifyCode">
             <div class="input-group">
               <input 
                 type="text" 
                 id="enter-code" 
                 v-model="verifyCodeForm.code"
-                placeholder="7789BM6X" 
-                maxlength="8"
+                placeholder="123456" 
+                maxlength="6"
+                pattern="[0-9]{6}"
+                required
               >
               <label for="enter-code">Enter Code</label>
             </div>
-            <div class="retransmit" @click="retransmit">재전송하기</div>      
+            <div class="retransmit" @click="retransmitCode">재전송하기</div>      
             <div class="options">
-              <button type="submit" class="forgot-password-verify-button">인증하기</button>
+              <button type="submit" class="forgot-password-verify-button" :disabled="isLoading">
+                {{ isLoading ? '확인 중...' : '인증하기' }}
+              </button>
             </div>
           </form>
         </div>
@@ -268,6 +262,7 @@
                   v-model="setPasswordForm.password"
                   placeholder="••••••••••••••••" 
                   maxlength="255"
+                  required
                 >
                 <button 
                   type="button" 
@@ -291,6 +286,7 @@
                   v-model="setPasswordForm.confirmPassword"
                   placeholder="••••••••••••••••" 
                   maxlength="255"
+                  required
                 >
                 <button 
                   type="button" 
@@ -308,7 +304,9 @@
             </div>
                                  
             <div class="options">
-              <button type="submit" class="set-password-button">비밀번호설정</button>
+              <button type="submit" class="set-password-button" :disabled="isLoading">
+                {{ isLoading ? '설정 중...' : '비밀번호설정' }}
+              </button>
             </div>
           </form>
         </div>
@@ -344,21 +342,24 @@
 </template>
 
 <script>
+// commonAxios에서 memberAPI 불러오기
+import { memberAPI } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelLogin',
+  
   data() {
     return {
       currentScreen: 'login',
       currentSlideIndex: 0,
+      isLoading: false,
       
-      // Password visibility states
       showPassword: {
         login: false,
         create: false,
         reenter: false
       },
       
-      // Form data
       loginForm: {
         email: '',
         password: '',
@@ -379,86 +380,209 @@ export default {
       }
     }
   },
+  
   mounted() {
-    // Auto slide images
+    this.handleSocialLoginResult();
+    
     setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
     }, 5000);
   },
+  
   methods: {
-    // Screen navigation
-    showScreen(screenName) {
-      this.currentScreen = screenName;
-      
-      // Reset forms when navigating
-      if (screenName === 'login') {
-        this.resetAllForms();
-      }
-    },
-    
-    // Image slider
-    slideToImage(index) {
-      this.currentSlideIndex = index;
-    },
-    
-    // Password visibility toggle
-    togglePassword(fieldType) {
-      this.showPassword[fieldType] = !this.showPassword[fieldType];
-    },
-    
-    // Form submissions
-    handleLogin() {
+    async handleLogin() {
       if (!this.loginForm.email || !this.loginForm.password) {
         alert('이메일과 비밀번호를 입력해주세요.');
         return;
       }
       
-      // Here you would typically make an API call
-      console.log('Login attempt:', this.loginForm);
-      alert('로그인 기능이 구현되지 않았습니다.');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.loginForm.email)) {
+        alert('올바른 이메일 형식을 입력해주세요.');
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        const result = await memberAPI.login({
+          email: this.loginForm.email,
+          password: this.loginForm.password
+        });
+        
+        if (result.data && result.data.token) {
+          // JWT 토큰과 사용자 정보 저장
+          localStorage.setItem('jwt_token', result.data.token);
+          localStorage.setItem('user_info', JSON.stringify({
+            id: result.data.memberId,
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            email: result.data.email,
+            provider: result.data.provider
+          }));
+          
+          alert('로그인이 완료되었습니다!');
+          this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+        }
+      } catch (error) {
+        console.error('로그인 실패:', error);
+        alert(error.response?.data?.message || '로그인에 실패했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
     },
-    
-    submitForgotPassword() {
+
+    async submitForgotPassword() {
       if (!this.forgotPasswordForm.email) {
         alert('이메일을 입력해주세요.');
         return;
       }
       
-      alert('인증번호가 ' + this.forgotPasswordForm.email + '로 전송되었습니다.');
-      this.showScreen('verify-code');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.forgotPasswordForm.email)) {
+        alert('올바른 이메일 형식을 입력해주세요.');
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        await memberAPI.forgotPassword(this.forgotPasswordForm.email);
+        alert('인증 코드가 이메일로 전송되었습니다.');
+        this.showScreen('verify-code');
+      } catch (error) {
+        console.error('비밀번호 재설정 요청 실패:', error);
+        alert(error.response?.data?.message || '비밀번호 재설정 요청에 실패했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
     },
-    
-    submitVerifyCode() {
+
+    async submitVerifyCode() {
       if (!this.verifyCodeForm.code) {
-        alert('인증번호를 입력해주세요.');
+        alert('인증 코드를 입력해주세요.');
         return;
       }
       
-      if (this.verifyCodeForm.code === '7789BM6X') {
-        alert('인증이 완료되었습니다!');
+      if (this.verifyCodeForm.code.length !== 6) {
+        alert('인증 코드는 6자리여야 합니다.');
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        await memberAPI.verifyResetCode(
+          this.forgotPasswordForm.email, 
+          this.verifyCodeForm.code
+        );
+        alert('인증 코드가 확인되었습니다.');
         this.showScreen('set-password');
-      } else {
-        alert('잘못된 인증번호입니다. (힌트: 7789BM6X)');
+      } catch (error) {
+        console.error('인증 코드 확인 실패:', error);
+        alert(error.response?.data?.message || '인증 코드 확인에 실패했습니다.');
+      } finally {
+        this.isLoading = false;
       }
     },
-    
-    submitSetPassword() {
+
+    async submitSetPassword() {
       if (!this.setPasswordForm.password || !this.setPasswordForm.confirmPassword) {
-        alert('모든 필드를 입력해주세요.');
+        alert('새 비밀번호를 입력해주세요.');
         return;
       }
       
-      if (this.setPasswordForm.password === this.setPasswordForm.confirmPassword) {
-        alert('비밀번호가 성공적으로 설정되었습니다!');
-        this.showScreen('login');
-      } else {
+      if (this.setPasswordForm.password.length < 8) {
+        alert('비밀번호는 8자 이상이어야 합니다.');
+        return;
+      }
+      
+      if (this.setPasswordForm.password !== this.setPasswordForm.confirmPassword) {
         alert('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        await memberAPI.resetPassword(
+          this.forgotPasswordForm.email,
+          this.verifyCodeForm.code,
+          this.setPasswordForm.password,
+          this.setPasswordForm.confirmPassword
+        );
+        alert('비밀번호가 성공적으로 재설정되었습니다!');
+        this.showScreen('login');
+        this.resetAllForms();
+      } catch (error) {
+        console.error('비밀번호 재설정 실패:', error);
+        alert(error.response?.data?.message || '비밀번호 재설정에 실패했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async retransmitCode() {
+      if (!this.forgotPasswordForm.email) {
+        alert('이메일 정보가 없습니다.');
+        return;
+      }
+
+      this.isLoading = true;
+      
+      try {
+        await memberAPI.forgotPassword(this.forgotPasswordForm.email);
+        alert('인증 코드가 재전송되었습니다.');
+      } catch (error) {
+        console.error('재전송 실패:', error);
+        alert(error.response?.data?.message || '재전송에 실패했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    showScreen(screenName) {
+      this.currentScreen = screenName;
+      if (screenName === 'login') {
+        this.resetAllForms();
       }
     },
     
-    // Utility functions
-    retransmit() {
-      alert("재전송 되었습니다!");
+    slideToImage(index) {
+      this.currentSlideIndex = index;
+    },
+    
+    togglePassword(fieldType) {
+      this.showPassword[fieldType] = !this.showPassword[fieldType];
+    },
+    
+    handleSocialLoginResult() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login') === 'success') {
+        alert('소셜 로그인이 완료되었습니다!');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+      } else if (urlParams.get('error') === 'oauth_failed') {
+        alert('소셜 로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    },
+    
+    // Social login methods
+    loginWithKakao() {
+      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+    },
+    
+    loginWithGoogle() {
+      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
+    },
+    
+    loginWithNaver() {
+      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
+    },
+    
+    goToSignup() {
+      this.$router.push('/signup');
     },
     
     resetAllForms() {
@@ -478,19 +602,14 @@ export default {
         create: false,
         reenter: false
       };
-    },
-    
-    // Social login functions
-    loginWithFacebook() {
-      alert('Facebook 로그인 기능');
-    },
-    
-    loginWithGoogle() {
-      alert('Google 로그인 기능');
-    },
-    
-    loginWithApple() {
-      alert('Apple 로그인 기능');
+    }
+  },
+  
+  created() {
+    // 이미 로그인된 상태라면 호텔1 화면으로 이동
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+      this.$router.push('/hotelone');
     }
   }
 }
@@ -571,30 +690,6 @@ export default {
   height: 100%;
   object-fit: cover;
   border-radius: 15px;
-}
-
-/* Placeholder images with different colors - fallback */
-.placeholder-image {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.slide1 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.slide2 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.slide3 {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
 /* 슬라이더 점들 */
@@ -741,7 +836,7 @@ p {
 }
 
 .retransmit:hover {
-  color: #000;
+  color: #7dd3c0;
 }
 
 .remember-forgot {
@@ -798,6 +893,14 @@ p {
 .forgot-password-verify-button:hover,
 .set-password-button:hover {
   background-color: #6bc4a8;
+}
+
+.login-button:disabled,
+.forgot-password-button:disabled,
+.forgot-password-verify-button:disabled,
+.set-password-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .signup-link {
@@ -881,7 +984,7 @@ p {
 }
 
 .back-link:hover {
-  color: #007bff;
+  color: #7dd3c0;
 }
 
 /* 화면 전환 */
