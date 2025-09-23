@@ -127,11 +127,18 @@ export const authMixin = {
       }
     },
     
-    // 로그아웃
-    logout() {
-      authUtils.logout()
-      this.currentUser = null
-      this.isAuthenticated = false
+    // 로그아웃 (서버 API 호출 + 상태 업데이트)
+    async logout() {
+      try {
+        // 서버에 로그아웃 요청 (토큰 블랙리스트 등록)
+        await authUtils.logout()
+      } catch (error) {
+        console.warn('서버 로그아웃 중 오류:', error)
+      } finally {
+        // 상태 업데이트
+        this.currentUser = null
+        this.isAuthenticated = false
+      }
     },
     
     // 인증 필요 페이지 체크

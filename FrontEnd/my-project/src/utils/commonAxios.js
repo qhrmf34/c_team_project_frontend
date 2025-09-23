@@ -58,6 +58,18 @@ export const memberAPI = {
     return response.data
   },
 
+  // 소셜 로그인 (NEW)
+  async socialLogin(socialLoginData) {
+    const response = await apiClient.post('/api/member/social-login', socialLoginData)
+    return response.data
+  },
+
+  // 로그아웃 (NEW)
+  async logout() {
+    const response = await apiClient.post('/api/member/logout')
+    return response.data
+  },
+
   // 회원가입 + 결제 트랜잭션
   async signupWithPayment(signupWithPaymentData) {
     const response = await apiClient.post('/api/member/signup-with-payment', signupWithPaymentData)
@@ -82,7 +94,7 @@ export const memberAPI = {
     return response.data
   },
 
-  // ========== 비밀번호 재설정 관련 API 추가 ==========
+  // ========== 비밀번호 재설정 관련 API ==========
   
   // 비밀번호 재설정 요청 (인증 코드 전송)
   async forgotPassword(email) {
@@ -172,10 +184,18 @@ export const authUtils = {
     }
   },
 
-  // 로그아웃
-  logout() {
-    localStorage.removeItem('jwt_token')
-    localStorage.removeItem('user_info')
+  // 로그아웃 (서버 API 호출 + 로컬 스토리지 정리)
+  async logout() {
+    try {
+      // 서버에 로그아웃 요청 (토큰 블랙리스트 등록)
+      await memberAPI.logout()
+    } catch (error) {
+      console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
+    } finally {
+      // 로컬 스토리지에서 토큰과 사용자 정보 삭제
+      localStorage.removeItem('jwt_token')
+      localStorage.removeItem('user_info')
+    }
   }
 }
 

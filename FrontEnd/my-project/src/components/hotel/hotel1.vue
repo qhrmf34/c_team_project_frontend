@@ -268,7 +268,7 @@
 </template>
 
 <script>
-// authUtils 불러오기
+// HotelOne.vue의 script 부분만 업데이트
 import { authUtils } from '@/utils/commonAxios'
 
 export default {
@@ -292,28 +292,43 @@ export default {
   },
   
   computed: {
-    // 표시할 사용자 이름 계산
+    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        // firstName과 lastName이 모두 있는 경우
-        if (this.userInfo.firstName && this.userInfo.lastName) {
-          return `${this.userInfo.firstName} ${this.userInfo.lastName}`;
+        const { provider, firstName, lastName, email } = this.userInfo;
+        
+        // 소셜 로그인의 경우 firstName만 사용
+        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
+          return firstName || email?.split('@')[0] || 'Social User';
         }
-        // firstName만 있는 경우
-        else if (this.userInfo.firstName) {
-          return this.userInfo.firstName;
-        }
-        // 이메일의 @ 앞부분 사용
-        else if (this.userInfo.email) {
-          return this.userInfo.email.split('@')[0];
+        
+        // local 로그인의 경우 firstName + lastName 사용
+        if (provider === 'local') {
+          if (firstName && lastName) {
+            return `${firstName} ${lastName}`;
+          } else if (firstName) {
+            return firstName;
+          } else if (email) {
+            return email.split('@')[0];
+          }
         }
       }
+      
       // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
     // 사용자 상태 표시
     userStatus() {
+      if (this.isLoggedIn && this.userInfo?.provider) {
+        const providerNames = {
+          'local': 'Local Account',
+          'google': 'Google Account',
+          'kakao': 'Kakao Account',
+          'naver': 'Naver Account'
+        };
+        return providerNames[this.userInfo.provider] || 'Online';
+      }
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
@@ -351,13 +366,28 @@ export default {
       }
     },
     
-    // 로그아웃 처리
-    handleLogout() {
+    // 로그아웃 처리 (개선된 버전)
+    async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
-        authUtils.logout();
-        this.loadUserInfo(); // 사용자 정보 다시 로드
-        alert('로그아웃되었습니다.');
-        this.$router.push('/login');
+        try {
+          // 서버 API 호출하여 토큰을 블랙리스트에 등록
+          await authUtils.logout();
+          
+          // 사용자 정보 다시 로드
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        } catch (error) {
+          console.error('로그아웃 중 오류:', error);
+          
+          // 서버 오류가 발생해도 로컬 정보는 삭제
+          authUtils.logout();
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        }
       }
     },
     
