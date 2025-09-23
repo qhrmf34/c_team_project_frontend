@@ -1,318 +1,205 @@
 <template>
   <div class="hotel-login-container">
-    <!-- Login Screen -->
-    <div class="container screen" :class="{ active: currentScreen === 'login' }">
-      <!-- Left Form Section -->
+    <div class="container">
+      <!-- Left Form Section - 화면에 따라 내용만 변경 -->
       <div class="form-section">
         <div class="form-section-content">
-          <h1>Login</h1>
-          <p class="subtitle">로그인해주세요</p>
-          <form @submit.prevent="handleLogin">
-            <div class="input-group">
-              <input 
-                type="email" 
-                id="email" 
-                v-model="loginForm.email"
-                placeholder="john.doe@gmail.com" 
-                maxlength="100"
-              >
-              <label for="email">Email</label>
-            </div>
-            <div class="input-group">
-              <div class="password-input-wrapper">
+          <!-- Login Screen -->
+          <div v-if="currentScreen === 'login'">
+            <h1>Login</h1>
+            <p class="subtitle">로그인해주세요</p>
+            <form @submit.prevent="handleLogin">
+              <div class="input-group">
                 <input 
-                  :type="showPassword.login ? 'text' : 'password'" 
-                  id="password" 
-                  v-model="loginForm.password"
-                  placeholder="••••••••••••••••" 
-                  maxlength="255"
+                  type="email" 
+                  id="email" 
+                  v-model="loginForm.email"
+                  placeholder="john.doe@gmail.com" 
+                  maxlength="100"
                 >
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  @click="togglePassword('login')"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path v-if="!showPassword.login" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <circle v-if="!showPassword.login" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <path v-if="showPassword.login" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                  </svg>
-                </button>
+                <label for="email">Email</label>
               </div>
-              <label for="password">Password</label>
+              <div class="input-group">
+                <div class="password-input-wrapper">
+                  <input 
+                    :type="showPassword.login ? 'text' : 'password'" 
+                    id="password" 
+                    v-model="loginForm.password"
+                    placeholder="••••••••••••••••" 
+                    maxlength="255"
+                  >
+                  <button 
+                    type="button" 
+                    class="password-toggle" 
+                    @click="togglePassword('login')"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path v-if="!showPassword.login" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <circle v-if="!showPassword.login" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <path v-if="showPassword.login" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                  </button>
+                </div>
+                <label for="password">Password</label>
+              </div>
+              
+              <div class="options">
+                <div class="remember-forgot">
+                  <span class="remember-me">
+                    <input type="checkbox" id="remember-checkbox" v-model="loginForm.rememberMe">
+                    <label for="remember-checkbox">비밀번호 기억하기</label>
+                  </span>
+                  <a href="#" class="forgot-password" @click="showScreen('forgot-password')">Forgot Password</a>
+                </div>
+                <button type="submit" class="login-button" :disabled="isLoading">
+                  {{ isLoading ? '로그인 중...' : 'Login' }}
+                </button>
+                <a href="#" class="signup-link" @click="goToSignup">회원가입</a>
+              </div>
+            </form>
+            
+            <!-- 소셜 로그인은 로그인 화면에서만 표시 -->
+            <div class="divider">
+              <span class="divider-beeline"></span>
+              <span>Or login with</span>
+              <span class="divider-beeline"></span>
             </div>
             
-            <div class="options">
-              <div class="remember-forgot">
-                <span class="remember-me">
-                  <input type="checkbox" id="remember-checkbox" v-model="loginForm.rememberMe">
-                  <label for="remember-checkbox">비밀번호 기억하기</label>
-                </span>
-                <a href="#" class="forgot-password" @click="showScreen('forgot-password')">Forgot Password</a>
-              </div>
-              <button type="submit" class="login-button" :disabled="isLoading">
-                {{ isLoading ? '로그인 중...' : 'Login' }}
+            <div class="social-login">
+              <button class="social-btn kakao-btn" @click="loginWithKakao">
+                <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
-              <a href="#" class="signup-link" @click="goToSignup">회원가입</a>
-            </div>
-          </form>
-          
-          <div class="divider">
-            <span class="divider-beeline"></span>
-            <span>Or login with</span>
-            <span class="divider-beeline"></span>
-          </div>
-          
-          <!-- Social Login Buttons -->
-          <div class="social-login">
-            <!-- 카카오 버튼-->
-            <button class="social-btn kakao-btn" @click="loginWithKakao">
-              <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
-            </button>
-            <button class="social-btn" @click="loginWithGoogle">
-              <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
-            </button>
-            <button class="social-btn" @click="loginWithNaver">
+              <button class="social-btn" @click="loginWithGoogle">
+                <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
+              </button>
+              <button class="social-btn" @click="loginWithNaver">
                 <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
-            </button>
+              </button>
+            </div>
+          </div>
+
+          <!-- Forgot Password Screen -->
+          <div v-else-if="currentScreen === 'forgot-password'">
+            <a href="#" class="back-link" @click="showScreen('login')">
+              &lt; Back to login
+            </a>
+            <h1>비밀번호 찾기</h1>
+            <p class="find-password">비밀번호를 찾아보세요</p>
+            <form @submit.prevent="submitForgotPassword">
+              <div class="input-group">
+                <input 
+                  type="email" 
+                  id="forgot-email" 
+                  v-model="forgotPasswordForm.email"
+                  placeholder="john.doe@gmail.com" 
+                  maxlength="100"
+                  required
+                >
+                <label for="forgot-email">Email</label>
+              </div>
+              
+              <div class="options">
+                <button type="submit" class="forgot-password-button" :disabled="isLoading">
+                  {{ isLoading ? '전송 중...' : '제출' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Verify Code Screen -->
+          <div v-else-if="currentScreen === 'verify-code'">
+            <a href="#" class="back-link" @click="showScreen('forgot-password')">
+              &lt; Back to forgot password
+            </a>
+            <h1>인증하기</h1>
+            <p class="email-retransmit">{{ forgotPasswordForm.email }}로 받은 인증번호를 입력해주세요</p>
+            <form @submit.prevent="submitVerifyCode">
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  id="enter-code" 
+                  v-model="verifyCodeForm.code"
+                  placeholder="123456" 
+                  maxlength="6"
+                  pattern="[0-9]{6}"
+                  required
+                >
+                <label for="enter-code">Enter Code</label>
+              </div>
+              <div class="retransmit" @click="retransmitCode">재전송하기</div>      
+              <div class="options">
+                <button type="submit" class="forgot-password-verify-button" :disabled="isLoading">
+                  {{ isLoading ? '확인 중...' : '인증하기' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Set Password Screen -->
+          <div v-else-if="currentScreen === 'set-password'">
+            <h1>비밀번호 설정</h1>
+            <p class="password-reset">비밀번호 다시 설정하기</p>
+            <form @submit.prevent="submitSetPassword">
+              <div class="input-group">
+                <div class="password-input-wrapper">
+                  <input 
+                    :type="showPassword.create ? 'text' : 'password'" 
+                    id="create-password" 
+                    v-model="setPasswordForm.password"
+                    placeholder="••••••••••••••••" 
+                    maxlength="255"
+                    required
+                  >
+                  <button 
+                    type="button" 
+                    class="password-toggle" 
+                    @click="togglePassword('create')"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path v-if="!showPassword.create" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <circle v-if="!showPassword.create" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <path v-if="showPassword.create" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                  </button>
+                </div>
+                <label for="create-password">Create Password</label>
+              </div>
+              <div class="input-group">
+                <div class="password-input-wrapper">
+                  <input 
+                    :type="showPassword.reenter ? 'text' : 'password'" 
+                    id="re-enter-password" 
+                    v-model="setPasswordForm.confirmPassword"
+                    placeholder="••••••••••••••••" 
+                    maxlength="255"
+                    required
+                  >
+                  <button 
+                    type="button" 
+                    class="password-toggle" 
+                    @click="togglePassword('reenter')"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path v-if="!showPassword.reenter" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <circle v-if="!showPassword.reenter" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                      <path v-if="showPassword.reenter" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                  </button>
+                </div>
+                <label for="re-enter-password">Re-enter Password</label>
+              </div>
+              
+              <div class="options">
+                <button type="submit" class="set-password-button" :disabled="isLoading">
+                  {{ isLoading ? '설정 중...' : '비밀번호설정' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
       
-      <!-- Right Image Section -->
-      <div class="image-section">
-        <div class="slider-container">
-          <div class="slider-wrapper" :style="{ transform: `translateX(${-currentSlideIndex * 33.333}%)` }">
-            <div class="slide">
-              <img src="/images/slide1.jpg" alt="Hotel slide 1" />
-            </div>
-            <div class="slide">
-              <img src="/images/slide2.jpg" alt="Hotel slide 2" />
-            </div>
-            <div class="slide">
-              <img src="/images/paris.jpg" alt="Paris hotel" />
-            </div>
-          </div>
-          <div class="image-dots">
-            <div 
-              v-for="(slide, index) in 3" 
-              :key="index"
-              class="dot" 
-              :class="{ active: currentSlideIndex === index }"
-              @click="slideToImage(index)"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Forgot Password Screen -->
-    <div class="container screen" :class="{ active: currentScreen === 'forgot-password' }">
-      <!-- Left Form Section -->
-      <div class="form-section">
-        <div class="form-section-content">
-          <a href="#" class="back-link" @click="showScreen('login')">
-            &lt; Back to login
-          </a>
-          <h1>비밀번호 찾기</h1>
-          <p class="find-password">비밀번호를 찾아보세요</p>
-          <form @submit.prevent="submitForgotPassword">
-            <div class="input-group">
-              <input 
-                type="email" 
-                id="forgot-email" 
-                v-model="forgotPasswordForm.email"
-                placeholder="john.doe@gmail.com" 
-                maxlength="100"
-                required
-              >
-              <label for="forgot-email">Email</label>
-            </div>
-                                 
-            <div class="options">
-              <button type="submit" class="forgot-password-button" :disabled="isLoading">
-                {{ isLoading ? '전송 중...' : '제출' }}
-              </button>
-            </div>
-          </form>
-                               
-          <div class="divider">
-            <span class="divider-beeline"></span>
-            <span>Or login with</span>
-            <span class="divider-beeline"></span>
-          </div>
-                               
-          <!-- Social Login Buttons -->
-          <div class="social-login">
-            <!-- 카카오 버튼-->
-            <button class="social-btn kakao-btn" @click="loginWithKakao">
-              <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
-            </button>
-            <button class="social-btn" @click="loginWithGoogle">
-              <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
-
-            </button>
-            <button class="social-btn" @click="loginWithNaver">
-                <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
-            </button>
-          </div>
-        </div>
-      </div>
-               
-      <!-- Right Image Section -->
-      <div class="image-section">
-        <div class="slider-container">
-          <div class="slider-wrapper" :style="{ transform: `translateX(${-currentSlideIndex * 33.333}%)` }">
-            <div class="slide">
-              <img src="/images/slide1.jpg" alt="Hotel slide 1" />
-            </div>
-            <div class="slide">
-              <img src="/images/slide2.jpg" alt="Hotel slide 2" />
-            </div>
-            <div class="slide">
-              <img src="/images/paris.jpg" alt="Paris hotel" />
-            </div>
-          </div>
-          <div class="image-dots">
-            <div 
-              v-for="(slide, index) in 3" 
-              :key="index"
-              class="dot" 
-              :class="{ active: currentSlideIndex === index }"
-              @click="slideToImage(index)"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Verify Code Screen -->
-    <div class="container screen" :class="{ active: currentScreen === 'verify-code' }">
-      <!-- Left Form Section -->
-      <div class="form-section">
-        <div class="form-section-content">
-          <a href="#" class="back-link" @click="showScreen('forgot-password')">
-            &lt; Back to forgot password
-          </a>
-          <h1>인증하기</h1>
-          <p class="email-retransmit">{{ forgotPasswordForm.email }}로 받은 인증번호를 입력해주세요</p>
-          <form @submit.prevent="submitVerifyCode">
-            <div class="input-group">
-              <input 
-                type="text" 
-                id="enter-code" 
-                v-model="verifyCodeForm.code"
-                placeholder="123456" 
-                maxlength="6"
-                pattern="[0-9]{6}"
-                required
-              >
-              <label for="enter-code">Enter Code</label>
-            </div>
-            <div class="retransmit" @click="retransmitCode">재전송하기</div>      
-            <div class="options">
-              <button type="submit" class="forgot-password-verify-button" :disabled="isLoading">
-                {{ isLoading ? '확인 중...' : '인증하기' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-               
-      <!-- Right Image Section -->
-      <div class="image-section">
-        <div class="slider-container">
-          <div class="slider-wrapper" :style="{ transform: `translateX(${-currentSlideIndex * 33.333}%)` }">
-            <div class="slide">
-              <img src="/images/slide1.jpg" alt="Hotel slide 1" />
-            </div>
-            <div class="slide">
-              <img src="/images/slide2.jpg" alt="Hotel slide 2" />
-            </div>
-            <div class="slide">
-              <img src="/images/paris.jpg" alt="Paris hotel" />
-            </div>
-          </div>
-          <div class="image-dots">
-            <div 
-              v-for="(slide, index) in 3" 
-              :key="index"
-              class="dot" 
-              :class="{ active: currentSlideIndex === index }"
-              @click="slideToImage(index)"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Set Password Screen -->
-    <div class="container screen" :class="{ active: currentScreen === 'set-password' }">
-      <!-- Left Form Section -->
-      <div class="form-section">
-        <div class="form-section-content">
-          <h1>비밀번호 설정</h1>
-          <p class="password-reset">비밀번호 다시 설정하기</p>
-          <form @submit.prevent="submitSetPassword">
-            <div class="input-group">
-              <div class="password-input-wrapper">
-                <input 
-                  :type="showPassword.create ? 'text' : 'password'" 
-                  id="create-password" 
-                  v-model="setPasswordForm.password"
-                  placeholder="••••••••••••••••" 
-                  maxlength="255"
-                  required
-                >
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  @click="togglePassword('create')"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path v-if="!showPassword.create" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <circle v-if="!showPassword.create" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <path v-if="showPassword.create" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                  </svg>
-                </button>
-              </div>
-              <label for="create-password">Create Password</label>
-            </div>
-            <div class="input-group">
-              <div class="password-input-wrapper">
-                <input 
-                  :type="showPassword.reenter ? 'text' : 'password'" 
-                  id="re-enter-password" 
-                  v-model="setPasswordForm.confirmPassword"
-                  placeholder="••••••••••••••••" 
-                  maxlength="255"
-                  required
-                >
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  @click="togglePassword('reenter')"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path v-if="!showPassword.reenter" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <circle v-if="!showPassword.reenter" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <path v-if="showPassword.reenter" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                  </svg>
-                </button>
-              </div>
-              <label for="re-enter-password">Re-enter Password</label>
-            </div>
-                                 
-            <div class="options">
-              <button type="submit" class="set-password-button" :disabled="isLoading">
-                {{ isLoading ? '설정 중...' : '비밀번호설정' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-               
-      <!-- Right Image Section -->
+      <!-- Right Image Section - 한 번만 정의하고 고정 -->
       <div class="image-section">
         <div class="slider-container">
           <div class="slider-wrapper" :style="{ transform: `translateX(${-currentSlideIndex * 33.333}%)` }">
@@ -384,6 +271,7 @@ export default {
   mounted() {
     this.handleSocialLoginResult();
     
+    // 슬라이더 자동 전환
     setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
     }, 5000);
@@ -985,15 +873,6 @@ p {
 
 .back-link:hover {
   color: #7dd3c0;
-}
-
-/* 화면 전환 */
-.screen {
-  display: none;
-}
-
-.screen.active {
-  display: flex;
 }
 
 /* 반응형 디자인 */
