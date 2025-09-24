@@ -492,6 +492,7 @@
 
     <!-- Newsletter Section -->
     <section class="newsletter-section">
+          </section>
       <div class="newsletter-content">
         <div class="newsletter-left">
           <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
@@ -563,7 +564,6 @@
           </div>
         </div>
       </div>
-    </section>
   </div>
 </template>
 
