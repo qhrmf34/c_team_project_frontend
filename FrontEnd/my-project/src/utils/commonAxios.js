@@ -114,8 +114,26 @@ export const memberAPI = {
       confirmPassword
     })
     return response.data
+  },
+  //계정화면에서 비밀번호 재설정
+  //비밀번호 맞는지 검사 
+  async accountForgot(password){
+    const response=await apiClient.post('/api/member/match-password',{
+      password
+    })
+    return response.data
+  },
+  //비밀번호 재설정
+  async accountPasswordReset(newPassword,confirmPassword){
+      const response=await apiClient.post('/api/member/account-reset-password',{
+        newPassword,
+        confirmPassword
+  })
+  return response.data
   }
 }
+
+
 
 // 기타 API들
 export const hotelAPI = {

@@ -26,7 +26,7 @@
         
         <div class="nav-right">
           <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/heart.jpg" alt="heart"></span>
+            <span><img src="@/assets/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -34,38 +34,34 @@
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
-            <span>Tomhoon</span>
+            <span>{{ displayUserName }}</span>
           </div>
         </div>
       </nav>
     </header>
 
     <!-- User Dropdown -->
-    <div class="user-dropdown" :class="{ active: dropdownActive }" ref="dropdown">
+    <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
         <div class="dropdown-info">
-          <h3>Tomhoon</h3>
-          <p>Online</p>
+          <h3>{{ displayUserName }}</h3>
+          <p>{{ userStatus }}</p>
         </div>
       </div>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/account.jpg" alt="account">
-          계정
+        <a href="#" class="dropdown-item" @click="goToAccount">
+          <img src="@/assets/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg" alt="card">
-          결제내역
+          <img src="@/assets/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg" alt="setting">
-          설정
+          <img src="@/assets/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/logout.jpg" alt="logout">
-          로그아웃
+        <a href="#" class="dropdown-item" @click="handleLogout">
+          <img src="@/assets/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -269,14 +265,19 @@
 </template>
 
 <script>
+import { authUtils } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelSix',
   data() {
     return {
-      dropdownActive: false,
+      isDropdownActive: false,
       activeTab: 'places',
       showingAll: false,
       email: '',
+      // 사용자 정보
+      userInfo: null,
+      isLoggedIn: false,
       visibleHotels: [
         {
           id: 1,
@@ -410,21 +411,69 @@ export default {
     }
   },
   mounted() {
-    document.addEventListener('click', this.handleOutsideClick)
+    document.addEventListener('click', this.handleClickOutside);
+    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
   },
+  
   beforeUnmount() {
-    document.removeEventListener('click', this.handleOutsideClick)
+    document.removeEventListener('click', this.handleClickOutside);
+  },
+  
+  // 라우터 변경 시에도 사용자 정보 다시 확인
+  watch: {
+    '$route'() {
+      this.loadUserInfo();
+    }
+  },
+    computed: {
+    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    displayUserName() {
+      if (this.isLoggedIn && this.userInfo) {
+        const { provider, firstName, lastName, email } = this.userInfo;
+        
+        // 소셜 로그인의 경우 firstName만 사용
+        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
+          return firstName || email?.split('@')[0] || 'Social User';
+        }
+        
+        // local 로그인의 경우 firstName + lastName 사용
+        if (provider === 'local') {
+          if (firstName && lastName) {
+            return `${firstName} ${lastName}`;
+          } else if (firstName) {
+            return firstName;
+          } else if (email) {
+            return email.split('@')[0];
+          }
+        }
+      }
+      
+      // 로그인하지 않은 경우 기본 이름
+      return 'Guest';
+    },
+    
+    // 사용자 상태 표시
+    userStatus() {
+      if (this.isLoggedIn && this.userInfo?.provider) {
+        const providerNames = {
+          'local': 'Local Account',
+          'google': 'Google Account',
+          'kakao': 'Kakao Account',
+          'naver': 'Naver Account'
+        };
+        return providerNames[this.userInfo.provider] || 'Online';
+      }
+      return this.isLoggedIn ? 'Online' : 'Offline';
+    }
   },
   methods: {
     toggleDropdown() {
-      this.dropdownActive = !this.dropdownActive
+      this.isDropdownActive = !this.isDropdownActive;
     },
-    handleOutsideClick(event) {
-      const dropdown = this.$refs.dropdown
-      const userProfile = event.target.closest('.user-profile')
-      
-      if (dropdown && !dropdown.contains(event.target) && !userProfile) {
-        this.dropdownActive = false
+    handleClickOutside(event) {
+      if (!this.$refs.userDropdown.contains(event.target) && 
+          !event.target.closest('.user-profile')) {
+        this.isDropdownActive = false;
       }
     },
     switchTab(tabName) {
@@ -454,7 +503,53 @@ export default {
         console.log('Subscribed:', this.email)
         this.email = ''
       }
-    }
+    },
+    // 사용자 정보 로드
+    loadUserInfo() {
+      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      
+      if (this.isLoggedIn) {
+        this.userInfo = authUtils.getUserInfo();
+        console.log('사용자 정보:', this.userInfo);
+      } else {
+        this.userInfo = null;
+      }
+    },
+    
+    // 로그아웃 처리 (개선된 버전)
+    async handleLogout() {
+      if (confirm('로그아웃하시겠습니까?')) {
+        try {
+          // 서버 API 호출하여 토큰을 블랙리스트에 등록
+          await authUtils.logout();
+          
+          // 사용자 정보 다시 로드
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        } catch (error) {
+          console.error('로그아웃 중 오류:', error);
+          
+          // 서버 오류가 발생해도 로컬 정보는 삭제
+          authUtils.logout();
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        }
+      }
+    },
+    
+    // 계정 페이지로 이동
+    goToAccount() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    }    
   }
 }
 </script>
