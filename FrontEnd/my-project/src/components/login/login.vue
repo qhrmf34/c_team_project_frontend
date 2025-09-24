@@ -67,13 +67,13 @@
             
             <div class="social-login">
               <button class="social-btn kakao-btn" @click="loginWithKakao">
-                <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
+                <img src="/images/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
               <button class="social-btn" @click="loginWithGoogle">
-                <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
+                <img src="/images/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
               <button class="social-btn" @click="loginWithNaver">
-                <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
+                <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
             </div>
           </div>

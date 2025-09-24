@@ -5,14 +5,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -36,17 +36,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -64,7 +64,7 @@
         <div class="hotel-info">
           <h1 class="hotel-title">해튼호텔</h1>
           <div class="hotel-location-line">
-            <span><img src="@/assets/hotel_img/map.jpg" alt="map"></span>
+            <span><img src="/images/hotel_img/map.jpg" alt="map"></span>
             <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
           </div>
         </div>
@@ -75,7 +75,7 @@
           </div>
           <div class="hotel-buttons">
             <button class="action-btn">
-              <img src="@/assets/hotel_img/share.jpg" alt="share">
+              <img src="/images/hotel_img/share.jpg" alt="share">
             </button>
             <button class="action-btn-download" @click="downloadTicket">Download</button>
           </div>
@@ -96,7 +96,7 @@
               </div>
             </div>
             <div>
-              <img src="@/assets/hotel_account_img/travel.jpg" class="left-image" alt="travel"/>
+              <img src="/images/hotel_account_img/travel.jpg" class="left-image" alt="travel"/>
             </div>
             <div class="ticket-left-updown">
               <div class="left-label">
@@ -121,7 +121,7 @@
             <div class="info-grid">
               <div class="info-item">
                 <div>
-                  <img src="@/assets/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+                  <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
                 </div>
                 <div class="info-item-content">
                   <div class="info-check">
@@ -135,7 +135,7 @@
 
               <div class="info-item">
                 <div>
-                  <img src="@/assets/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+                  <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
                 </div>
                 <div class="info-item-content">
                   <div class="info-check">
@@ -149,7 +149,7 @@
 
               <div class="info-item">
                 <div>
-                  <img src="@/assets/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
+                  <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
                 </div>
                 <div class="info-item-content">
                   <div class="info-check">
@@ -164,14 +164,14 @@
 
             <div class="ticket-number">
               <div class="ticket-air">EK <div class="ticket-num">ABC12345</div></div>
-              <div class="barcode"><img src="@/assets/hotel_account_img/barcode.jpg" alt="barcode"/></div>
+              <div class="barcode"><img src="/images/hotel_account_img/barcode.jpg" alt="barcode"/></div>
             </div>
           </div>
           
           <!-- 오른쪽 CVK 카드 -->
           <div class="ticket-right">
             <div>
-              <img src="@/assets/hotel_img/cvk.jpg" alt="cvk"/>
+              <img src="/images/hotel_img/cvk.jpg" alt="cvk"/>
             </div>
           </div>
         </div>
@@ -233,10 +233,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">

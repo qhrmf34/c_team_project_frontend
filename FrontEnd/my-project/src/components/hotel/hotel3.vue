@@ -4,14 +4,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -35,17 +35,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -61,7 +61,7 @@
         <div class="hotel-info">
           <h1 class="hotel-title">해튼호텔<span class="stars">★★★★★</span><span class="stars-hotel">5 Star Hotel</span></h1>
           <div class="hotel-location-line">
-            <span><img src="@/assets/hotel_img/map.jpg"></span>
+            <span><img src="/images/hotel_img/map.jpg"></span>
             <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
           </div>
           <div class="hotel-meta-left">
@@ -77,8 +77,8 @@
             <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
           </div>
           <div class="hotel-buttons">
-            <button class="action-btn"><img src="@/assets/hotel_img/heart2.jpg"/></button>
-            <button class="action-btn"><img src="@/assets/hotel_img/share.jpg"></button>
+            <button class="action-btn"><img src="/images/hotel_img/heart2.jpg"/></button>
+            <button class="action-btn"><img src="/images/hotel_img/share.jpg"></button>
             <button class="book-now-btn">Book now</button>
           </div>
         </div>
@@ -87,23 +87,23 @@
       <!-- Image Gallery -->
       <div class="image-gallery">
         <div class="main-image">
-          <img src="@/assets/hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
+          <img src="/images/hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
         </div>
         <div class="sub-images">
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="@/assets/hotel_img/findhotel2.jpg" alt="호텔 객실">
+              <img src="/images/hotel_img/findhotel2.jpg" alt="호텔 객실">
             </div>
             <div class="gallery-item item3">
-              <img src="@/assets/hotel_img/findhotel3.jpg" alt="호텔 로비">
+              <img src="/images/hotel_img/findhotel3.jpg" alt="호텔 로비">
             </div>
           </div>  
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="@/assets/hotel_img/findhotel4.jpg" alt="호텔 외관">
+              <img src="/images/hotel_img/findhotel4.jpg" alt="호텔 외관">
             </div>
             <div class="gallery-item item5">
-              <img src="@/assets/hotel_img/findhotel5.jpg" alt="호텔 수영장">
+              <img src="/images/hotel_img/findhotel5.jpg" alt="호텔 수영장">
               <button class="view-all-photos">View all photos</button>
             </div>
           </div>     
@@ -128,22 +128,22 @@
                 <div class="review-count">371 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near park</div>
                 <div class="review-count">215 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near nightlife</div>
                 <div class="review-count">89 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near theater</div>
                 <div class="review-count">142 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Clean Hotel</div>
                 <div class="review-count">142 reviews</div>
               </div>
@@ -178,7 +178,7 @@
             </div>
             <div class="map-actions">
               <div class="map-address">
-                <img src="@/assets/hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
+                <img src="/images/hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
               </div>
               <button class="view-map-btn" @click="openGoogleMaps">View on google maps</button>
             </div>
@@ -190,39 +190,39 @@
             <h3 class="amenities-title">Amenities</h3>
             <div class="amenities-grid">
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/outdoor.jpg"></span>
+                <span><img src="/images/hotel_img/outdoor.jpg"></span>
                 <span class="amenity-text">Outdoor pool</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/fitness.jpg"></span>
+                <span><img src="/images/hotel_img/fitness.jpg"></span>
                 <span class="amenity-text">Fitness center</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/outdoor.jpg"></span>
+                <span><img src="/images/hotel_img/outdoor.jpg"></span>
                 <span class="amenity-text">Indoor pool</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/bar.jpg"></span>
+                <span><img src="/images/hotel_img/bar.jpg"></span>
                 <span class="amenity-text">Bar/Lounge</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/spa.jpg"/></span>
+                <span><img src="/images/hotel_img/spa.jpg"/></span>
                 <span class="amenity-text">Spa and wellness center</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/wifi.jpg"></span>
+                <span><img src="/images/hotel_img/wifi.jpg"></span>
                 <span class="amenity-text">Free Wi-Fi</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/restaurant.jpg"></span>
+                <span><img src="/images/hotel_img/restaurant.jpg"></span>
                 <span class="amenity-text">Restaurant</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/cafe.jpg"></span>
+                <span><img src="/images/hotel_img/cafe.jpg"></span>
                 <span class="amenity-text">Tes/coffee machine</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/roomservice.jpg"></span>
+                <span><img src="/images/hotel_img/roomservice.jpg"></span>
                 <span class="amenity-text">Room service</span>
               </div>
               
@@ -384,10 +384,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg"></span>
+          <span><img src="/images/hotel_img/facebook.jpg"></span>
+          <span><img src="/images/hotel_img/twitter.jpg"></span>
+          <span><img src="/images/hotel_img/youtube.jpg"></span>
+          <span><img src="/images/hotel_img/instagram.jpg"></span>
         </div>
 
         <div class="footer-links">

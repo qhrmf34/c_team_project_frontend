@@ -5,14 +5,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -36,17 +36,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -72,7 +72,7 @@
       <section class="cover">
         <img :src="coverImage" alt="커버 이미지" class="cover-img"/>
         <button class="upload" @click="$refs.coverImageInput.click()">
-          <img src="@/assets/hotel_account_img/file-upload.jpg" alt="upload">
+          <img src="/images/hotel_account_img/file-upload.jpg" alt="upload">
           Upload new cover
         </button>
       </section>
@@ -82,7 +82,7 @@
         <div class="avatar-container">
           <img class="avatar" :src="profileAvatar" alt="프로필" />
           <div class="avatar-edit" @click="$refs.avatarImageInput.click()">
-            <img src="@/assets/hotel_account_img/pencil.jpg" alt="edit">
+            <img src="/images/hotel_account_img/pencil.jpg" alt="edit">
           </div>
         </div>
         <h2 class="name">{{ displayUserName }}</h2>
@@ -209,7 +209,7 @@
             </div>
           </div>
           <div class="booking-sub">
-            <img src="@/assets/hotel_account_img/bedroom.jpg" alt="bedroom"/>
+            <img src="/images/hotel_account_img/bedroom.jpg" alt="bedroom"/>
             객실
           </div>
           <div class="booking-wrap">
@@ -220,7 +220,7 @@
                 class="booking-card"
               >
                 <div class="bc-logo">
-                  <img src="@/assets/hotel_account_img/cvk.jpg" alt="hotel logo">
+                  <img src="/images/hotel_account_img/cvk.jpg" alt="hotel logo">
                 </div>
                 
                 <!-- 날짜 -->
@@ -240,14 +240,14 @@
                 <!-- 시간 -->
                 <div class="bc-times">
                   <div class="bc-time-info">
-                    <img class="time-icon" src="@/assets/hotel_account_img/check.jpg" alt="check">
+                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                     <div>
                       <div class="label">체크인</div>
                       <div class="val">{{ booking.checkInTime }}</div>
                     </div>
                   </div>
                   <div class="bc-time-info">
-                    <img class="time-icon" src="@/assets/hotel_account_img/check.jpg" alt="check">
+                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                     <div>
                       <div class="label">체크아웃</div>
                       <div class="val">{{ booking.checkOutTime }}</div>
@@ -258,7 +258,7 @@
                 <!-- 방번호 -->
                 <div class="bc-guest">
                   <div class="bc-time-info">
-                    <img class="time-icon" src="@/assets/hotel_account_img/room.jpg" alt="room">
+                    <img class="time-icon" src="/images/hotel_account_img/room.jpg" alt="room">
                     <div>
                       <div class="label">방번호</div>
                       <div class="val">{{ booking.roomNumber }}</div>
@@ -270,7 +270,7 @@
                 <div class="bc-actions">
                   <button class="bc-btn" @click="downloadTicket(booking)">Download Ticket</button>
                   <div class="bc-next" @click="viewBookingDetails(booking)">
-                    <img src="@/assets/hotel_account_img/right.jpg" alt="arrow"/>
+                    <img src="/images/hotel_account_img/right.jpg" alt="arrow"/>
                   </div>
                 </div>
               </div>
@@ -296,7 +296,7 @@
                     <div class="cc-number">{{ card.lastFour }}</div>
                   </div>
                   <div class="cc-delete" @click="deleteCard(card.id)">
-                    <img src="@/assets/hotel_account_img/garbage.jpg" alt="delete"/>
+                    <img src="/images/hotel_account_img/garbage.jpg" alt="delete"/>
                   </div>
                 </div>
                 <div class="cc-bottom">
@@ -305,7 +305,7 @@
                     <div class="cc-meta-bold">{{ card.expiryDate }}</div>
                   </div>
                   <div class="cc-brand">
-                    <img src="@/assets/hotel_account_img/hotel_account_visa.jpg" alt="visa"/>
+                    <img src="/images/hotel_account_img/hotel_account_visa.jpg" alt="visa"/>
                   </div>
                 </div>
               </div>
@@ -344,7 +344,7 @@
                     v-model="newCard.number"
                     @input="formatCardNumber"
                   />
-                  <img src="@/assets/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
+                  <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
                 </div>
               </div>
               
@@ -520,10 +520,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">
@@ -579,8 +579,8 @@ export default {
       userInfo: null,
       isLoggedIn: false,
       activeTab: 'account',
-      coverImage: require('@/assets/hotel_account_img/back.jpg'),
-      profileAvatar: require('@/assets/hotel_account_img/member.jpg'),
+      coverImage: '/images/hotel_account_img/back.jpg',
+      profileAvatar: '/images/hotel_account_img/member.jpg',
       
       // 실제 사용자 정보 (API에서 가져옴)
       actualUserInfo: null,

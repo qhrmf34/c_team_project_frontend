@@ -4,14 +4,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -35,17 +35,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -70,7 +70,7 @@
             <option>1 room, 2 guests</option>
           </select>
         </div>
-        <button class="search-btn" @click="search"><img src="@/assets/hotel_img/glass.jpg"/></button>
+        <button class="search-btn" @click="search"><img src="/images/hotel_img/glass.jpg"/></button>
       </div>
     </section>
 
@@ -82,7 +82,7 @@
           <div class="filter-header" @click="toggleFilter('price')">
             <h3>Price</h3>
             <span class="filter-toggle">
-              <img :src="filters.price.collapsed ? require('@/assets/hotel_img/down.jpg') : require('@/assets/hotel_img/up.jpg')"/>
+              <img :src="filters.price.collapsed ? '/images/hotel_img/down.jpg' :'/images/hotel_img/up.jpg'"/>
             </span>
           </div>
           <div class="filter-content" :class="{ collapsed: filters.price.collapsed }">
@@ -116,7 +116,7 @@
           <div class="filter-header" @click="toggleFilter('rating')">
             <h3>Rating</h3>
             <span class="filter-toggle">
-              <img :src="filters.rating.collapsed ? require('@/assets/hotel_img/down.jpg') : require('@/assets/hotel_img/up.jpg')"/>
+              <img :src="filters.rating.collapsed ? '/images/hotel_img/down.jpg' : '/images/hotel_img/up.jpg'"/>
             </span>
           </div>
           <div class="filter-content" :class="{ collapsed: filters.rating.collapsed }">
@@ -137,7 +137,7 @@
           <div class="filter-header" @click="toggleFilter('freebies')">
             <h3>Freebies</h3>
             <span class="filter-toggle">
-              <img :src="filters.freebies.collapsed ? require('@/assets/hotel_img/down.jpg') : require('@/assets/hotel_img/up.jpg')"/>
+              <img :src="filters.freebies.collapsed ? '/images/hotel_img/down.jpg' : '/images/hotel_img/up.jpg'"/>
             </span>
           </div>
           <div class="filter-content" :class="{ collapsed: filters.freebies.collapsed }">
@@ -154,7 +154,7 @@
           <div class="filter-header" @click="toggleFilter('amenities')">
             <h3>Amenities</h3>
             <span class="filter-toggle">
-              <img :src="filters.amenities.collapsed ? require('@/assets/hotel_img/down.jpg') : require('@/assets/hotel_img/up.jpg')"/>
+              <img :src="filters.amenities.collapsed ? '/images/hotel_img/down.jpg' : '/images/hotel_img/up.jpg'"/>
             </span>
           </div>
           <div class="filter-content" :class="{ collapsed: filters.amenities.collapsed }">
@@ -217,14 +217,14 @@
                 </div>
               </div>
               <div class="hotel-location">
-                <span><img src="@/assets/hotel_img/map.jpg"/></span>
+                <span><img src="/images/hotel_img/map.jpg"/></span>
                 <span>{{ hotel.location }}</span>
               </div>
               <div class="hotel-meta">
                 <span class="stars">{{ hotel.stars }}</span>
                 <span class="hotel-type">{{ hotel.type }}</span>
                 <span class="amenities">
-                  <img src="@/assets/hotel_img/coffee.jpg"/> {{ hotel.amenitiesCount }}+ Amenities
+                  <img src="/images/hotel_img/coffee.jpg"/> {{ hotel.amenitiesCount }}+ Amenities
                 </span>
               </div>
               <div class="rating-section">
@@ -284,10 +284,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg"></span>
+          <span><img src="/images/hotel_img/facebook.jpg"></span>
+          <span><img src="/images/hotel_img/twitter.jpg"></span>
+          <span><img src="/images/hotel_img/youtube.jpg"></span>
+          <span><img src="/images/hotel_img/instagram.jpg"></span>
         </div>
 
         <div class="footer-links">
@@ -385,7 +385,7 @@ export default {
         {
           id: 1,
           title: '해튼호텔',
-          image: require('@/assets/hotel_img/hotel1.jpg'),
+          image: '/images/hotel_img/hotel1.jpg',
           imageCount: 9,
           price: '₩240,000',
           location: 'Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437',
@@ -400,7 +400,7 @@ export default {
         {
           id: 2,
           title: '마제스틱 말라카 호텔',
-          image: require('@/assets/hotel_img/hotel2.jpg'),
+          image: '/images/hotel_img/hotel2.jpg',
           imageCount: 9,
           price: '₩120,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -415,7 +415,7 @@ export default {
         {
           id: 3,
           title: '카나휘 리모 호텔',
-          image: require('@/assets/hotel_img/hotel3.jpg'),
+          image: '/images/hotel_img/hotel3.jpg',
           imageCount: 9,
           price: '₩130,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -430,7 +430,7 @@ export default {
         {
           id: 4,
           title: '베이알 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 9,
           price: '₩104,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -445,7 +445,7 @@ export default {
         {
           id: 5,
           title: '그랜드 플라자 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 12,
           price: '₩85,000',
           location: 'Beyoğlu, Galata Kulesi Sk. No:15, Istanbul 34421',
@@ -460,7 +460,7 @@ export default {
         {
           id: 6,
           title: '오션뷰 리조트',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 15,
           price: '₩320,000',
           location: 'Kadıköy, Bağdat Cd. No:234, Istanbul 34710',
@@ -475,7 +475,7 @@ export default {
         {
           id: 7,
           title: '시티센터 비즈니스 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 8,
           price: '₩95,000',
           location: 'Şişli, Büyükdere Cd. No:145, Istanbul 34394',
@@ -490,7 +490,7 @@ export default {
         {
           id: 8,
           title: '부티크 가든 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 11,
           price: '₩180,000',
           location: 'Beşiktaş, Çırağan Cd. No:32, Istanbul 34349',
@@ -505,7 +505,7 @@ export default {
         {
           id: 9,
           title: '럭셔리 스파 리조트',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 20,
           price: '₩450,000',
           location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',

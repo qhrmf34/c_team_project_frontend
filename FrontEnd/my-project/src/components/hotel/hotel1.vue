@@ -4,14 +4,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -35,23 +35,23 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
 
     <section class="hero-section">
-      <img src="@/assets/hotel_img/plushotel.jpg" alt="Hero Background">
+      <img src="/images/hotel_img/plushotel.jpg" alt="Hero Background">
       <div class="hero-content">
         <h1 class="hero-title">플러스 호텔 및 다양한 숙소를 확인하세요!</h1>
         <p class="hero-subtitle">검색을 통해 요금을 비교하고 무료 취소를 포함한 특가도 확인하세요!</p>
@@ -94,7 +94,7 @@
 
         <div class="destination-cards">
           <div class="destination-card">
-            <img src="@/assets/hotel_img/melbourne.jpg" alt="Melbourne" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+            <img src="/images/hotel_img/melbourne.jpg" alt="Melbourne" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
             <div class="card-overlay">
               <div class="card-content">
                 <div class="card-info">
@@ -108,7 +108,7 @@
           </div>
 
           <div class="destination-card">
-            <img src="@/assets/hotel_img/paris.jpg" alt="Paris" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+            <img src="/images/hotel_img/paris.jpg" alt="Paris" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
             <div class="card-overlay">
               <div class="card-content">
                 <div class="card-info">
@@ -122,7 +122,7 @@
           </div>
 
           <div class="destination-card">
-            <img src="@/assets/hotel_img/london.jpg" alt="London" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+            <img src="/images/hotel_img/london.jpg" alt="London" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
             <div class="card-overlay">
               <div class="card-content">
                 <div class="card-info">
@@ -136,7 +136,7 @@
           </div>
 
           <div class="destination-card">
-            <img src="@/assets/hotel_img/colombia.jpg" alt="Colombia" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+            <img src="/images/hotel_img/colombia.jpg" alt="Colombia" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
             <div class="card-overlay">
               <div class="card-content">
                 <div class="card-info">
@@ -177,12 +177,12 @@
 
           <div class="tour-images">
             <div class="image-row">
-              <img src="@/assets/hotel_img/tour-image-1.jpg" alt="Tour Image 1" class="tour-image">
-              <img src="@/assets/hotel_img/tour-image-2.jpg" alt="Tour Image 2" class="tour-image">
+              <img src="/images/hotel_img/tour-image-1.jpg" alt="Tour Image 1" class="tour-image">
+              <img src="/images/hotel_img/tour-image-2.jpg" alt="Tour Image 2" class="tour-image">
             </div>
             <div class="image-row">
-              <img src="@/assets/hotel_img/tour-image-3.jpg" alt="Tour Image 3" class="tour-image">
-              <img src="@/assets/hotel_img/tour-image-4.jpg" alt="Tour Image 4" class="tour-image">
+              <img src="/images/hotel_img/tour-image-3.jpg" alt="Tour Image 3" class="tour-image">
+              <img src="/images/hotel_img/tour-image-4.jpg" alt="Tour Image 4" class="tour-image">
             </div>
           </div>
         </div>
@@ -220,10 +220,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <img src="@/assets/hotel_img/facebook.jpg"/>
-          <img src="@/assets/hotel_img/twitter.jpg"/>
-          <img src="@/assets/hotel_img/youtube.jpg"/>
-          <img src="@/assets/hotel_img/instagram.jpg"/>
+          <img src="/images/hotel_img/facebook.jpg"/>
+          <img src="/images/hotel_img/twitter.jpg"/>
+          <img src="/images/hotel_img/youtube.jpg"/>
+          <img src="/images/hotel_img/instagram.jpg"/>
         </div>
 
         <div class="footer-links">

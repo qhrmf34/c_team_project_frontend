@@ -5,14 +5,14 @@
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -36,17 +36,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -67,7 +67,7 @@
             <div class="hotel-info">
               <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
               <div class="hotel-location">
-                <span><img src="@/assets/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
                 <span class="hotel-location-map">
                   <span class="hotel-locatin-hotel">해튼호텔</span>
                   <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
@@ -80,9 +80,9 @@
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
-                  <div><img src="@/assets/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
-                  <div><img src="@/assets/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
-                  <div><img src="@/assets/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
+                  <div><img src="/images/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
+                  <div><img src="/images/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
+                  <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
                   <div class="date-label">Friday, Dec 9</div>
@@ -132,18 +132,18 @@
 
               <div class="social-login">
                 <button class="social-btn facebook">
-                  <img src="@/assets/hotel_img/facebook2.jpg" alt="facebook">
+                  <img src="/images/hotel_img/facebook2.jpg" alt="facebook">
                 </button>
                 <button class="social-btn google">
-                  <img src="@/assets/hotel_img/google.jpg" alt="google">
+                  <img src="/images/hotel_img/google.jpg" alt="google">
                 </button>
                 <button class="social-btn apple">
-                  <img src="@/assets/hotel_img/apple.jpg" alt="apple">
+                  <img src="/images/hotel_img/apple.jpg" alt="apple">
                 </button>
               </div>
 
               <button class="email-login">
-                <span><img src="@/assets/hotel_img/email.jpg" alt="email"></span>
+                <span><img src="/images/hotel_img/email.jpg" alt="email"></span>
                 Continue with email
               </button>
             </div>
@@ -152,7 +152,7 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="@/assets/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">CVK Park Bosphorus...</div>
                   <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
@@ -223,7 +223,7 @@
             <div class="hotel-info">
               <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
               <div class="hotel-location">
-                <span><img src="@/assets/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
                 <span class="hotel-location-map">
                   <span class="hotel-locatin-hotel">해튼호텔</span>
                   <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
@@ -236,9 +236,9 @@
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
-                  <div><img src="@/assets/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
-                  <div><img src="@/assets/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
-                  <div><img src="@/assets/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
+                  <div><img src="/images/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
+                  <div><img src="/images/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
+                  <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
                   <div class="date-label">Friday, Dec 9</div>
@@ -281,7 +281,7 @@
               >
                 <div class="card-info">
                   <div class="card-icon">
-                    <img src="@/assets/hotel_img/visa.jpg" alt="visa">
+                    <img src="/images/hotel_img/visa.jpg" alt="visa">
                   </div>
                   <span class="card-number">****4321</span>
                   <span class="card-date">02/27</span>
@@ -298,7 +298,7 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="@/assets/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">CVK Park Bosphorus...</div>
                   <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
@@ -375,7 +375,7 @@
                     maxlength="19"
                     v-model="cardForm.cardNumber"
                   />
-                  <img src="@/assets/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
+                  <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
                 </div>
               </div>
           
@@ -470,10 +470,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">

@@ -6,13 +6,13 @@
         <div class="nav-left">
           <a href="#" class="nav-item">
             <span>
-              <img src="@/assets/hotel_img/airplane.png" alt="airplane"/>
+              <img src="/images/hotel_img/airplane.png" alt="airplane"/>
               Find Flight
             </span>
           </a>
           <a href="#" class="nav-item" >
             <span>
-              <img src="@/assets/hotel_img/hotel.jpg" alt="hotel">
+              <img src="/images/hotel_img/hotel.jpg" alt="hotel">
               Find Stays
             </span>
           </a>
@@ -20,13 +20,13 @@
 
         <div class="nav-center">
           <a href="#" class="nav-item" @click="goToHotel">
-            <img src="@/assets/hotel_img/Logo.png" alt="logo"/>
+            <img src="/images/hotel_img/Logo.png" alt="logo"/>
           </a>
         </div>
         
         <div class="nav-right">
           <a href="#" class="nav-item" @click="goToFavourites">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -51,17 +51,17 @@
       </div>
       <div class="dropdown-menu">
         <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="@/assets/hotel_img/account.jpg">계정
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/card.jpg">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img src="@/assets/hotel_img/setting.jpg">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
         <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="@/assets/hotel_img/logout.jpg">로그아웃
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -112,14 +112,14 @@
                     <div class="price-tax">excl. tax</div>
                   </div>
                   <div class="hotel-location">
-                    <span><img src="@/assets/hotel_img/map.jpg" alt="map"/></span>
+                    <span><img src="/images/hotel_img/map.jpg" alt="map"/></span>
                     <span>{{ hotel.location }}</span>
                   </div>
                   <div class="hotel-meta">
                     <span class="stars">{{ hotel.stars }}</span>
                     <span class="hotel-type">{{ hotel.type }}</span>
                     <span class="amenities">
-                      <img src="@/assets/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
+                      <img src="/images/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
                     </span>
                   </div>
                   <div class="rating-section">
@@ -152,14 +152,14 @@
                     <div class="price-tax">excl. tax</div>
                   </div>
                   <div class="hotel-location">
-                    <span><img src="@/assets/hotel_img/map.jpg" alt="map"/></span>
+                    <span><img src="/images/hotel_img/map.jpg" alt="map"/></span>
                     <span>{{ hotel.location }}</span>
                   </div>
                   <div class="hotel-meta">
                     <span class="stars">{{ hotel.stars }}</span>
                     <span class="hotel-type">{{ hotel.type }}</span>
                     <span class="amenities">
-                      <img src="@/assets/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
+                      <img src="/images/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
                     </span>
                   </div>
                   <div class="rating-section">
@@ -217,10 +217,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">
@@ -282,7 +282,7 @@ export default {
         {
           id: 1,
           name: '해튼호텔',
-          image: require('@/assets/hotel_img/hotel1.jpg'),
+          image: '/images/hotel_img/hotel1.jpg',
           imageCount: 9,
           price: '₩240,000',
           location: 'Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437',
@@ -296,7 +296,7 @@ export default {
         {
           id: 2,
           name: '마제스틱 말라카 호텔',
-          image: require('@/assets/hotel_img/hotel2.jpg'),
+          image: '/images/hotel_img/hotel2.jpg',
           imageCount: 9,
           price: '₩120,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -310,7 +310,7 @@ export default {
         {
           id: 3,
           name: '카나휘 리모 호텔',
-          image: require('@/assets/hotel_img/hotel3.jpg'),
+          image: '/images/hotel_img/hotel3.jpg',
           imageCount: 9,
           price: '₩130,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -326,7 +326,7 @@ export default {
         {
           id: 4,
           name: '베이알 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 9,
           price: '₩104,000',
           location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
@@ -340,7 +340,7 @@ export default {
         {
           id: 5,
           name: '그랜드 플라자 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 12,
           price: '₩85,000',
           location: 'Beyoğlu, Galata Kulesi Sk. No:15, Istanbul 34421',
@@ -354,7 +354,7 @@ export default {
         {
           id: 6,
           name: '오션뷰 리조트',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 15,
           price: '₩320,000',
           location: 'Kadıköy, Bağdat Cd. No:234, Istanbul 34710',
@@ -368,7 +368,7 @@ export default {
         {
           id: 7,
           name: '시티센터 비즈니스 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 8,
           price: '₩95,000',
           location: 'Şişli, Büyükdere Cd. No:145, Istanbul 34394',
@@ -382,7 +382,7 @@ export default {
         {
           id: 8,
           name: '부티크 가든 호텔',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 11,
           price: '₩180,000',
           location: 'Beşiktaş, Çırağan Cd. No:32, Istanbul 34349',
@@ -396,7 +396,7 @@ export default {
         {
           id: 9,
           name: '럭셔리 스파 리조트',
-          image: require('@/assets/hotel_img/hotel4.jpg'),
+          image: '/images/hotel_img/hotel4.jpg',
           imageCount: 20,
           price: '₩450,000',
           location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',
