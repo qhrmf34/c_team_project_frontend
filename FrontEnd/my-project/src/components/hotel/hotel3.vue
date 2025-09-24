@@ -3,14 +3,14 @@
     <header class="header">
       <nav>
         <div class="nav-left">
-          <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/hotel.jpg"></span>
+          <a href="#" class="nav-item" @click="goToHotel">
+            <span><img src="@/assets/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
-          <a href="#" class="nav-item">
+          <a href="#" class="nav-item" @click="goToFavourites">
             <span><img src="@/assets/hotel_img/heart.jpg"></span>
             찜하기
           </a>
@@ -721,6 +721,24 @@ export default {
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    //찜목록 페이지로 이동
+    goToFavourites() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelsix');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },    
+    //호텔 페이지로 이동
+    goToHotel() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelone');
       } else {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
