@@ -274,23 +274,123 @@
             </div>
             
             <div class="card-list">
+              <!-- 저장된 카드들-->
               <div 
+                v-for="(card, index) in savedCards"
+                :key="card.id"
                 class="saved-card" 
-                :class="{ selected: selectedCard === 0 }"
-                @click="selectCard(0)"
+                :class="{ selected: selectedCard === index }"
+                @click="selectCard(index)"
               >
                 <div class="card-info">
                   <div class="card-icon">
-                    <img src="/images/hotel_img/visa.jpg" alt="visa">
+                    <img :src="getCardTypeImage(card.cardType)" :alt="card.cardType">
                   </div>
-                  <span class="card-number">****4321</span>
-                  <span class="card-date">02/27</span>
+                  <span class="card-number">****{{ card.lastFour }}</span>
+                  <span class="card-date">{{ card.expiryDate }}</span>
                 </div>
                 <div class="card-radio"></div>
               </div>
+
+
+              <!-- 카드 추가 버튼 -->
               <div class="add-card-btn" @click="openAddCardModal">
                 <div class="plus-btn">+</div>
                 <div class="add-card">Add a new card</div>
+              </div>
+            </div>
+
+            <!-- Add Card Modal - 수정된 부분 -->
+            <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
+              <div class="modal-full">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button class="close-btn" @click="closeAddCardModal">&times;</button>
+                  </div>
+                  <div class="modal-card">
+                    <div class="modal-title">카드추가</div>
+                  
+                    <form @submit.prevent="addNewCard">
+                      <!-- Card Number -->
+                      <div class="form-group card-number-group">
+                        <label class="form-label">Card Number</label>
+                        <div class="card-input-wrapper">
+                          <input
+                            type="text"
+                            class="form-input"
+                            placeholder="4330 1234 5678 1234"
+                            maxlength="19"
+                            v-model="cardForm.cardNumber"
+                            @input="formatCardNumber"
+                          />
+                          <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
+                        </div>
+                      </div>
+                    
+                      <!-- Exp & 카드 비밀번호 -->
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label class="form-label">Exp. Date</label>
+                          <input
+                            type="text"
+                            class="form-input"
+                            placeholder="MM/YY"
+                            maxlength="5"
+                            v-model="cardForm.expDate"
+                            @input="formatExpDate"
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">카드 비밀번호 (앞 2자리)</label>
+                          <input
+                            type="password"
+                            class="form-input"
+                            placeholder="12"
+                            maxlength="2"
+                            v-model="cardForm.cardPassword"
+                            @input="formatCardPassword"
+                          />
+                        </div>
+                      </div>
+                    
+                      <!-- Name -->
+                      <div class="form-group">
+                        <label class="form-label">Name on Card</label>
+                        <input
+                          type="text"
+                          class="form-input"
+                          placeholder="홍길동"
+                          v-model="cardForm.cardName"
+                        />
+                      </div>
+                    
+                      <!-- Country -->
+                      <div class="form-group">
+                        <label class="form-label">Country or Region</label>
+                        <select class="form-input" v-model="cardForm.country">
+                          <option value="KR">대한민국</option>
+                          <option value="US">United States</option>
+                          <option value="JP">Japan</option>
+                        </select>
+                      </div>
+                    
+                      <!-- Checkbox -->
+                      <div class="form-group checkbox-group">
+                        <input type="checkbox" id="saveInfo" v-model="cardForm.saveInfo" />
+                        <label for="saveInfo">정보 저장하기</label>
+                      </div>
+                    
+                      <!-- Button -->
+                      <button 
+                        type="submit" 
+                        class="save-card-btn"
+                        :disabled="isAddingCard"
+                      >
+                        {{ isAddingCard ? '등록 중...' : 'Add Card' }}
+                      </button>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -353,90 +453,7 @@
       </main>
     </div>
 
-    <!-- Add Card Modal -->
-    <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
-      <div class="modal-full">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button class="close-btn" @click="closeAddCardModal">&times;</button>
-          </div>
-          <div class="modal-card">
-            <div class="modal-title">카드추가</div>
-        
-            <form @submit="addNewCard">
-              <!-- Card Number -->
-              <div class="form-group card-number-group">
-                <label class="form-label">Card Number</label>
-                <div class="card-input-wrapper">
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="4321 4321 4321 4321"
-                    maxlength="19"
-                    v-model="cardForm.cardNumber"
-                  />
-                  <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
-                </div>
-              </div>
-          
-              <!-- Exp & CVC -->
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Exp. Date</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="MM/YY"
-                    maxlength="5"
-                    v-model="cardForm.expDate"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">CVC</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="123"
-                    maxlength="3"
-                    v-model="cardForm.cvc"
-                  />
-                </div>
-              </div>
-          
-              <!-- Name -->
-              <div class="form-group">
-                <label class="form-label">Name on Card</label>
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="John Doe"
-                  v-model="cardForm.cardName"
-                />
-              </div>
-          
-              <!-- Country -->
-              <div class="form-group">
-                <label class="form-label">Country or Region</label>
-                <select class="form-input" v-model="cardForm.country">
-                  <option>United States</option>
-                  <option>Korea</option>
-                  <option>Japan</option>
-                </select>
-              </div>
-          
-              <!-- Checkbox -->
-              <div class="form-group checkbox-group">
-                <input type="checkbox" id="saveInfo" v-model="cardForm.saveInfo" />
-                <label for="saveInfo">정보 저장하기</label>
-              </div>
-          
-              <!-- Button -->
-              <button type="submit" class="save-card-btn">Add Card</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Newsletter Section -->
     <section class="newsletter-section">
@@ -517,8 +534,10 @@
   </div>
 </template>
 
+// HotelFour.vue - 수정된 script 부분
+
 <script>
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, paymentMethodAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelFour',
@@ -531,20 +550,28 @@ export default {
       modalActive: false,
       phoneNumber: '',
       email: '',
+      
+      // 카드 폼 수정 (CVC → cardPassword)
       cardForm: {
         cardNumber: '',
         expDate: '',
-        cvc: '',
+        cardPassword: '', // CVC에서 cardPassword로 변경
         cardName: '',
-        country: 'United States',
+        country: 'KR', // 기본값을 한국으로 변경
         saveInfo: false
       },
+      
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      
+      // 결제수단 관련
+      isAddingCard: false,
+      savedCards: [] // 저장된 카드 목록
     }
   },
-    computed: {
+  
+  computed: {
     // 표시할 사용자 이름 계산 (소셜 로그인 개선)
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
@@ -585,20 +612,24 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
-  mounted() {
-    // 화면 외부 클릭 시 드롭다운 닫기
+  
+  async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+    this.loadUserInfo();
+    await this.loadSavedCards(); // 저장된 카드 목록 로드
   },
+  
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside)
   },
-    // 라우터 변경 시에도 사용자 정보 다시 확인
+  
+  // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
     '$route'() {
       this.loadUserInfo();
     }
   },
+  
   methods: {
     showScreen(screenNumber) {
       this.currentScreen = screenNumber
@@ -609,38 +640,180 @@ export default {
     selectCard(index) {
       this.selectedCard = index
     },
+    
+    // 카드 추가 모달 관련
     openAddCardModal() {
-      this.modalActive = true
+      this.modalActive = true;
+      this.resetCardForm();
     },
+    
     closeAddCardModal() {
-      this.modalActive = false
+      this.modalActive = false;
+      this.resetCardForm();
     },
+    
     closeModalOnOverlay(event) {
       if (event.target === event.currentTarget) {
         this.closeAddCardModal()
       }
     },
-    addNewCard(event) {
-      event.preventDefault()
-      // 여기서 카드 데이터를 서버로 전송
-      console.log('Card added:', this.cardForm)
-      this.closeAddCardModal()
+    
+    // 카드 폼 초기화
+    resetCardForm() {
+      this.cardForm = {
+        cardNumber: '',
+        expDate: '',
+        cardPassword: '', // CVC → cardPassword
+        cardName: '',
+        country: 'KR',
+        saveInfo: false
+      };
     },
+    
+    // 카드 추가 - 실제 API 연동
+    async addNewCard(event) {
+      event.preventDefault();
+      
+      // 로그인 체크
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        return;
+      }
+      
+      // 유효성 검사
+      if (!this.validateCardForm()) {
+        return;
+      }
+      
+      this.isAddingCard = true;
+      
+      try {
+        // 서버 API 형식에 맞게 데이터 변환
+        const cardData = {
+          cardNumber: this.cardForm.cardNumber.replace(/\s/g, ''), // 공백 제거
+          cardExpirationMonth: this.cardForm.expDate.split('/')[0],
+          cardExpirationYear: this.cardForm.expDate.split('/')[1],
+          cardPassword: this.cardForm.cardPassword, // 카드 비밀번호 앞 2자리
+          customerName: this.cardForm.cardName
+        };
+        
+        // 결제수단 등록 API 호출
+        const response = await paymentMethodAPI.registerPaymentMethod(cardData);
+        
+        if (response && response.data) {
+          // 성공 시 저장된 카드 목록에 추가
+          this.savedCards.push({
+            id: response.data.id,
+            lastFour: cardData.cardNumber.slice(-4),
+            expiryDate: this.cardForm.expDate,
+            cardType: this.determineCardType(cardData.cardNumber),
+            cardCompany: response.data.cardCompany || 'Unknown'
+          });
+          
+          this.closeAddCardModal();
+          alert('카드가 성공적으로 등록되었습니다!');
+        }
+        
+      } catch (error) {
+        console.error('카드 등록 실패:', error);
+        
+        let errorMessage = '카드 등록에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        this.isAddingCard = false;
+      }
+    },
+    
+    // 카드 유효성 검사
+    validateCardForm() {
+      const validation = paymentMethodAPI.validateCardInfo({
+        cardNumber: this.cardForm.cardNumber,
+        expiry: this.cardForm.expDate,
+        cardPassword: this.cardForm.cardPassword, // CVC → cardPassword
+        name: this.cardForm.cardName
+      });
+
+      if (!validation.isValid) {
+        alert(validation.errors.join('\n'));
+        return false;
+      }
+
+      return true;
+    },
+    
+    // 포맷팅 메서드들
+    formatCardNumber() {
+      this.cardForm.cardNumber = paymentMethodAPI.formatCardNumber(this.cardForm.cardNumber);
+    },
+    
+    formatExpDate() {
+      this.cardForm.expDate = paymentMethodAPI.formatExpiryDate(this.cardForm.expDate);
+    },
+    
+    // 카드 비밀번호 포맷팅 (2자리 숫자만)
+    formatCardPassword() {
+      this.cardForm.cardPassword = this.cardForm.cardPassword.replace(/\D/g, '').substring(0, 2);
+    },
+    
+    // 카드 타입 결정
+    determineCardType(cardNumber) {
+      if (cardNumber.startsWith('4')) return 'VISA';
+      if (cardNumber.startsWith('5')) return 'MasterCard';
+      if (cardNumber.startsWith('3')) return 'AMEX';
+      return 'CARD';
+    },
+    
+    // 카드 타입별 이미지 반환
+    getCardTypeImage(cardType) {
+      return paymentMethodAPI.getCardTypeImage(cardType);
+    },
+    
+    // 저장된 카드 목록 로드
+    async loadSavedCards() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        const response = await paymentMethodAPI.getMyPaymentMethods();
+        if (response && response.data) {
+          this.savedCards = response.data.map(card => ({
+            id: card.id,
+            lastFour: card.cardLastFour || '****',
+            expiryDate: '**/**', // 보안상 숨김
+            cardType: card.cardType || 'VISA',
+            cardCompany: card.cardCompany || 'Unknown'
+          }));
+        }
+      } catch (error) {
+        console.error('저장된 카드 로드 실패:', error);
+        // 에러가 있어도 기본 카드는 표시하도록 빈 배열 유지
+      }
+    },
+    
+    // 기존 메서드들
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
+    
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
     },
+    
     subscribe() {
       if (this.email) {
         console.log('Subscribed:', this.email)
         this.email = ''
       }
     },
+    
     // 사용자 정보 로드
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
@@ -653,31 +826,25 @@ export default {
       }
     },
     
-    // 로그아웃 처리 (개선된 버전)
+    // 로그아웃 처리
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
           console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
           authUtils.logout();
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         }
       }
     },
-    //호텔 페이지로 이동
+    
+    // 페이지 이동 메서드들
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -685,8 +852,8 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    }, 
-    //찜목록 페이지로 이동
+    },
+    
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -696,7 +863,6 @@ export default {
       }
     },
 
-    // 계정 페이지로 이동
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');

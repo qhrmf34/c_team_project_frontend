@@ -1045,7 +1045,8 @@ export default {
         }
       } catch (error) {
         console.error('정보 수정 실패:', error);
-        alert('정보 수정 중 오류가 발생했습니다.');
+        const serverMessage = error.response?.data?.message || error.message;
+        alert(serverMessage);
       }
     },
     

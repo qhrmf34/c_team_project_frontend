@@ -72,7 +72,7 @@ export const memberAPI = {
 
   // 프로필 수정
   async updateProfile(profileData) {
-    const response = await apiClient.put('/api/member/profile', profileData)
+    const response = await apiClient.post('/api/member/profile', profileData)
     return response.data
   },
 
@@ -213,7 +213,7 @@ export const memberAPI = {
   getCardTypeImage(cardType) {
     const cardImages = {
       'VISA': '/images/hotel_account_img/visa.jpg',
-      'MasterCard': '/images/hotel_account_img/mastercard.jpb',
+      'MasterCard': '/images/hotel_account_img/mastercard.jpg',
       'AMEX': '/images/hotel_account_img/amex.jpg',
       'JCB': '/images/hotel_account_img/hotel_account_jcb.jpg',
       'DinersClub': '/images/hotel_account_img/dinersclub.jpg'
