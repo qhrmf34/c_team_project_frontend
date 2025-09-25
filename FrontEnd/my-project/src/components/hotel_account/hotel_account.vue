@@ -26,6 +26,7 @@
       </nav>
     </header>
 
+    <!-- User Dropdown -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
@@ -159,7 +160,8 @@
                     :title="isSocialAccount ? '소셜 로그인 계정은 이메일을 변경할 수 없습니다.' : ''"
                   >
                     {{ isSocialAccount ? 'Social Account' : 'Change' }}
-                  </button>                </div>
+                  </button>                
+                </div>
 
                 <!-- 비밀번호 (로컬 계정만 표시) -->
                 <div class="row" v-if="isLocalAccount">
@@ -283,8 +285,13 @@
           <div class="payment-title">결제수단</div>
           
           <section class="billing">
-            <div class="grid">
-              <!-- 기존 카드들 -->
+            <!-- 로딩 상태 -->
+            <div v-if="isLoadingCards" class="loading-message">
+              <p>결제수단을 불러오는 중...</p>
+            </div>
+            
+            <div v-else class="grid">
+              <!-- 실제 카드들 -->
               <div 
                 v-for="card in paymentCards" 
                 :key="card.id" 
@@ -339,7 +346,7 @@
                   <input
                     type="text"
                     class="form-input"
-                    placeholder="4321 4321 4321 4321"
+                    placeholder="1234 5678 9012 3456"
                     maxlength="19"
                     v-model="newCard.number"
                     @input="formatCardNumber"
@@ -348,7 +355,7 @@
                 </div>
               </div>
               
-              <!-- Exp & CVC -->
+              <!-- Exp & Card Password -->
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Exp. Date</label>
@@ -362,13 +369,14 @@
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">CVC</label>
+                  <label class="form-label">카드 비밀번호 (앞 2자리)</label>
                   <input
-                    type="text"
+                    type="password"
                     class="form-input"
-                    placeholder="123"
-                    maxlength="3"
-                    v-model="newCard.cvc"
+                    placeholder="12"
+                    maxlength="2"
+                    v-model="newCard.cardPassword"
+                    @input="formatCardPassword"
                   />
                 </div>
               </div>
@@ -379,8 +387,9 @@
                 <input
                   type="text"
                   class="form-input"
-                  placeholder="John Doe"
+                  placeholder="홍길동"
                   v-model="newCard.name"
+                  @input="formatCardName"
                 />
               </div>
               
@@ -388,8 +397,8 @@
               <div class="form-group">
                 <label class="form-label">Country or Region</label>
                 <select class="form-input" v-model="newCard.country">
+                  <option value="KR">대한민국</option>
                   <option value="US">United States</option>
-                  <option value="KR">Korea</option>
                   <option value="JP">Japan</option>
                 </select>
               </div>
@@ -401,7 +410,13 @@
               </div>
               
               <!-- Button -->
-              <button type="submit" class="save-card-btn">Add Card</button>
+              <button 
+                type="submit" 
+                class="save-card-btn"
+                :disabled="isAddingCard"
+              >
+                {{ isAddingCard ? '등록 중...' : 'Add Card' }}
+              </button>
             </form>
           </div>
         </div>
@@ -492,7 +507,7 @@
 
     <!-- Newsletter Section -->
     <section class="newsletter-section">
-          </section>
+        </section>
       <div class="newsletter-content">
         <div class="newsletter-left">
           <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
@@ -568,7 +583,7 @@
 </template>
 
 <script>
-import { authUtils, memberAPI } from '@/utils/commonAxios'
+import { authUtils, memberAPI, paymentMethodAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelAccount',
@@ -585,7 +600,7 @@ export default {
       // 실제 사용자 정보 (API에서 가져옴)
       actualUserInfo: null,
       
-      // Booking Data (기존 유지)
+      // Booking Data (예시 데이터)
       sortOption: 'upcoming',
       bookings: [
         {
@@ -614,28 +629,27 @@ export default {
         }
       ],
       
-      // Payment Cards (기존 유지)
-      paymentCards: [
-        {
-          id: 1,
-          lastFour: '4321',
-          expiryDate: '02/27',
-          type: 'visa'
-        }
-      ],
+      // Payment Cards - 빈 배열로 초기화 (실제 데이터는 API에서 가져옴)
+      paymentCards: [],
+      
+      // 카드 로딩 상태
+      isLoadingCards: false,
+      
+      // 카드 추가 시 로딩 상태
+      isAddingCard: false,
       
       // Modal States
       addCardModalActive: false,
       editModalActive: false,
       passwordModalActive: false,
       
-      // New Card Data
+      // New Card Data - cardPassword로 변경
       newCard: {
         number: '',
         expiry: '',
-        cvc: '',
+        cardPassword: '', // cvc에서 cardPassword로 변경
         name: '',
-        country: 'US',
+        country: 'KR',
         saveInfo: false
       },
       
@@ -751,6 +765,7 @@ export default {
     document.addEventListener('keydown', this.handleEscapeKey);
     await this.loadUserInfo();
     await this.loadUserProfile();
+    await this.loadPaymentMethods(); // 결제수단 로드 추가
   },
   
   beforeUnmount() {
@@ -799,6 +814,42 @@ export default {
         this.isLoading = false;
       }
     },
+
+    // 결제수단 목록 로드
+    async loadPaymentMethods() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        this.isLoadingCards = true;
+        const response = await paymentMethodAPI.getMyPaymentMethods();
+        
+        if (response && response.data) {
+          // 서버에서 받은 데이터를 화면용 형식으로 변환
+          this.paymentCards = response.data.map(card => ({
+            id: card.id,
+            lastFour: this.extractLastFour(card.tossKey), // 토스키에서 카드 끝자리 추출
+            expiryDate: '**/**', // 보안상 숨김
+            type: 'visa', // 기본값 (실제로는 카드사 정보 필요)
+            tossKey: card.tossKey,
+            createdAt: card.createdAt
+          }));
+        }
+      } catch (error) {
+        console.error('결제수단 로드 실패:', error);
+        if (error.response?.status !== 404) { // 404는 결제수단이 없는 경우이므로 정상
+          alert('결제수단을 불러오는데 실패했습니다.');
+        }
+      } finally {
+        this.isLoadingCards = false;
+      }
+    },
+
+    // 토스키에서 카드 끝자리 추출 (실제로는 다른 방식일 수 있음)
+    extractLastFour(tossKey) {
+      // 토스키는 실제 카드 번호가 아니므로, 임시로 처리
+      // 실제로는 토스 API에서 마스킹된 카드 번호를 제공해야 함
+      return tossKey.slice(-4);
+    },
     
     // Dropdown Methods
     toggleDropdown() {
@@ -841,7 +892,8 @@ export default {
     goToAccount() {
       // 이미 계정 페이지임
     },
-    //호텔 페이지로 이동
+    
+    // 호텔 페이지로 이동
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -850,7 +902,8 @@ export default {
         this.$router.push('/login');
       }
     },
-    //찜목록 페이지로 이동
+    
+    // 찜목록 페이지로 이동
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -859,6 +912,7 @@ export default {
         this.$router.push('/login');
       }
     },
+    
     // Image Upload Methods
     handleCoverImageChange(event) {
       const file = event.target.files[0];
@@ -1017,25 +1071,25 @@ export default {
         alert('비밀번호가 올바르지 않습니다.');
         return;
       }
-    try {
-    const response = await memberAPI.accountForgot(this.currentPassword);
-    
-    if (response && response.code === 200) {
-      // 비밀번호 확인 성공 - 2단계로 이동
-      this.passwordStep = 2;
-    }
-    }catch (error) {
-    console.error('비밀번호 확인 실패:', error);
-    if (error.response?.status === 400) {
-      alert('현재 비밀번호가 일치하지 않습니다.');
-    } else if (error.response?.status === 403) {
-      alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
-      this.closePasswordModal();
-    } else {
-      alert('비밀번호 확인 중 오류가 발생했습니다.');
-    }
-  }
-},
+      try {
+        const response = await memberAPI.accountForgot(this.currentPassword);
+        
+        if (response && response.code === 200) {
+          // 비밀번호 확인 성공 - 2단계로 이동
+          this.passwordStep = 2;
+        }
+      } catch (error) {
+        console.error('비밀번호 확인 실패:', error);
+        if (error.response?.status === 400) {
+          alert('현재 비밀번호가 일치하지 않습니다.');
+        } else if (error.response?.status === 403) {
+          alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+          this.closePasswordModal();
+        } else {
+          alert('비밀번호 확인 중 오류가 발생했습니다.');
+        }
+      }
+    },
     
     async changePassword() {
       if (this.newPassword !== this.confirmPassword) {
@@ -1048,7 +1102,7 @@ export default {
         return;
       }
       
-    try {
+      try {
         const response = await memberAPI.accountPasswordReset(
           this.newPassword, 
           this.confirmPassword
@@ -1078,80 +1132,134 @@ export default {
       }
     },
 
-    
-    // Payment Card Methods
+    // Payment Card Methods - 실제 API 연동
     openAddCardModal() {
       this.addCardModalActive = true;
+      this.resetNewCard();
     },
     
     closeAddCardModal() {
       this.addCardModalActive = false;
       this.resetNewCard();
     },
-    
-    addNewCard() {
+
+    // 카드 추가 처리 - 실제 API 연동
+    async addNewCard() {
       if (!this.validateCardForm()) return;
       
-      const newCard = {
-        id: Date.now(),
-        lastFour: this.newCard.number.slice(-4),
-        expiryDate: this.newCard.expiry,
-        type: 'visa'
-      };
-      
-      this.paymentCards.push(newCard);
-      this.closeAddCardModal();
-      alert('카드가 추가되었습니다.');
-    },
-    
-    deleteCard(cardId) {
-      if (confirm('정말로 이 카드를 삭제하시겠습니까?')) {
-        this.paymentCards = this.paymentCards.filter(card => card.id !== cardId);
+      try {
+        this.isAddingCard = true;
+        
+        // 프론트엔드 데이터를 서버 형식으로 변환 (이메일 제거)
+        const cardData = {
+          cardNumber: this.newCard.number.replace(/\s/g, ''), // 공백 제거
+          cardExpirationMonth: this.newCard.expiry.split('/')[0],
+          cardExpirationYear: this.newCard.expiry.split('/')[1],
+          cardPassword: this.newCard.cardPassword, // 카드 비밀번호 앞 2자리
+          customerName: this.newCard.name
+        };
+
+        // 서버에 카드 등록 요청
+        const response = await paymentMethodAPI.registerPaymentMethod(cardData);
+        
+        if (response && response.data) {
+          // 성공 시 카드 목록 다시 로드
+          await this.loadPaymentMethods();
+          this.closeAddCardModal();
+          alert('카드가 성공적으로 등록되었습니다.');
+        }
+        
+      } catch (error) {
+        console.error('카드 등록 실패:', error);
+        
+        let errorMessage = '카드 등록에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        this.isAddingCard = false;
       }
     },
-    
+
+    // 카드 삭제 - 실제 API 연동
+    async deleteCard(cardId) {
+      if (!confirm('정말로 이 카드를 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        const response = await paymentMethodAPI.deletePaymentMethod(cardId);
+        
+        if (response) {
+          // 성공 시 카드 목록 다시 로드
+          await this.loadPaymentMethods();
+          alert('카드가 삭제되었습니다.');
+        }
+        
+      } catch (error) {
+        console.error('카드 삭제 실패:', error);
+        
+        let errorMessage = '카드 삭제에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+        
+        alert(errorMessage);
+      }
+    },
+
+    // 카드 정보 유효성 검사 강화 (수정됨)
     validateCardForm() {
-      if (!this.newCard.number || !this.newCard.expiry || !this.newCard.cvc || !this.newCard.name) {
-        alert('모든 필드를 입력해주세요.');
+      // API 서비스의 유효성 검사 사용 (cardPassword로 변경)
+      const validation = paymentMethodAPI.validateCardInfo({
+        cardNumber: this.newCard.number,
+        expiry: this.newCard.expiry,
+        cvc: this.newCard.cardPassword, // cardPassword를 cvc로 전달
+        name: this.newCard.name
+      });
+
+      if (!validation.isValid) {
+        alert(validation.errors.join('\n'));
         return false;
       }
+
       return true;
     },
     
+    // 새 카드 데이터 초기화
     resetNewCard() {
       this.newCard = {
         number: '',
         expiry: '',
-        cvc: '',
+        cardPassword: '', // cvc에서 cardPassword로 변경
         name: '',
-        country: 'US',
+        country: 'KR', // 한국으로 기본값 설정
         saveInfo: false
       };
     },
     
+    // 카드 번호 포맷팅 개선
     formatCardNumber() {
-      let value = this.newCard.number.replace(/\s/g, '').replace(/[^0-9]/gi, '');
-      const matches = value.match(/\d{4,16}/g);
-      const match = matches && matches[0] || '';
-      const parts = [];
-      
-      for (let i = 0, len = match.length; i < len; i += 4) {
-        parts.push(match.substring(i, i + 4));
-      }
-      
-      if (parts.length) {
-        this.newCard.number = parts.join(' ');
-      } else {
-        this.newCard.number = value;
-      }
+      this.newCard.number = paymentMethodAPI.formatCardNumber(this.newCard.number);
     },
-    
+
+    // 만료일 포맷팅 개선  
     formatExpiryDate() {
-      let value = this.newCard.expiry.replace(/\D/g, '');
-      if (value.length >= 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2, 4);
-      }
-      this.newCard.expiry = value;
+      this.newCard.expiry = paymentMethodAPI.formatExpiryDate(this.newCard.expiry);
+    },
+
+    // 카드 비밀번호 입력 제한 (2자리)
+    formatCardPassword() {
+      this.newCard.cardPassword = this.newCard.cardPassword.replace(/\D/g, '').substring(0, 2);
+    },
+
+    // 카드 소유자명 포맷팅 (숫자 제거)
+    formatCardName() {
+      this.newCard.name = this.newCard.name.replace(/[0-9]/g, '');
     },
     
     // Booking Methods
