@@ -292,6 +292,7 @@
             
             <div v-else class="grid">
               <!-- 실제 카드들 -->
+              <!-- 기존 템플릿의 카드 표시 부분을 다음과 같이 수정 -->
               <div 
                 v-for="card in paymentCards" 
                 :key="card.id" 
@@ -300,6 +301,7 @@
                 <div class="cc-top">
                   <div>
                     <div class="cc-star">**** **** ****</div>
+                    <!-- 실제 카드번호 마지막 4자리 표시 -->
                     <div class="cc-number">{{ card.lastFour }}</div>
                   </div>
                   <div class="cc-delete" @click="deleteCard(card.id)">
@@ -308,11 +310,12 @@
                 </div>
                 <div class="cc-bottom">
                   <div class="cc-valid">
-                    <div class="cc-meta">Valid Thru</div>
+                    <div class="cc-meta">{{ getKoreanCardCompany(card.cardCompany) }}</div>
                     <div class="cc-meta-bold">{{ card.expiryDate }}</div>
                   </div>
                   <div class="cc-brand">
-                    <img src="/images/hotel_account_img/hotel_account_visa.jpg" alt="visa"/>
+                    <!-- 동적으로 카드 타입에 맞는 이미지 표시 -->
+                    <img :src="getCardImage(card.cardType)" :alt="card.cardType"/>
                   </div>
                 </div>
               </div>
@@ -817,39 +820,41 @@ export default {
 
     // 결제수단 목록 로드
     async loadPaymentMethods() {
-      if (!this.isLoggedIn) return;
+    if (!this.isLoggedIn) return;
+    
+    try {
+      this.isLoadingCards = true;
+      const response = await paymentMethodAPI.getMyPaymentMethods();
       
-      try {
-        this.isLoadingCards = true;
-        const response = await paymentMethodAPI.getMyPaymentMethods();
-        
-        if (response && response.data) {
-          // 서버에서 받은 데이터를 화면용 형식으로 변환
-          this.paymentCards = response.data.map(card => ({
-            id: card.id,
-            lastFour: this.extractLastFour(card.tossKey), // 토스키에서 카드 끝자리 추출
-            expiryDate: '**/**', // 보안상 숨김
-            type: 'visa', // 기본값 (실제로는 카드사 정보 필요)
-            tossKey: card.tossKey,
-            createdAt: card.createdAt
-          }));
-        }
-      } catch (error) {
-        console.error('결제수단 로드 실패:', error);
-        if (error.response?.status !== 404) { // 404는 결제수단이 없는 경우이므로 정상
-          alert('결제수단을 불러오는데 실패했습니다.');
-        }
-      } finally {
-        this.isLoadingCards = false;
+      if (response && response.data) {
+        // 서버에서 받은 데이터를 화면용 형식으로 변환
+        this.paymentCards = response.data.map(card => ({
+          id: card.id,
+          lastFour: card.cardLastFour || '****', // 서버에서 직접 제공하는 마지막 4자리
+          expiryDate: '**/**', // 보안상 숨김
+          cardCompany: card.cardCompany || '카드사', // 카드사 정보
+          cardType: card.cardType || 'VISA', // 카드 타입 (VISA, MasterCard 등)
+          tossKey: card.tossKey,
+          createdAt: card.createdAt
+        }));
       }
+    } catch (error) {
+      console.error('결제수단 로드 실패:', error);
+      if (error.response?.status !== 404) {
+        alert('결제수단을 불러오는데 실패했습니다.');
+      }
+    } finally {
+      this.isLoadingCards = false;
+    }
+  },
+    // 카드 타입에 따른 이미지 반환
+    getCardImage(cardType) {
+      return paymentMethodAPI.getCardTypeImage(cardType);
+    },
+    getKoreanCardCompany(cardCompany) {
+      return paymentMethodAPI.getKoreanCardCompany(cardCompany);
     },
 
-    // 토스키에서 카드 끝자리 추출 (실제로는 다른 방식일 수 있음)
-    extractLastFour(tossKey) {
-      // 토스키는 실제 카드 번호가 아니므로, 임시로 처리
-      // 실제로는 토스 API에서 마스킹된 카드 번호를 제공해야 함
-      return tossKey.slice(-4);
-    },
     
     // Dropdown Methods
     toggleDropdown() {
@@ -1218,7 +1223,7 @@ export default {
       const validation = paymentMethodAPI.validateCardInfo({
         cardNumber: this.newCard.number,
         expiry: this.newCard.expiry,
-        cvc: this.newCard.cardPassword, // cardPassword를 cvc로 전달
+        cardPassword: this.newCard.cardPassword, // 파라미터명 통일
         name: this.newCard.name
       });
 

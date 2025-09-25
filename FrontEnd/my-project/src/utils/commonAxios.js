@@ -126,8 +126,8 @@ export const memberAPI = {
   }
 }
 
-// 결제수단 API
-export const paymentMethodAPI = {
+//결제수단 API
+  export const paymentMethodAPI = {
   // 결제수단 등록 (토스 빌링키 발급)
   async registerPaymentMethod(cardData) {
     const response = await apiClient.post('/api/payment-methods/register', cardData)
@@ -152,7 +152,7 @@ export const paymentMethodAPI = {
     return response.data
   },
 
-  // 카드 정보 유효성 검증
+  // 카드 정보 유효성 검증 - 수정됨
   validateCardInfo(cardInfo) {
     const errors = []
     
@@ -179,8 +179,8 @@ export const paymentMethodAPI = {
       }
     }
     
-    // CVC 검증 (2자리 숫자로 수정 - 토스는 카드 비밀번호 앞 2자리)
-    if (!cardInfo.cvc || !/^\d{2}$/.test(cardInfo.cvc)) {
+    // 카드 비밀번호 검증 (2자리 숫자) - 파라미터명 변경
+    if (!cardInfo.cardPassword || !/^\d{2}$/.test(cardInfo.cardPassword)) {
       errors.push('카드 비밀번호는 2자리 숫자여야 합니다')
     }
     
@@ -207,6 +207,49 @@ export const paymentMethodAPI = {
       return digitsOnly.substring(0, 2) + '/' + digitsOnly.substring(2, 4)
     }
     return digitsOnly
+  },
+
+  // 카드 타입에 따른 이미지 반환 - 새로 추가
+  getCardTypeImage(cardType) {
+    const cardImages = {
+      'VISA': '/images/hotel_account_img/visa.jpg',
+      'MasterCard': '/images/hotel_account_img/mastercard.jpb',
+      'AMEX': '/images/hotel_account_img/amex.jpg',
+      'JCB': '/images/hotel_account_img/hotel_account_jcb.jpg',
+      'DinersClub': '/images/hotel_account_img/dinersclub.jpg'
+    };
+    return cardImages[cardType] || '/images/hotel_account_img/hotel_account_visa.jpg';
+  },
+
+  // 카드사명을 한국어로 변환 - 새로 추가
+  getKoreanCardCompany(cardCompany) {
+    if (!cardCompany) return '카드사';
+    
+    const companyNames = {
+      'KB': 'KB국민카드',
+      'SAMSUNG': '삼성카드',
+      'HYUNDAI': '현대카드',
+      'LOTTE': '롯데카드',
+      'HANA': '하나카드',
+      'SHINHAN': '신한카드',
+      'WOORI': '우리카드',
+      'NH': 'NH농협카드',
+      'CITI': '씨티카드',
+      'KBANK': '케이뱅크카드',
+      // 토스에서 반환하는 영어 카드사명들
+      'KOOKMIN': 'KB국민카드',
+      'SAMSUNG_CARD': '삼성카드',
+      'HYUNDAI_CARD': '현대카드',
+      'LOTTE_CARD': '롯데카드',
+      'HANA_CARD': '하나카드',
+      'SHINHAN_CARD': '신한카드',
+      'WOORI_CARD': '우리카드',
+      'NH_CARD': 'NH농협카드',
+      'CITI_CARD': '씨티카드',
+      'KAKAO_BANK': '카카오뱅크카드',
+      'K_BANK': '케이뱅크카드'
+    };
+    return companyNames[cardCompany.toUpperCase()] || cardCompany;
   }
 }
 
