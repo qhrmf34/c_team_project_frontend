@@ -165,14 +165,14 @@
           <div class="social-login">
             <!-- 카카오 버튼-->
             <button class="social-btn kakao-btn" @click="loginWithKakao">
-              <img src="../../assets/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
+              <img src="/images/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
             <button class="social-btn" @click="loginWithGoogle">
-              <img src="../../assets/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
+              <img src="/images/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
 
             </button>
             <button class="social-btn" @click="loginWithNaver">
-                <img src="../../assets/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
+                <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
           </div>
         </div>
@@ -227,7 +227,7 @@
                   type="text" 
                   id="card-number" 
                   v-model="paymentForm.cardNumber"
-                  placeholder="4321 4321 4321 4321" 
+                  placeholder="4330 1234 5678 1234" 
                   inputmode="numeric" 
                   maxlength="19" 
                   required
@@ -263,37 +263,38 @@
               </div>
               <div class="input-group">
                 <input 
-                  type="text" 
-                  id="cvc" 
-                  v-model="paymentForm.cvc"
-                  placeholder="123" 
-                  maxlength="3" 
-                  pattern="[0-9]{3}" 
+                  type="password" 
+                  id="card-password" 
+                  v-model="paymentForm.cardPassword"
+                  placeholder="12" 
+                  maxlength="2" 
+                  pattern="[0-9]{2}" 
                   required
-                  @input="formatCVC"
+                  @input="formatCardPassword"
                 >
-                <label for="cvc">CVC</label>
+                <label for="card-password">카드 비밀번호 (앞 2자리)</label>
               </div>
             </div>
-
+          
             <!-- Name Input Section -->
             <div class="input-group" style="margin-bottom: 25px;">
               <input 
                 type="text" 
                 id="name-card" 
                 v-model="paymentForm.nameOnCard"
-                placeholder="John Doe" 
+                placeholder="홍길동" 
                 maxlength="50" 
                 required
               >
               <label for="name-card">Name on Card</label>
             </div>
-
+          
             <!-- Country Select Section -->
             <div class="input-group" style="margin-bottom: 25px;">
               <select name="country" id="country-select" v-model="paymentForm.country" required>
+                <option value="KR">대한민국</option>
                 <option value="US">United States</option>
-                <option value="KR">South Korea</option>
+                <option value="JP">Japan</option>
               </select>
               <label for="country-select">Country or Region</label>
             </div>
@@ -301,17 +302,16 @@
             <!-- Checkbox Section -->
             <div class="payment-checkbox">
               <input type="checkbox" id="onetouch-checkbox" v-model="paymentForm.saveCard">
-              <label for="onetouch-checkbox">저장하고 one 터치로 결제하기</label>
+              <label for="onetouch-checkbox">정보 저장하기</label>
             </div>
-
+          
             <!-- Payment Buttons Section -->
             <div class="payment-buttons">
-              <button type="submit" class="payment-submit-button" :disabled="isLoading">
-                {{ isLoading ? '추가 중...' : '결제수단 추가' }}
+              <button type="submit" class="payment-submit-button" :disabled="isPaymentLoading">
+                {{ isPaymentLoading ? '추가 중...' : 'Add Card' }}
               </button>
               
-              <!-- 다음에 하기 버튼 추가 -->
-              <button type="button" class="skip-payment-button" @click="skipPayment" :disabled="isLoading">
+              <button type="button" class="skip-payment-button" @click="skipPayment" :disabled="isPaymentLoading">
                 다음에 하기
               </button>
             </div>
@@ -329,9 +329,11 @@
   </div>
 </template>
 
+// HotelSignup.vue - 결제수단 관련 수정 부분
+
 <script>
-// commonAxios에서 memberAPI 불러오기
-import { memberAPI } from '@/utils/commonAxios'
+// commonAxios에서 필요한 API들 불러오기
+import { memberAPI, paymentMethodAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelSignup',
@@ -341,6 +343,7 @@ export default {
       currentScreen: 'signup',
       currentSlideIndex: 0,
       isLoading: false,
+      isPaymentLoading: false, // 결제수단 추가용 별도 로딩
       
       showPassword: {
         signup: false,
@@ -357,12 +360,13 @@ export default {
         agreement: false
       },
       
+      // 결제수단 폼 수정 (CVC → cardPassword)
       paymentForm: {
         cardNumber: '',
         expDate: '',
-        cvc: '',
+        cardPassword: '', // CVC에서 cardPassword로 변경
         nameOnCard: '',
-        country: 'US',
+        country: 'KR', // 기본값을 한국으로 변경
         saveCard: false
       }
     }
@@ -445,56 +449,84 @@ export default {
       }
     },
     
-    submitPaymentMethod() {
-      const cleanCardNumber = this.paymentForm.cardNumber.replace(/\s/g, '');
-      if (cleanCardNumber.length !== 16) {
-        alert('올바른 카드번호를 입력해주세요.');
+    // 결제수단 추가 메서드 - 실제 API 연동
+    async submitPaymentMethod() {
+      // 유효성 검사 강화
+      if (!this.validatePaymentForm()) {
         return;
       }
       
-      if (this.paymentForm.cvc.length !== 3) {
-        alert('올바른 CVC를 입력해주세요.');
-        return;
+      this.isPaymentLoading = true;
+      
+      try {
+        // 서버 API 형식에 맞게 데이터 변환
+        const cardData = {
+          cardNumber: this.paymentForm.cardNumber.replace(/\s/g, ''), // 공백 제거
+          cardExpirationMonth: this.paymentForm.expDate.split('/')[0],
+          cardExpirationYear: this.paymentForm.expDate.split('/')[1],
+          cardPassword: this.paymentForm.cardPassword, // 카드 비밀번호 앞 2자리
+          customerName: this.paymentForm.nameOnCard
+        };
+        
+        // 결제수단 등록 API 호출
+        const response = await paymentMethodAPI.registerPaymentMethod(cardData);
+        
+        if (response && response.data) {
+          alert('결제수단이 성공적으로 추가되었습니다!');
+          this.$router.push('/hotelone');
+        }
+        
+      } catch (error) {
+        console.error('결제수단 추가 실패:', error);
+        
+        let errorMessage = '결제수단 추가에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        this.isPaymentLoading = false;
       }
-      
-      if (!this.paymentForm.expDate.match(/^\d{2}\/\d{2}$/)) {
-        alert('올바른 만료일을 입력해주세요. (MM/YY)');
-        return;
+    },
+    
+    // 결제수단 유효성 검사 (강화된 버전)
+    validatePaymentForm() {
+      const validation = paymentMethodAPI.validateCardInfo({
+        cardNumber: this.paymentForm.cardNumber,
+        expiry: this.paymentForm.expDate,
+        cardPassword: this.paymentForm.cardPassword, // CVC → cardPassword
+        name: this.paymentForm.nameOnCard
+      });
+
+      if (!validation.isValid) {
+        alert(validation.errors.join('\n'));
+        return false;
       }
-      
-      console.log('Payment data:', this.paymentForm);
-      alert('결제수단이 성공적으로 추가되었습니다!');
-      
-      // 호텔1 화면으로 이동
-      this.$router.push('/hotelone');
+
+      return true;
     },
     
     // 다음에 하기 버튼 클릭 시
     skipPayment() {
       alert('결제수단은 나중에 추가할 수 있습니다.');
-      this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+      this.$router.push('/hotelone');
     },
     
-    // Input formatting methods
+    // Input formatting methods - paymentMethodAPI 활용
     formatCardNumber() {
-      let value = this.paymentForm.cardNumber.replace(/\s/g, '');
-      let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
-      if (formattedValue.length > 19) {
-        formattedValue = formattedValue.substring(0, 19);
-      }
-      this.paymentForm.cardNumber = formattedValue;
+      this.paymentForm.cardNumber = paymentMethodAPI.formatCardNumber(this.paymentForm.cardNumber);
     },
     
     formatExpDate() {
-      let value = this.paymentForm.expDate.replace(/\D/g, '');
-      if (value.length >= 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2, 4);
-      }
-      this.paymentForm.expDate = value;
+      this.paymentForm.expDate = paymentMethodAPI.formatExpiryDate(this.paymentForm.expDate);
     },
     
-    formatCVC() {
-      this.paymentForm.cvc = this.paymentForm.cvc.replace(/\D/g, '');
+    // 카드 비밀번호 포맷팅 (2자리 숫자로 제한)
+    formatCardPassword() {
+      this.paymentForm.cardPassword = this.paymentForm.cardPassword.replace(/\D/g, '').substring(0, 2);
     },
     
     // Social login functions
@@ -516,7 +548,7 @@ export default {
     if (urlParams.get('login') === 'success') {
       alert('소셜 로그인이 완료되었습니다!');
       window.history.replaceState({}, document.title, window.location.pathname);
-      this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+      this.$router.push('/hotelone');
     } else if (urlParams.get('error') === 'oauth_failed') {
       alert('소셜 로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
       window.history.replaceState({}, document.title, window.location.pathname);

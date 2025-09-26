@@ -3,15 +3,15 @@
     <header class="header">
       <nav>
         <div class="nav-left">
-          <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/hotel.jpg"></span>
-            Find Stays
+          <a href="#" class="nav-item" @click="goToHotel">
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
+            Hotels
           </a>
         </div>
         
         <div class="nav-right">
-          <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/heart.jpg"></span>
+          <a href="#" class="nav-item" @click="goToFavourites">
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -19,33 +19,33 @@
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
-            <span>Tomhoon</span>
+            <span>{{ displayUserName }}</span>
           </div>
         </div>
       </nav>
     </header>
 
-    <div class="user-dropdown" :class="{ active: isDropdownOpen }" id="userDropdown">
+    <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
         <div class="dropdown-info">
-          <h3>Tomhoon</h3>
-          <p>Online</p>
+          <h3>{{ displayUserName }}</h3>
+          <p>{{ userStatus }}</p>
         </div>
       </div>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/account.jpg"></span> 계정
+        <a href="#" class="dropdown-item" @click="goToAccount">
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/card.jpg"></span> 결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/setting.jpg"></span> 설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/logout.jpg"></span> 로그아웃
+        <a href="#" class="dropdown-item" @click="handleLogout">
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -61,7 +61,7 @@
         <div class="hotel-info">
           <h1 class="hotel-title">해튼호텔<span class="stars">★★★★★</span><span class="stars-hotel">5 Star Hotel</span></h1>
           <div class="hotel-location-line">
-            <span><img src="@/assets/hotel_img/map.jpg"></span>
+            <span><img src="/images/hotel_img/map.jpg"></span>
             <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
           </div>
           <div class="hotel-meta-left">
@@ -77,8 +77,8 @@
             <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
           </div>
           <div class="hotel-buttons">
-            <button class="action-btn"><img src="@/assets/hotel_img/heart2.jpg"/></button>
-            <button class="action-btn"><img src="@/assets/hotel_img/share.jpg"></button>
+            <button class="action-btn"><img src="/images/hotel_img/heart2.jpg"/></button>
+            <button class="action-btn"><img src="/images/hotel_img/share.jpg"></button>
             <button class="book-now-btn">Book now</button>
           </div>
         </div>
@@ -87,23 +87,23 @@
       <!-- Image Gallery -->
       <div class="image-gallery">
         <div class="main-image">
-          <img src="@/assets/hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
+          <img src="/images/hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
         </div>
         <div class="sub-images">
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="@/assets/hotel_img/findhotel2.jpg" alt="호텔 객실">
+              <img src="/images/hotel_img/findhotel2.jpg" alt="호텔 객실">
             </div>
             <div class="gallery-item item3">
-              <img src="@/assets/hotel_img/findhotel3.jpg" alt="호텔 로비">
+              <img src="/images/hotel_img/findhotel3.jpg" alt="호텔 로비">
             </div>
           </div>  
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="@/assets/hotel_img/findhotel4.jpg" alt="호텔 외관">
+              <img src="/images/hotel_img/findhotel4.jpg" alt="호텔 외관">
             </div>
             <div class="gallery-item item5">
-              <img src="@/assets/hotel_img/findhotel5.jpg" alt="호텔 수영장">
+              <img src="/images/hotel_img/findhotel5.jpg" alt="호텔 수영장">
               <button class="view-all-photos">View all photos</button>
             </div>
           </div>     
@@ -128,22 +128,22 @@
                 <div class="review-count">371 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near park</div>
                 <div class="review-count">215 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near nightlife</div>
                 <div class="review-count">89 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Near theater</div>
                 <div class="review-count">142 reviews</div>
               </div>
               <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="@/assets/hotel_img/star.jpg"></div>
+                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
                 <div class="rating-label">Clean Hotel</div>
                 <div class="review-count">142 reviews</div>
               </div>
@@ -178,7 +178,7 @@
             </div>
             <div class="map-actions">
               <div class="map-address">
-                <img src="@/assets/hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
+                <img src="/images/hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
               </div>
               <button class="view-map-btn" @click="openGoogleMaps">View on google maps</button>
             </div>
@@ -190,39 +190,39 @@
             <h3 class="amenities-title">Amenities</h3>
             <div class="amenities-grid">
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/outdoor.jpg"></span>
+                <span><img src="/images/hotel_img/outdoor.jpg"></span>
                 <span class="amenity-text">Outdoor pool</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/fitness.jpg"></span>
+                <span><img src="/images/hotel_img/fitness.jpg"></span>
                 <span class="amenity-text">Fitness center</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/outdoor.jpg"></span>
+                <span><img src="/images/hotel_img/outdoor.jpg"></span>
                 <span class="amenity-text">Indoor pool</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/bar.jpg"></span>
+                <span><img src="/images/hotel_img/bar.jpg"></span>
                 <span class="amenity-text">Bar/Lounge</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/spa.jpg"/></span>
+                <span><img src="/images/hotel_img/spa.jpg"/></span>
                 <span class="amenity-text">Spa and wellness center</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/wifi.jpg"></span>
+                <span><img src="/images/hotel_img/wifi.jpg"></span>
                 <span class="amenity-text">Free Wi-Fi</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/restaurant.jpg"></span>
+                <span><img src="/images/hotel_img/restaurant.jpg"></span>
                 <span class="amenity-text">Restaurant</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/cafe.jpg"></span>
+                <span><img src="/images/hotel_img/cafe.jpg"></span>
                 <span class="amenity-text">Tes/coffee machine</span>
               </div>
               <div class="amenity-item">
-                <span><img src="@/assets/hotel_img/roomservice.jpg"></span>
+                <span><img src="/images/hotel_img/roomservice.jpg"></span>
                 <span class="amenity-text">Room service</span>
               </div>
               
@@ -384,10 +384,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg"></span>
+          <span><img src="/images/hotel_img/facebook.jpg"></span>
+          <span><img src="/images/hotel_img/twitter.jpg"></span>
+          <span><img src="/images/hotel_img/youtube.jpg"></span>
+          <span><img src="/images/hotel_img/instagram.jpg"></span>
         </div>
 
         <div class="footer-links">
@@ -432,6 +432,8 @@
 </template>
 
 <script>
+import { authUtils } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelThree',
   data() {
@@ -508,7 +510,10 @@ export default {
         { value: 'fake', label: '허위 정보' },
         { value: 'abusive', label: '욕설/비방' },
         { value: 'other', label: '기타' }
-      ]
+      ],
+      // 사용자 정보
+      userInfo: null,
+      isLoggedIn: false
     }
   },
   computed: {
@@ -519,26 +524,71 @@ export default {
         return [...this.reviews].sort((a, b) => a.rating - b.rating);
       }
       return this.reviews;
+    },
+        // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    displayUserName() {
+      if (this.isLoggedIn && this.userInfo) {
+        const { provider, firstName, lastName, email } = this.userInfo;
+        
+        // 소셜 로그인의 경우 firstName만 사용
+        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
+          return firstName || email?.split('@')[0] || 'Social User';
+        }
+        
+        // local 로그인의 경우 firstName + lastName 사용
+        if (provider === 'local') {
+          if (firstName && lastName) {
+            return `${firstName} ${lastName}`;
+          } else if (firstName) {
+            return firstName;
+          } else if (email) {
+            return email.split('@')[0];
+          }
+        }
+      }
+      
+      // 로그인하지 않은 경우 기본 이름
+      return 'Guest';
+    },
+    
+    // 사용자 상태 표시
+    userStatus() {
+      if (this.isLoggedIn && this.userInfo?.provider) {
+        const providerNames = {
+          'local': 'Local Account',
+          'google': 'Google Account',
+          'kakao': 'Kakao Account',
+          'naver': 'Naver Account'
+        };
+        return providerNames[this.userInfo.provider] || 'Online';
+      }
+      return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
+    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
   },
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
+    // 라우터 변경 시에도 사용자 정보 다시 확인
+  watch: {
+    '$route'() {
+      this.loadUserInfo();
+    }
+  },
   methods: {
     toggleDropdown() {
-      this.isDropdownOpen = !this.isDropdownOpen;
+      this.isDropdownActive = !this.isDropdownActive;
     },
     handleClickOutside(event) {
-      const dropdown = this.$el.querySelector('#userDropdown');
-      const userProfile = this.$el.querySelector('.user-profile');
-      
-      if (dropdown && userProfile && !dropdown.contains(event.target) && !userProfile.contains(event.target)) {
-        this.isDropdownOpen = false;
+      if (!this.$refs.userDropdown.contains(event.target) && 
+          !event.target.closest('.user-profile')) {
+        this.isDropdownActive = false;
       }
     },
+    
     selectRatingBox(event) {
       const boxes = this.$el.querySelectorAll('.rating-box');
       boxes.forEach(box => box.classList.remove('active'));
@@ -629,7 +679,72 @@ export default {
         alert('구독 신청이 완료되었습니다!');
         this.newsletterEmail = '';
       }
+    },
+     // 사용자 정보 로드
+    loadUserInfo() {
+      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      
+      if (this.isLoggedIn) {
+        this.userInfo = authUtils.getUserInfo();
+        console.log('사용자 정보:', this.userInfo);
+      } else {
+        this.userInfo = null;
+      }
+    },
+    
+    // 로그아웃 처리 (개선된 버전)
+    async handleLogout() {
+      if (confirm('로그아웃하시겠습니까?')) {
+        try {
+          // 서버 API 호출하여 토큰을 블랙리스트에 등록
+          await authUtils.logout();
+          
+          // 사용자 정보 다시 로드
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        } catch (error) {
+          console.error('로그아웃 중 오류:', error);
+          
+          // 서버 오류가 발생해도 로컬 정보는 삭제
+          authUtils.logout();
+          this.loadUserInfo();
+          
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        }
+      }
+    },
+    
+    // 계정 페이지로 이동
+    goToAccount() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    //찜목록 페이지로 이동
+    goToFavourites() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelsix');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },    
+    //호텔 페이지로 이동
+    goToHotel() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelone');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
     }
+    
   }
 }
 </script>

@@ -4,15 +4,15 @@
     <header class="header">
       <nav>
         <div class="nav-left">
-          <a href="#" class="nav-item">
-            <span><img :src="require('@/assets/hotel_img/hotel.jpg')" alt="hotel"></span>
+          <a href="#" class="nav-item" @click="goToHotel">
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
             Hotels
           </a>
         </div>
         
         <div class="nav-right">
-          <a href="#" class="nav-item">
-            <span><img :src="require('@/assets/hotel_img/heart.jpg')" alt="heart"></span>
+          <a href="#" class="nav-item" @click="goToFavourites">
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -20,34 +20,34 @@
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
-            <span>{{ userInfo.name }}</span>
+            <span>{{ displayUserName }}</span>
           </div>
         </div>
       </nav>
     </header>
 
     <!-- User Dropdown -->
-    <div class="user-dropdown" :class="{ active: dropdownActive }" ref="dropdown">
+    <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
         <div class="dropdown-info">
-          <h3>{{ userInfo.name }}</h3>
-          <p>Online</p>
+          <h3>{{ displayUserName }}</h3>
+          <p>{{ userStatus }}</p>
         </div>
       </div>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <img :src="require('@/assets/hotel_img/account.jpg')" alt="account">계정
+        <a href="#" class="dropdown-item" @click="goToAccount">
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <img :src="require('@/assets/hotel_img/card.jpg')" alt="card">결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <img :src="require('@/assets/hotel_img/setting.jpg')" alt="setting">설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item">
-          <img :src="require('@/assets/hotel_img/logout.jpg')" alt="logout">로그아웃
+        <a href="#" class="dropdown-item" @click="handleLogout">
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -73,7 +73,7 @@
       <section class="cover">
         <img :src="coverImage" alt="커버 이미지" class="cover-img"/>
         <button class="upload" @click="$refs.coverImageInput.click()">
-          <img :src="require('@/assets/hotel_account_img/file-upload.jpg')" alt="upload">
+          <img src="/images/hotel_account_img/file-upload.jpg" alt="upload">
           Upload new cover
         </button>
       </section>
@@ -83,11 +83,11 @@
         <div class="avatar-container">
           <img class="avatar" :src="profileAvatar" alt="프로필" />
           <div class="avatar-edit" @click="$refs.avatarImageInput.click()">
-            <img :src="require('@/assets/hotel_account_img/pencil.jpg')" alt="edit">
+            <img src="/images/hotel_account_img/pencil.jpg" alt="edit">
           </div>
         </div>
-        <h2 class="name">{{ userInfo.name }}</h2>
-        <div class="email">{{ userInfo.email }}</div>
+        <h2 class="name">{{ displayUserName }}</h2>
+        <div class="email">{{ displayUserInfo.email || '이메일 정보 없음' }}</div>
       </section>
 
       <!-- Tabs -->
@@ -121,53 +121,77 @@
       <div class="panels">
         <!-- Account Panel -->
         <section v-show="activeTab === 'account'" class="panel">
-          <h2 class="account-title">Account</h2>
-          <section class="card">
-            <div class="content-body">
-              <div class="row">
-                <div>
-                  <div class="meta">Name</div>
-                  <div class="value">{{ userInfo.name }}</div>
+          <div v-if="isLoading" class="loading-message">
+            <p>사용자 정보를 불러오는 중...</p>
+          </div>
+          
+          <div v-else>
+            <h2 class="account-title">Account</h2>
+            <section class="card">
+              <div class="content-body">
+                <!-- 이름 -->
+                <div class="row">
+                  <div>
+                    <div class="meta">Name</div>
+                    <div class="value">{{ displayUserInfo.name || '이름 없음' }}</div>
+                  </div>
+                  <button 
+                    class="btn" 
+                    @click="openEditModal('name')"
+                    :disabled="isSocialAccount"
+                    :class="{ 'btn-disabled': isSocialAccount }"
+                    :title="isSocialAccount ? '소셜 로그인 계정은 이름을 변경할 수 없습니다.' : ''"
+                  >
+                    {{ isSocialAccount ? 'Social Account' : 'Change' }}
+                  </button>
                 </div>
-                <button class="btn" @click="openEditModal('name')">Change</button>
-              </div>
-              <div class="row">
-                <div>
-                  <div class="meta">Email</div>
-                  <div class="value">{{ userInfo.email }}</div>
+
+                <!-- 이메일 -->
+                <div class="row">
+                  <div>
+                    <div class="meta">Email</div>
+                    <div class="value">{{ displayUserInfo.email || '이메일 없음' }}</div>
+                  </div>
+                  <button 
+                    class="btn" 
+                    @click="openEditModal('email')"
+                    :disabled="isSocialAccount"
+                    :class="{ 'btn-disabled': isSocialAccount }"
+                    :title="isSocialAccount ? '소셜 로그인 계정은 이메일을 변경할 수 없습니다.' : ''"
+                  >
+                    {{ isSocialAccount ? 'Social Account' : 'Change' }}
+                  </button>                
                 </div>
-                <button class="btn" @click="openEditModal('email')">Change</button>
-              </div>
-              <div class="row">
-                <div>
-                  <div class="meta">Password</div>
-                  <div class="value">************</div>
+
+                <!-- 비밀번호 (로컬 계정만 표시) -->
+                <div class="row" v-if="isLocalAccount">
+                  <div>
+                    <div class="meta">Password</div>
+                    <div class="value">************</div>
+                  </div>
+                  <button class="btn" @click="openPasswordModal">Change</button>
                 </div>
-                <button class="btn" @click="openPasswordModal">Change</button>
-              </div>
-              <div class="row">
-                <div>
-                  <div class="meta">Phone number</div>
-                  <div class="value">{{ userInfo.phone }}</div>
+
+                <!-- 소셜 로그인 정보 표시 (소셜 계정만) -->
+                <div class="row" v-if="isSocialAccount">
+                  <div>
+                    <div class="meta">Login Provider</div>
+                    <div class="value">{{ userStatus }}</div>
+                  </div>
+                  <span class="btn-disabled" title="소셜 로그인 계정입니다">Social Account</span>
                 </div>
-                <button class="btn" @click="openEditModal('phone')">Change</button>
-              </div>
-              <div class="row">
-                <div>
-                  <div class="meta">Address</div>
-                  <div class="value">{{ userInfo.address }}</div>
+
+                <!-- 전화번호 -->
+                <div class="row" v-if="isLocalAccount">
+                  <div>
+                    <div class="meta">Phone number</div>
+                    <div class="value">{{ displayUserInfo.phone || '전화번호 없음' }}</div>
+                  </div>
+                  <button class="btn" @click="openEditModal('phone')">Change</button>
                 </div>
-                <button class="btn" @click="openEditModal('address')">Change</button>
               </div>
-              <div class="row">
-                <div>
-                  <div class="meta">Date of birth</div>
-                  <div class="value">{{ userInfo.birth }}</div>
-                </div>
-                <button class="btn" @click="openEditModal('birth')">Change</button>
-              </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </section>
 
         <!-- History Panel -->
@@ -187,7 +211,7 @@
             </div>
           </div>
           <div class="booking-sub">
-            <img :src="require('@/assets/hotel_account_img/bedroom.jpg')" alt="bedroom"/>
+            <img src="/images/hotel_account_img/bedroom.jpg" alt="bedroom"/>
             객실
           </div>
           <div class="booking-wrap">
@@ -198,7 +222,7 @@
                 class="booking-card"
               >
                 <div class="bc-logo">
-                  <img :src="require('@/assets/hotel_account_img/cvk.jpg')" alt="hotel logo">
+                  <img src="/images/hotel_account_img/cvk.jpg" alt="hotel logo">
                 </div>
                 
                 <!-- 날짜 -->
@@ -218,14 +242,14 @@
                 <!-- 시간 -->
                 <div class="bc-times">
                   <div class="bc-time-info">
-                    <img class="time-icon" :src="require('@/assets/hotel_account_img/check.jpg')" alt="check">
+                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                     <div>
                       <div class="label">체크인</div>
                       <div class="val">{{ booking.checkInTime }}</div>
                     </div>
                   </div>
                   <div class="bc-time-info">
-                    <img class="time-icon" :src="require('@/assets/hotel_account_img/check.jpg')" alt="check">
+                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                     <div>
                       <div class="label">체크아웃</div>
                       <div class="val">{{ booking.checkOutTime }}</div>
@@ -236,7 +260,7 @@
                 <!-- 방번호 -->
                 <div class="bc-guest">
                   <div class="bc-time-info">
-                    <img class="time-icon" :src="require('@/assets/hotel_account_img/room.jpg')" alt="room">
+                    <img class="time-icon" src="/images/hotel_account_img/room.jpg" alt="room">
                     <div>
                       <div class="label">방번호</div>
                       <div class="val">{{ booking.roomNumber }}</div>
@@ -248,7 +272,7 @@
                 <div class="bc-actions">
                   <button class="bc-btn" @click="downloadTicket(booking)">Download Ticket</button>
                   <div class="bc-next" @click="viewBookingDetails(booking)">
-                    <img :src="require('@/assets/hotel_account_img/right.jpg')" alt="arrow"/>
+                    <img src="/images/hotel_account_img/right.jpg" alt="arrow"/>
                   </div>
                 </div>
               </div>
@@ -261,8 +285,14 @@
           <div class="payment-title">결제수단</div>
           
           <section class="billing">
-            <div class="grid">
-              <!-- 기존 카드들 -->
+            <!-- 로딩 상태 -->
+            <div v-if="isLoadingCards" class="loading-message">
+              <p>결제수단을 불러오는 중...</p>
+            </div>
+            
+            <div v-else class="grid">
+              <!-- 실제 카드들 -->
+              <!-- 기존 템플릿의 카드 표시 부분을 다음과 같이 수정 -->
               <div 
                 v-for="card in paymentCards" 
                 :key="card.id" 
@@ -271,19 +301,21 @@
                 <div class="cc-top">
                   <div>
                     <div class="cc-star">**** **** ****</div>
+                    <!-- 실제 카드번호 마지막 4자리 표시 -->
                     <div class="cc-number">{{ card.lastFour }}</div>
                   </div>
                   <div class="cc-delete" @click="deleteCard(card.id)">
-                    <img :src="require('@/assets/hotel_account_img/garbage.jpg')" alt="delete"/>
+                    <img src="/images/hotel_account_img/garbage.jpg" alt="delete"/>
                   </div>
                 </div>
                 <div class="cc-bottom">
                   <div class="cc-valid">
-                    <div class="cc-meta">Valid Thru</div>
+                    <div class="cc-meta">{{ getKoreanCardCompany(card.cardCompany) }}</div>
                     <div class="cc-meta-bold">{{ card.expiryDate }}</div>
                   </div>
                   <div class="cc-brand">
-                    <img :src="require('@/assets/hotel_account_img/hotel_account_visa.jpg')" alt="visa"/>
+                    <!-- 동적으로 카드 타입에 맞는 이미지 표시 -->
+                    <img :src="getCardImage(card.cardType)" :alt="card.cardType"/>
                   </div>
                 </div>
               </div>
@@ -317,16 +349,16 @@
                   <input
                     type="text"
                     class="form-input"
-                    placeholder="4321 4321 4321 4321"
+                    placeholder="1234 5678 9012 3456"
                     maxlength="19"
                     v-model="newCard.number"
                     @input="formatCardNumber"
                   />
-                  <img :src="require('@/assets/hotel_img/visa2.jpg')" alt="VISA" class="card-logo" />
+                  <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
                 </div>
               </div>
               
-              <!-- Exp & CVC -->
+              <!-- Exp & Card Password -->
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Exp. Date</label>
@@ -340,13 +372,14 @@
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">CVC</label>
+                  <label class="form-label">카드 비밀번호 (앞 2자리)</label>
                   <input
-                    type="text"
+                    type="password"
                     class="form-input"
-                    placeholder="123"
-                    maxlength="3"
-                    v-model="newCard.cvc"
+                    placeholder="12"
+                    maxlength="2"
+                    v-model="newCard.cardPassword"
+                    @input="formatCardPassword"
                   />
                 </div>
               </div>
@@ -357,8 +390,9 @@
                 <input
                   type="text"
                   class="form-input"
-                  placeholder="John Doe"
+                  placeholder="홍길동"
                   v-model="newCard.name"
+                  @input="formatCardName"
                 />
               </div>
               
@@ -366,8 +400,8 @@
               <div class="form-group">
                 <label class="form-label">Country or Region</label>
                 <select class="form-input" v-model="newCard.country">
+                  <option value="KR">대한민국</option>
                   <option value="US">United States</option>
-                  <option value="KR">Korea</option>
                   <option value="JP">Japan</option>
                 </select>
               </div>
@@ -379,7 +413,13 @@
               </div>
               
               <!-- Button -->
-              <button type="submit" class="save-card-btn">Add Card</button>
+              <button 
+                type="submit" 
+                class="save-card-btn"
+                :disabled="isAddingCard"
+              >
+                {{ isAddingCard ? '등록 중...' : 'Add Card' }}
+              </button>
             </form>
           </div>
         </div>
@@ -470,7 +510,7 @@
 
     <!-- Newsletter Section -->
     <section class="newsletter-section">
-            </section>
+        </section>
       <div class="newsletter-content">
         <div class="newsletter-left">
           <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
@@ -479,7 +519,7 @@
             <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
           </div>
           <div class="newsletter-form">
-            <input type="email" class="newsletter-input" placeholder="Your email address" v-model="email">
+            <input type="email" class="newsletter-input" placeholder="Your email address" v-model="newsletterEmail">
             <button class="subscribe-btn" @click="subscribe">Subscribe</button>
           </div>
         </div>
@@ -498,10 +538,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">
@@ -546,25 +586,24 @@
 </template>
 
 <script>
+import { authUtils, memberAPI, paymentMethodAPI } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelAccount',
   data() {
     return {
-      dropdownActive: false,
+      isDropdownActive: false,
+      // 사용자 정보
+      userInfo: null,
+      isLoggedIn: false,
       activeTab: 'account',
-      coverImage: require('@/assets/hotel_account_img/back.jpg'),
-      profileAvatar: require('@/assets/hotel_account_img/member.jpg'),
+      coverImage: '/images/hotel_account_img/back.jpg',
+      profileAvatar: '/images/hotel_account_img/member.jpg',
       
-      // User Information
-      userInfo: {
-        name: 'Tomhoon',
-        email: 'gnsdj90798@gmail.com',
-        phone: '010-5555-5555',
-        address: '경기도 화성시 화성읍 드레미아파트 101동 101호',
-        birth: '1999-99-99'
-      },
+      // 실제 사용자 정보 (API에서 가져옴)
+      actualUserInfo: null,
       
-      // Booking Data
+      // Booking Data (예시 데이터)
       sortOption: 'upcoming',
       bookings: [
         {
@@ -593,28 +632,27 @@ export default {
         }
       ],
       
-      // Payment Cards
-      paymentCards: [
-        {
-          id: 1,
-          lastFour: '4321',
-          expiryDate: '02/27',
-          type: 'visa'
-        }
-      ],
+      // Payment Cards - 빈 배열로 초기화 (실제 데이터는 API에서 가져옴)
+      paymentCards: [],
+      
+      // 카드 로딩 상태
+      isLoadingCards: false,
+      
+      // 카드 추가 시 로딩 상태
+      isAddingCard: false,
       
       // Modal States
       addCardModalActive: false,
       editModalActive: false,
       passwordModalActive: false,
       
-      // New Card Data
+      // New Card Data - cardPassword로 변경
       newCard: {
         number: '',
         expiry: '',
-        cvc: '',
+        cardPassword: '', // cvc에서 cardPassword로 변경
         name: '',
-        country: 'US',
+        country: 'KR',
         saveInfo: false
       },
       
@@ -633,10 +671,83 @@ export default {
       confirmPassword: '',
       
       // Newsletter
-      newsletterEmail: ''
+      newsletterEmail: '',
+      
+      // 로딩 상태
+      isLoading: true
     }
   },
+  
   computed: {
+    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    displayUserName() {
+      if (this.isLoggedIn && this.userInfo) {
+        const { provider, firstName, lastName, email } = this.userInfo;
+        
+        // 소셜 로그인의 경우 firstName만 사용
+        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
+          return firstName || email?.split('@')[0] || 'Social User';
+        }
+        
+        // local 로그인의 경우 firstName + lastName 사용
+        if (provider === 'local') {
+          if (firstName && lastName) {
+            return `${firstName} ${lastName}`;
+          } else if (firstName) {
+            return firstName;
+          } else if (email) {
+            return email.split('@')[0];
+          }
+        }
+      }
+      
+      // 로그인하지 않은 경우 기본 이름
+      return 'Guest';
+    },
+    
+    // 사용자 상태 표시
+    userStatus() {
+      if (this.isLoggedIn && this.userInfo?.provider) {
+        const providerNames = {
+          'local': 'Local Account',
+          'google': 'Google Account',
+          'kakao': 'Kakao Account',
+          'naver': 'Naver Account'
+        };
+        return providerNames[this.userInfo.provider] || 'Online';
+      }
+      return this.isLoggedIn ? 'Online' : 'Offline';
+    },
+    
+    // 계정 타입 확인
+    isLocalAccount() {
+      return this.userInfo?.provider === 'local';
+    },
+    
+    isSocialAccount() {
+      return ['google', 'kakao', 'naver'].includes(this.userInfo?.provider);
+    },
+    
+    // 실제 사용자 정보 표시
+    displayUserInfo() {
+      if (!this.actualUserInfo) return {};
+      
+      const info = {
+        name: this.actualUserInfo.firstName || '',
+        email: this.actualUserInfo.email || '',
+        phone: this.actualUserInfo.phoneNumber || '전화번호 없음',
+        provider: this.actualUserInfo.provider || 'local'
+      };
+      
+      // local 계정의 경우 firstName + lastName 조합
+      if (this.isLocalAccount && this.actualUserInfo.lastName) {
+        info.name = `${this.actualUserInfo.firstName} ${this.actualUserInfo.lastName}`;
+      }
+      
+      return info;
+    },
+    
+    // 정렬된 예약 목록
     sortedBookings() {
       const bookings = [...this.bookings];
       switch (this.sortOption) {
@@ -651,32 +762,159 @@ export default {
       }
     }
   },
-  mounted() {
-    document.addEventListener('click', this.handleOutsideClick);
+  
+  async mounted() {
+    document.addEventListener('click', this.handleClickOutside);
     document.addEventListener('keydown', this.handleEscapeKey);
+    await this.loadUserInfo();
+    await this.loadUserProfile();
+    await this.loadPaymentMethods(); // 결제수단 로드 추가
   },
+  
   beforeUnmount() {
-    document.removeEventListener('click', this.handleOutsideClick);
+    document.removeEventListener('click', this.handleClickOutside);
     document.removeEventListener('keydown', this.handleEscapeKey);
   },
+  
+  // 라우터 변경 시에도 사용자 정보 다시 확인
+  watch: {
+    '$route'() {
+      this.loadUserInfo();
+    }
+  },
+  
   methods: {
-    // Dropdown Methods
-    toggleDropdown() {
-      this.dropdownActive = !this.dropdownActive;
+    // 사용자 정보 로드
+    loadUserInfo() {
+      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      
+      if (this.isLoggedIn) {
+        this.userInfo = authUtils.getUserInfo();
+        console.log('사용자 정보:', this.userInfo);
+      } else {
+        this.userInfo = null;
+        // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+        this.$router.push('/login');
+      }
     },
     
-    handleOutsideClick(event) {
-      const dropdown = this.$refs.dropdown;
-      const userProfile = event.target.closest('.user-profile');
+    // 서버에서 실제 사용자 프로필 정보 가져오기
+    async loadUserProfile() {
+      if (!this.isLoggedIn) return;
       
-      if (dropdown && !dropdown.contains(event.target) && !userProfile) {
-        this.dropdownActive = false;
+      try {
+        this.isLoading = true;
+        const response = await memberAPI.getProfile();
+        
+        if (response && response.data) {
+          this.actualUserInfo = response.data;
+          console.log('실제 사용자 정보:', this.actualUserInfo);
+        }
+      } catch (error) {
+        console.error('프로필 로드 실패:', error);
+        alert('사용자 정보를 불러오는데 실패했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // 결제수단 목록 로드
+    async loadPaymentMethods() {
+    if (!this.isLoggedIn) return;
+    
+    try {
+      this.isLoadingCards = true;
+      const response = await paymentMethodAPI.getMyPaymentMethods();
+      
+      if (response && response.data) {
+        // 서버에서 받은 데이터를 화면용 형식으로 변환
+        this.paymentCards = response.data.map(card => ({
+          id: card.id,
+          lastFour: card.cardLastFour || '****', // 서버에서 직접 제공하는 마지막 4자리
+          expiryDate: '**/**', // 보안상 숨김
+          cardCompany: card.cardCompany || '카드사', // 카드사 정보
+          cardType: card.cardType || 'VISA', // 카드 타입 (VISA, MasterCard 등)
+          tossKey: card.tossKey,
+          createdAt: card.createdAt
+        }));
+      }
+    } catch (error) {
+      console.error('결제수단 로드 실패:', error);
+      if (error.response?.status !== 404) {
+        alert('결제수단을 불러오는데 실패했습니다.');
+      }
+    } finally {
+      this.isLoadingCards = false;
+    }
+  },
+    // 카드 타입에 따른 이미지 반환
+    getCardImage(cardType) {
+      return paymentMethodAPI.getCardTypeImage(cardType);
+    },
+    getKoreanCardCompany(cardCompany) {
+      return paymentMethodAPI.getKoreanCardCompany(cardCompany);
+    },
+
+    
+    // Dropdown Methods
+    toggleDropdown() {
+      this.isDropdownActive = !this.isDropdownActive;
+    },
+    
+    handleClickOutside(event) {
+      if (this.$refs.userDropdown && 
+          !this.$refs.userDropdown.contains(event.target) && 
+          !event.target.closest('.user-profile')) {
+        this.isDropdownActive = false;
       }
     },
     
     handleEscapeKey(event) {
       if (event.key === 'Escape') {
         this.closeAllModals();
+      }
+    },
+    
+    // 로그아웃 처리
+    async handleLogout() {
+      if (confirm('로그아웃하시겠습니까?')) {
+        try {
+          await authUtils.logout();
+          this.loadUserInfo();
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        } catch (error) {
+          console.error('로그아웃 중 오류:', error);
+          authUtils.logout();
+          this.loadUserInfo();
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        }
+      }
+    },
+    
+    // 계정 페이지로 이동 (이미 계정 페이지이므로 아무것도 하지 않음)
+    goToAccount() {
+      // 이미 계정 페이지임
+    },
+    
+    // 호텔 페이지로 이동
+    goToHotel() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelone');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    
+    // 찜목록 페이지로 이동
+    goToFavourites() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelsix');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
       }
     },
     
@@ -703,94 +941,14 @@ export default {
       }
     },
     
-    // Booking Methods
-    downloadTicket(booking) {
-      console.log('Downloading ticket for booking:', booking.id);
-      alert('티켓 다운로드가 시작됩니다.');
-    },
-    
-    viewBookingDetails(booking) {
-      console.log('Viewing details for booking:', booking.id);
-      // Navigate to booking details page
-    },
-    
-    // Payment Card Methods
-    openAddCardModal() {
-      this.addCardModalActive = true;
-    },
-    
-    closeAddCardModal() {
-      this.addCardModalActive = false;
-      this.resetNewCard();
-    },
-    
-    addNewCard() {
-      if (!this.validateCardForm()) return;
-      
-      const newCard = {
-        id: Date.now(),
-        lastFour: this.newCard.number.slice(-4),
-        expiryDate: this.newCard.expiry,
-        type: 'visa'
-      };
-      
-      this.paymentCards.push(newCard);
-      this.closeAddCardModal();
-      alert('카드가 추가되었습니다.');
-    },
-    
-    deleteCard(cardId) {
-      if (confirm('정말로 이 카드를 삭제하시겠습니까?')) {
-        this.paymentCards = this.paymentCards.filter(card => card.id !== cardId);
-      }
-    },
-    
-    validateCardForm() {
-      if (!this.newCard.number || !this.newCard.expiry || !this.newCard.cvc || !this.newCard.name) {
-        alert('모든 필드를 입력해주세요.');
-        return false;
-      }
-      return true;
-    },
-    
-    resetNewCard() {
-      this.newCard = {
-        number: '',
-        expiry: '',
-        cvc: '',
-        name: '',
-        country: 'US',
-        saveInfo: false
-      };
-    },
-    
-    formatCardNumber() {
-      let value = this.newCard.number.replace(/\s/g, '').replace(/[^0-9]/gi, '');
-      const matches = value.match(/\d{4,16}/g);
-      const match = matches && matches[0] || '';
-      const parts = [];
-      
-      for (let i = 0, len = match.length; i < len; i += 4) {
-        parts.push(match.substring(i, i + 4));
-      }
-      
-      if (parts.length) {
-        this.newCard.number = parts.join(' ');
-      } else {
-        this.newCard.number = value;
-      }
-    },
-    
-    formatExpiryDate() {
-      let value = this.newCard.expiry.replace(/\D/g, '');
-      if (value.length >= 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2, 4);
-      }
-      this.newCard.expiry = value;
-    },
-    
-    // Edit Modal Methods
+    // Edit Modal Methods (수정됨)
     openEditModal(type) {
+      // 소셜 로그인 계정의 경우 이름 변경 불가
+      if (this.isSocialAccount) {
+        alert('소셜 로그인 계정은 정보를 변경할 수 없습니다.');
+        return;
+      }
+      
       this.editType = type;
       this.editModalActive = true;
       
@@ -800,44 +958,32 @@ export default {
           label: '이름',
           placeholder: '이름을 입력하세요',
           type: 'text',
-          value: this.userInfo.name
+          value: this.displayUserInfo.name
         },
         email: {
           title: '이메일 변경',
           label: '이메일',
           placeholder: '이메일을 입력하세요',
           type: 'email',
-          value: this.userInfo.email
+          value: this.displayUserInfo.email
         },
         phone: {
           title: '전화번호 변경',
           label: '전화번호',
           placeholder: '전화번호를 입력하세요',
           type: 'tel',
-          value: this.userInfo.phone
-        },
-        address: {
-          title: '주소 변경',
-          label: '주소',
-          placeholder: '주소를 입력하세요',
-          type: 'text',
-          value: this.userInfo.address
-        },
-        birth: {
-          title: '생년월일 변경',
-          label: '생년월일',
-          placeholder: 'YYYY-MM-DD',
-          type: 'date',
-          value: this.userInfo.birth
+          value: this.displayUserInfo.phone === '전화번호 없음' ? '' : this.displayUserInfo.phone
         }
       };
       
       const currentConfig = config[type];
-      this.editModalTitle = currentConfig.title;
-      this.editFieldLabel = currentConfig.label;
-      this.editPlaceholder = currentConfig.placeholder;
-      this.editInputType = currentConfig.type;
-      this.editValue = currentConfig.value;
+      if (currentConfig) {
+        this.editModalTitle = currentConfig.title;
+        this.editFieldLabel = currentConfig.label;
+        this.editPlaceholder = currentConfig.placeholder;
+        this.editInputType = currentConfig.type;
+        this.editValue = currentConfig.value;
+      }
     },
     
     closeEditModal() {
@@ -850,19 +996,66 @@ export default {
       this.editValue = '';
     },
     
-    saveEdit() {
+    // 정보 수정 저장 (서버 API 연동)
+    async saveEdit() {
       if (!this.editValue.trim()) {
         alert('값을 입력해주세요.');
         return;
       }
       
-      this.userInfo[this.editType] = this.editValue;
-      this.closeEditModal();
-      alert(`${this.editFieldLabel}이(가) 변경되었습니다.`);
+      try {
+        const updateData = {};
+        
+        // 타입별로 업데이트 데이터 설정
+        switch (this.editType) {
+          case 'name':
+            // local 계정의 경우 이름을 firstName, lastName으로 분리
+            if (this.isLocalAccount) {
+              const nameParts = this.editValue.trim().split(' ');
+              updateData.firstName = nameParts[0];
+              updateData.lastName = nameParts.slice(1).join(' ') || '';
+            }
+            break;
+          case 'email':
+            updateData.email = this.editValue;
+            break;
+          case 'phone':
+            updateData.phoneNumber = this.editValue;
+            break;
+        }
+        
+        // 서버에 업데이트 요청
+        const response = await memberAPI.updateProfile(updateData);
+        
+        if (response && response.data) {
+          // 성공 시 실제 사용자 정보 다시 로드
+          await this.loadUserProfile();
+          
+          // localStorage 정보도 업데이트 (필요한 경우)
+          if (this.editType === 'name' && this.isLocalAccount) {
+            const userInfo = authUtils.getUserInfo();
+            userInfo.firstName = updateData.firstName;
+            userInfo.lastName = updateData.lastName;
+            authUtils.saveAuth(authUtils.getToken(), userInfo);
+            this.loadUserInfo();
+          }
+          
+          this.closeEditModal();
+          alert(`${this.editFieldLabel}이(가) 변경되었습니다.`);
+        }
+      } catch (error) {
+        console.error('정보 수정 실패:', error);
+        const serverMessage = error.response?.data?.message || error.message;
+        alert(serverMessage);
+      }
     },
     
-    // Password Modal Methods
+    // Password Modal Methods (local 계정만 가능)
     openPasswordModal() {
+      if (this.isSocialAccount) {
+        alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+        return;
+      }
       this.passwordModalActive = true;
       this.passwordStep = 1;
     },
@@ -879,16 +1072,32 @@ export default {
       this.confirmPassword = '';
     },
     
-    verifyPassword() {
+    async verifyPassword() {
       if (this.currentPassword.length < 4) {
         alert('비밀번호가 올바르지 않습니다.');
         return;
       }
-      
-      this.passwordStep = 2;
+      try {
+        const response = await memberAPI.accountForgot(this.currentPassword);
+        
+        if (response && response.code === 200) {
+          // 비밀번호 확인 성공 - 2단계로 이동
+          this.passwordStep = 2;
+        }
+      } catch (error) {
+        console.error('비밀번호 확인 실패:', error);
+        if (error.response?.status === 400) {
+          alert('현재 비밀번호가 일치하지 않습니다.');
+        } else if (error.response?.status === 403) {
+          alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+          this.closePasswordModal();
+        } else {
+          alert('비밀번호 확인 중 오류가 발생했습니다.');
+        }
+      }
     },
     
-    changePassword() {
+    async changePassword() {
       if (this.newPassword !== this.confirmPassword) {
         alert('새 비밀번호가 일치하지 않습니다.');
         return;
@@ -899,8 +1108,174 @@ export default {
         return;
       }
       
-      this.closePasswordModal();
-      alert('비밀번호가 변경되었습니다.');
+      try {
+        const response = await memberAPI.accountPasswordReset(
+          this.newPassword, 
+          this.confirmPassword
+        );
+        
+        if (response && response.code === 200) {
+          this.closePasswordModal();
+          alert('비밀번호가 성공적으로 변경되었습니다.');
+          // 서버 API 호출하여 토큰을 블랙리스트에 등록
+          await authUtils.logout();
+          
+          // 사용자 정보 다시 로드
+          this.loadUserInfo();
+
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        console.error('비밀번호 변경 실패:', error);
+        if (error.response?.status === 400) {
+          alert(error.response.data?.message || '비밀번호 변경 요청이 올바르지 않습니다.');
+        } else if (error.response?.status === 403) {
+          alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+          this.closePasswordModal();
+        } else {
+          alert('비밀번호 변경 중 오류가 발생했습니다.');
+        }
+      }
+    },
+
+    // Payment Card Methods - 실제 API 연동
+    openAddCardModal() {
+      this.addCardModalActive = true;
+      this.resetNewCard();
+    },
+    
+    closeAddCardModal() {
+      this.addCardModalActive = false;
+      this.resetNewCard();
+    },
+
+    // 카드 추가 처리 - 실제 API 연동
+    async addNewCard() {
+      if (!this.validateCardForm()) return;
+      
+      try {
+        this.isAddingCard = true;
+        
+        // 프론트엔드 데이터를 서버 형식으로 변환 (이메일 제거)
+        const cardData = {
+          cardNumber: this.newCard.number.replace(/\s/g, ''), // 공백 제거
+          cardExpirationMonth: this.newCard.expiry.split('/')[0],
+          cardExpirationYear: this.newCard.expiry.split('/')[1],
+          cardPassword: this.newCard.cardPassword, // 카드 비밀번호 앞 2자리
+          customerName: this.newCard.name
+        };
+
+        // 서버에 카드 등록 요청
+        const response = await paymentMethodAPI.registerPaymentMethod(cardData);
+        
+        if (response && response.data) {
+          // 성공 시 카드 목록 다시 로드
+          await this.loadPaymentMethods();
+          this.closeAddCardModal();
+          alert('카드가 성공적으로 등록되었습니다.');
+        }
+        
+      } catch (error) {
+        console.error('카드 등록 실패:', error);
+        
+        let errorMessage = '카드 등록에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        this.isAddingCard = false;
+      }
+    },
+
+    // 카드 삭제 - 실제 API 연동
+    async deleteCard(cardId) {
+      if (!confirm('정말로 이 카드를 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        const response = await paymentMethodAPI.deletePaymentMethod(cardId);
+        
+        if (response) {
+          // 성공 시 카드 목록 다시 로드
+          await this.loadPaymentMethods();
+          alert('카드가 삭제되었습니다.');
+        }
+        
+      } catch (error) {
+        console.error('카드 삭제 실패:', error);
+        
+        let errorMessage = '카드 삭제에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+        
+        alert(errorMessage);
+      }
+    },
+
+    // 카드 정보 유효성 검사 강화 (수정됨)
+    validateCardForm() {
+      // API 서비스의 유효성 검사 사용 (cardPassword로 변경)
+      const validation = paymentMethodAPI.validateCardInfo({
+        cardNumber: this.newCard.number,
+        expiry: this.newCard.expiry,
+        cardPassword: this.newCard.cardPassword, // 파라미터명 통일
+        name: this.newCard.name
+      });
+
+      if (!validation.isValid) {
+        alert(validation.errors.join('\n'));
+        return false;
+      }
+
+      return true;
+    },
+    
+    // 새 카드 데이터 초기화
+    resetNewCard() {
+      this.newCard = {
+        number: '',
+        expiry: '',
+        cardPassword: '', // cvc에서 cardPassword로 변경
+        name: '',
+        country: 'KR', // 한국으로 기본값 설정
+        saveInfo: false
+      };
+    },
+    
+    // 카드 번호 포맷팅 개선
+    formatCardNumber() {
+      this.newCard.number = paymentMethodAPI.formatCardNumber(this.newCard.number);
+    },
+
+    // 만료일 포맷팅 개선  
+    formatExpiryDate() {
+      this.newCard.expiry = paymentMethodAPI.formatExpiryDate(this.newCard.expiry);
+    },
+
+    // 카드 비밀번호 입력 제한 (2자리)
+    formatCardPassword() {
+      this.newCard.cardPassword = this.newCard.cardPassword.replace(/\D/g, '').substring(0, 2);
+    },
+
+    // 카드 소유자명 포맷팅 (숫자 제거)
+    formatCardName() {
+      this.newCard.name = this.newCard.name.replace(/[0-9]/g, '');
+    },
+    
+    // Booking Methods
+    downloadTicket(booking) {
+      console.log('Downloading ticket for booking:', booking.id);
+      alert('티켓 다운로드가 시작됩니다.');
+    },
+    
+    viewBookingDetails(booking) {
+      console.log('Viewing details for booking:', booking.id);
     },
     
     // Newsletter Methods
@@ -920,7 +1295,7 @@ export default {
       this.addCardModalActive = false;
       this.editModalActive = false;
       this.passwordModalActive = false;
-      this.dropdownActive = false;
+      this.isDropdownActive = false;
       this.resetNewCard();
       this.resetEditModal();
       this.resetPasswordModal();
@@ -1355,7 +1730,7 @@ nav {
 
 .content-body {
   width: 1232px;
-  height: 536px;
+  height: auto;
   angle: 0 deg;
   opacity: 1;
   border-radius: 16px;
@@ -2393,5 +2768,36 @@ nav {
 
 .footer-column a:hover {
   opacity: 1;
+}
+/* 비활성화된 버튼 스타일 */
+.btn-disabled {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn:disabled {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 로딩 메시지 */
+.loading-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-family: Montserrat;
+  font-size: 16px;
+  color: #6b7280;
 }
 </style>

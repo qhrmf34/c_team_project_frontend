@@ -4,15 +4,15 @@
     <header class="header">
       <nav>
         <div class="nav-left">
-          <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/hotel.jpg" alt="hotel"></span>
-            Find Stays
+          <a href="#" class="nav-item" @click="goToHotel">
+            <span><img src="/images/hotel_img/hotel.jpg" ></span>
+            Hotels
           </a>
         </div>
         
         <div class="nav-right">
-          <a href="#" class="nav-item">
-            <span><img src="@/assets/hotel_img/heart.jpg" alt="heart"></span>
+          <a href="#" class="nav-item" @click="goToFavourites">
+            <span><img src="/images/hotel_img/heart.jpg"></span>
             찜하기
           </a>
           <span>|</span>
@@ -20,34 +20,33 @@
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
-            <span>Tomhoon</span>
+            <span>{{ displayUserName }}</span>
           </div>
         </div>
       </nav>
     </header>
 
-    <!-- User Dropdown -->
-    <div class="user-dropdown" :class="{ active: dropdownActive }" ref="dropdown">
+    <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
         <div class="dropdown-info">
-          <h3>Tomhoon</h3>
-          <p>Online</p>
+          <h3>{{ displayUserName }}</h3>
+          <p>{{ userStatus }}</p>
         </div>
       </div>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/account.jpg" alt="account"></span> 계정
+        <a href="#" class="dropdown-item" @click="goToAccount">
+          <img src="/images/hotel_img/account.jpg">계정
         </a>
         <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/card.jpg" alt="card"></span> 결제내역
+          <img src="/images/hotel_img/card.jpg">결제내역
         </a>
         <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/setting.jpg" alt="setting"></span> 설정
+          <img src="/images/hotel_img/setting.jpg">설정
         </a>
         <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item">
-          <span><img src="@/assets/hotel_img/logout.jpg" alt="logout"></span> 로그아웃
+        <a href="#" class="dropdown-item" @click="handleLogout">
+          <img src="/images/hotel_img/logout.jpg">로그아웃
         </a>
       </div>
     </div>
@@ -68,7 +67,7 @@
             <div class="hotel-info">
               <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
               <div class="hotel-location">
-                <span><img src="@/assets/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
                 <span class="hotel-location-map">
                   <span class="hotel-locatin-hotel">해튼호텔</span>
                   <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
@@ -81,9 +80,9 @@
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
-                  <div><img src="@/assets/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
-                  <div><img src="@/assets/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
-                  <div><img src="@/assets/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
+                  <div><img src="/images/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
+                  <div><img src="/images/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
+                  <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
                   <div class="date-label">Friday, Dec 9</div>
@@ -133,18 +132,18 @@
 
               <div class="social-login">
                 <button class="social-btn facebook">
-                  <img src="@/assets/hotel_img/facebook2.jpg" alt="facebook">
+                  <img src="/images/hotel_img/facebook2.jpg" alt="facebook">
                 </button>
                 <button class="social-btn google">
-                  <img src="@/assets/hotel_img/google.jpg" alt="google">
+                  <img src="/images/hotel_img/google.jpg" alt="google">
                 </button>
                 <button class="social-btn apple">
-                  <img src="@/assets/hotel_img/apple.jpg" alt="apple">
+                  <img src="/images/hotel_img/apple.jpg" alt="apple">
                 </button>
               </div>
 
               <button class="email-login">
-                <span><img src="@/assets/hotel_img/email.jpg" alt="email"></span>
+                <span><img src="/images/hotel_img/email.jpg" alt="email"></span>
                 Continue with email
               </button>
             </div>
@@ -153,7 +152,7 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="@/assets/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">CVK Park Bosphorus...</div>
                   <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
@@ -224,7 +223,7 @@
             <div class="hotel-info">
               <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
               <div class="hotel-location">
-                <span><img src="@/assets/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
                 <span class="hotel-location-map">
                   <span class="hotel-locatin-hotel">해튼호텔</span>
                   <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
@@ -237,9 +236,9 @@
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
-                  <div><img src="@/assets/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
-                  <div><img src="@/assets/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
-                  <div><img src="@/assets/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
+                  <div><img src="/images/hotel_img/leftline.jpg" class="img2" alt="leftline"/></div>
+                  <div><img src="/images/hotel_img/apart.jpg" class="img1" alt="apart"/></div>
+                  <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
                   <div class="date-label">Friday, Dec 9</div>
@@ -275,23 +274,123 @@
             </div>
             
             <div class="card-list">
+              <!-- 저장된 카드들-->
               <div 
+                v-for="(card, index) in savedCards"
+                :key="card.id"
                 class="saved-card" 
-                :class="{ selected: selectedCard === 0 }"
-                @click="selectCard(0)"
+                :class="{ selected: selectedCard === index }"
+                @click="selectCard(index)"
               >
                 <div class="card-info">
                   <div class="card-icon">
-                    <img src="@/assets/hotel_img/visa.jpg" alt="visa">
+                    <img :src="getCardTypeImage(card.cardType)" :alt="card.cardType">
                   </div>
-                  <span class="card-number">****4321</span>
-                  <span class="card-date">02/27</span>
+                  <span class="card-number">****{{ card.lastFour }}</span>
+                  <span class="card-date">{{ card.expiryDate }}</span>
                 </div>
                 <div class="card-radio"></div>
               </div>
+
+
+              <!-- 카드 추가 버튼 -->
               <div class="add-card-btn" @click="openAddCardModal">
                 <div class="plus-btn">+</div>
                 <div class="add-card">Add a new card</div>
+              </div>
+            </div>
+
+            <!-- Add Card Modal - 수정된 부분 -->
+            <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
+              <div class="modal-full">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button class="close-btn" @click="closeAddCardModal">&times;</button>
+                  </div>
+                  <div class="modal-card">
+                    <div class="modal-title">카드추가</div>
+                  
+                    <form @submit.prevent="addNewCard">
+                      <!-- Card Number -->
+                      <div class="form-group card-number-group">
+                        <label class="form-label">Card Number</label>
+                        <div class="card-input-wrapper">
+                          <input
+                            type="text"
+                            class="form-input"
+                            placeholder="4330 1234 5678 1234"
+                            maxlength="19"
+                            v-model="cardForm.cardNumber"
+                            @input="formatCardNumber"
+                          />
+                          <img src="/images/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
+                        </div>
+                      </div>
+                    
+                      <!-- Exp & 카드 비밀번호 -->
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label class="form-label">Exp. Date</label>
+                          <input
+                            type="text"
+                            class="form-input"
+                            placeholder="MM/YY"
+                            maxlength="5"
+                            v-model="cardForm.expDate"
+                            @input="formatExpDate"
+                          />
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">카드 비밀번호 (앞 2자리)</label>
+                          <input
+                            type="password"
+                            class="form-input"
+                            placeholder="12"
+                            maxlength="2"
+                            v-model="cardForm.cardPassword"
+                            @input="formatCardPassword"
+                          />
+                        </div>
+                      </div>
+                    
+                      <!-- Name -->
+                      <div class="form-group">
+                        <label class="form-label">Name on Card</label>
+                        <input
+                          type="text"
+                          class="form-input"
+                          placeholder="홍길동"
+                          v-model="cardForm.cardName"
+                        />
+                      </div>
+                    
+                      <!-- Country -->
+                      <div class="form-group">
+                        <label class="form-label">Country or Region</label>
+                        <select class="form-input" v-model="cardForm.country">
+                          <option value="KR">대한민국</option>
+                          <option value="US">United States</option>
+                          <option value="JP">Japan</option>
+                        </select>
+                      </div>
+                    
+                      <!-- Checkbox -->
+                      <div class="form-group checkbox-group">
+                        <input type="checkbox" id="saveInfo" v-model="cardForm.saveInfo" />
+                        <label for="saveInfo">정보 저장하기</label>
+                      </div>
+                    
+                      <!-- Button -->
+                      <button 
+                        type="submit" 
+                        class="save-card-btn"
+                        :disabled="isAddingCard"
+                      >
+                        {{ isAddingCard ? '등록 중...' : 'Add Card' }}
+                      </button>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -299,7 +398,7 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="@/assets/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">CVK Park Bosphorus...</div>
                   <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
@@ -354,90 +453,7 @@
       </main>
     </div>
 
-    <!-- Add Card Modal -->
-    <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
-      <div class="modal-full">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button class="close-btn" @click="closeAddCardModal">&times;</button>
-          </div>
-          <div class="modal-card">
-            <div class="modal-title">카드추가</div>
-        
-            <form @submit="addNewCard">
-              <!-- Card Number -->
-              <div class="form-group card-number-group">
-                <label class="form-label">Card Number</label>
-                <div class="card-input-wrapper">
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="4321 4321 4321 4321"
-                    maxlength="19"
-                    v-model="cardForm.cardNumber"
-                  />
-                  <img src="@/assets/hotel_img/visa2.jpg" alt="VISA" class="card-logo" />
-                </div>
-              </div>
-          
-              <!-- Exp & CVC -->
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Exp. Date</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="MM/YY"
-                    maxlength="5"
-                    v-model="cardForm.expDate"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">CVC</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    placeholder="123"
-                    maxlength="3"
-                    v-model="cardForm.cvc"
-                  />
-                </div>
-              </div>
-          
-              <!-- Name -->
-              <div class="form-group">
-                <label class="form-label">Name on Card</label>
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="John Doe"
-                  v-model="cardForm.cardName"
-                />
-              </div>
-          
-              <!-- Country -->
-              <div class="form-group">
-                <label class="form-label">Country or Region</label>
-                <select class="form-input" v-model="cardForm.country">
-                  <option>United States</option>
-                  <option>Korea</option>
-                  <option>Japan</option>
-                </select>
-              </div>
-          
-              <!-- Checkbox -->
-              <div class="form-group checkbox-group">
-                <input type="checkbox" id="saveInfo" v-model="cardForm.saveInfo" />
-                <label for="saveInfo">정보 저장하기</label>
-              </div>
-          
-              <!-- Button -->
-              <button type="submit" class="save-card-btn">Add Card</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Newsletter Section -->
     <section class="newsletter-section">
@@ -471,10 +487,10 @@
 
       <div class="footer-content">
         <div class="social-icons">
-          <span><img src="@/assets/hotel_img/facebook.jpg" alt="facebook"></span>
-          <span><img src="@/assets/hotel_img/twitter.jpg" alt="twitter"></span>
-          <span><img src="@/assets/hotel_img/youtube.jpg" alt="youtube"></span>
-          <span><img src="@/assets/hotel_img/instagram.jpg" alt="instagram"></span>
+          <span><img src="/images/hotel_img/facebook.jpg" alt="facebook"></span>
+          <span><img src="/images/hotel_img/twitter.jpg" alt="twitter"></span>
+          <span><img src="/images/hotel_img/youtube.jpg" alt="youtube"></span>
+          <span><img src="/images/hotel_img/instagram.jpg" alt="instagram"></span>
         </div>
 
         <div class="footer-links">
@@ -518,35 +534,102 @@
   </div>
 </template>
 
+// HotelFour.vue - 수정된 script 부분
+
 <script>
+import { authUtils, paymentMethodAPI } from '@/utils/commonAxios'
+
 export default {
   name: 'HotelFour',
   data() {
     return {
+      isDropdownActive: false,
       currentScreen: 1,
       selectedPaymentMethod: -1,
       selectedCard: -1,
-      dropdownActive: false,
       modalActive: false,
       phoneNumber: '',
       email: '',
+      
+      // 카드 폼 수정 (CVC → cardPassword)
       cardForm: {
         cardNumber: '',
         expDate: '',
-        cvc: '',
+        cardPassword: '', // CVC에서 cardPassword로 변경
         cardName: '',
-        country: 'United States',
+        country: 'KR', // 기본값을 한국으로 변경
         saveInfo: false
-      }
+      },
+      
+      // 사용자 정보
+      userInfo: null,
+      isLoggedIn: false,
+      
+      // 결제수단 관련
+      isAddingCard: false,
+      savedCards: [] // 저장된 카드 목록
     }
   },
-  mounted() {
-    // 화면 외부 클릭 시 드롭다운 닫기
-    document.addEventListener('click', this.handleOutsideClick)
+  
+  computed: {
+    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    displayUserName() {
+      if (this.isLoggedIn && this.userInfo) {
+        const { provider, firstName, lastName, email } = this.userInfo;
+        
+        // 소셜 로그인의 경우 firstName만 사용
+        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
+          return firstName || email?.split('@')[0] || 'Social User';
+        }
+        
+        // local 로그인의 경우 firstName + lastName 사용
+        if (provider === 'local') {
+          if (firstName && lastName) {
+            return `${firstName} ${lastName}`;
+          } else if (firstName) {
+            return firstName;
+          } else if (email) {
+            return email.split('@')[0];
+          }
+        }
+      }
+      
+      // 로그인하지 않은 경우 기본 이름
+      return 'Guest';
+    },
+    
+    // 사용자 상태 표시
+    userStatus() {
+      if (this.isLoggedIn && this.userInfo?.provider) {
+        const providerNames = {
+          'local': 'Local Account',
+          'google': 'Google Account',
+          'kakao': 'Kakao Account',
+          'naver': 'Naver Account'
+        };
+        return providerNames[this.userInfo.provider] || 'Online';
+      }
+      return this.isLoggedIn ? 'Online' : 'Offline';
+    }
   },
+  
+  async mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+    this.loadUserInfo();
+    await this.loadSavedCards(); // 저장된 카드 목록 로드
+  },
+  
   beforeUnmount() {
-    document.removeEventListener('click', this.handleOutsideClick)
+    document.removeEventListener('click', this.handleClickOutside)
   },
+  
+  // 라우터 변경 시에도 사용자 정보 다시 확인
+  watch: {
+    '$route'() {
+      this.loadUserInfo();
+    }
+  },
+  
   methods: {
     showScreen(screenNumber) {
       this.currentScreen = screenNumber
@@ -557,40 +640,237 @@ export default {
     selectCard(index) {
       this.selectedCard = index
     },
+    
+    // 카드 추가 모달 관련
     openAddCardModal() {
-      this.modalActive = true
+      this.modalActive = true;
+      this.resetCardForm();
     },
+    
     closeAddCardModal() {
-      this.modalActive = false
+      this.modalActive = false;
+      this.resetCardForm();
     },
+    
     closeModalOnOverlay(event) {
       if (event.target === event.currentTarget) {
         this.closeAddCardModal()
       }
     },
-    addNewCard(event) {
-      event.preventDefault()
-      // 여기서 카드 데이터를 서버로 전송
-      console.log('Card added:', this.cardForm)
-      this.closeAddCardModal()
+    
+    // 카드 폼 초기화
+    resetCardForm() {
+      this.cardForm = {
+        cardNumber: '',
+        expDate: '',
+        cardPassword: '', // CVC → cardPassword
+        cardName: '',
+        country: 'KR',
+        saveInfo: false
+      };
     },
-    toggleDropdown() {
-      this.dropdownActive = !this.dropdownActive
-    },
-    handleOutsideClick(event) {
-      const dropdown = this.$refs.dropdown
-      const userProfile = event.target.closest('.user-profile')
+    
+    // 카드 추가 - 실제 API 연동
+    async addNewCard(event) {
+      event.preventDefault();
       
-      if (dropdown && !dropdown.contains(event.target) && !userProfile) {
-        this.dropdownActive = false
+      // 로그인 체크
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        return;
+      }
+      
+      // 유효성 검사
+      if (!this.validateCardForm()) {
+        return;
+      }
+      
+      this.isAddingCard = true;
+      
+      try {
+        // 서버 API 형식에 맞게 데이터 변환
+        const cardData = {
+          cardNumber: this.cardForm.cardNumber.replace(/\s/g, ''), // 공백 제거
+          cardExpirationMonth: this.cardForm.expDate.split('/')[0],
+          cardExpirationYear: this.cardForm.expDate.split('/')[1],
+          cardPassword: this.cardForm.cardPassword, // 카드 비밀번호 앞 2자리
+          customerName: this.cardForm.cardName
+        };
+        
+        // 결제수단 등록 API 호출
+        const response = await paymentMethodAPI.registerPaymentMethod(cardData);
+        
+        if (response && response.data) {
+          // 성공 시 저장된 카드 목록에 추가
+          this.savedCards.push({
+            id: response.data.id,
+            lastFour: cardData.cardNumber.slice(-4),
+            expiryDate: this.cardForm.expDate,
+            cardType: this.determineCardType(cardData.cardNumber),
+            cardCompany: response.data.cardCompany || 'Unknown'
+          });
+          
+          this.closeAddCardModal();
+          alert('카드가 성공적으로 등록되었습니다!');
+        }
+        
+      } catch (error) {
+        console.error('카드 등록 실패:', error);
+        
+        let errorMessage = '카드 등록에 실패했습니다.';
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        this.isAddingCard = false;
       }
     },
+    
+    // 카드 유효성 검사
+    validateCardForm() {
+      const validation = paymentMethodAPI.validateCardInfo({
+        cardNumber: this.cardForm.cardNumber,
+        expiry: this.cardForm.expDate,
+        cardPassword: this.cardForm.cardPassword, // CVC → cardPassword
+        name: this.cardForm.cardName
+      });
+
+      if (!validation.isValid) {
+        alert(validation.errors.join('\n'));
+        return false;
+      }
+
+      return true;
+    },
+    
+    // 포맷팅 메서드들
+    formatCardNumber() {
+      this.cardForm.cardNumber = paymentMethodAPI.formatCardNumber(this.cardForm.cardNumber);
+    },
+    
+    formatExpDate() {
+      this.cardForm.expDate = paymentMethodAPI.formatExpiryDate(this.cardForm.expDate);
+    },
+    
+    // 카드 비밀번호 포맷팅 (2자리 숫자만)
+    formatCardPassword() {
+      this.cardForm.cardPassword = this.cardForm.cardPassword.replace(/\D/g, '').substring(0, 2);
+    },
+    
+    // 카드 타입 결정
+    determineCardType(cardNumber) {
+      if (cardNumber.startsWith('4')) return 'VISA';
+      if (cardNumber.startsWith('5')) return 'MasterCard';
+      if (cardNumber.startsWith('3')) return 'AMEX';
+      return 'CARD';
+    },
+    
+    // 카드 타입별 이미지 반환
+    getCardTypeImage(cardType) {
+      return paymentMethodAPI.getCardTypeImage(cardType);
+    },
+    
+    // 저장된 카드 목록 로드
+    async loadSavedCards() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        const response = await paymentMethodAPI.getMyPaymentMethods();
+        if (response && response.data) {
+          this.savedCards = response.data.map(card => ({
+            id: card.id,
+            lastFour: card.cardLastFour || '****',
+            expiryDate: '**/**', // 보안상 숨김
+            cardType: card.cardType || 'VISA',
+            cardCompany: card.cardCompany || 'Unknown'
+          }));
+        }
+      } catch (error) {
+        console.error('저장된 카드 로드 실패:', error);
+        // 에러가 있어도 기본 카드는 표시하도록 빈 배열 유지
+      }
+    },
+    
+    // 기존 메서드들
+    toggleDropdown() {
+      this.isDropdownActive = !this.isDropdownActive;
+    },
+    
+    handleClickOutside(event) {
+      if (!this.$refs.userDropdown.contains(event.target) && 
+          !event.target.closest('.user-profile')) {
+        this.isDropdownActive = false;
+      }
+    },
+    
     subscribe() {
       if (this.email) {
         console.log('Subscribed:', this.email)
         this.email = ''
       }
-    }
+    },
+    
+    // 사용자 정보 로드
+    loadUserInfo() {
+      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      
+      if (this.isLoggedIn) {
+        this.userInfo = authUtils.getUserInfo();
+        console.log('사용자 정보:', this.userInfo);
+      } else {
+        this.userInfo = null;
+      }
+    },
+    
+    // 로그아웃 처리
+    async handleLogout() {
+      if (confirm('로그아웃하시겠습니까?')) {
+        try {
+          await authUtils.logout();
+          this.loadUserInfo();
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        } catch (error) {
+          console.error('로그아웃 중 오류:', error);
+          authUtils.logout();
+          this.loadUserInfo();
+          alert('로그아웃되었습니다.');
+          this.$router.push('/login');
+        }
+      }
+    },
+    
+    // 페이지 이동 메서드들
+    goToHotel() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelone');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    
+    goToFavourites() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelsix');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+
+    goToAccount() {
+      if (this.isLoggedIn) {
+        this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    }    
   }
 }
 </script>

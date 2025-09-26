@@ -44,7 +44,7 @@ apiClient.interceptors.response.use(
   }
 )
 
-// API 호출 메서드들
+// 회원 API
 export const memberAPI = {
   // 회원가입
   async signup(signupData) {
@@ -58,15 +58,9 @@ export const memberAPI = {
     return response.data
   },
 
-  // 로그아웃 (NEW)
+  // 로그아웃
   async logout() {
     const response = await apiClient.post('/api/member/logout')
-    return response.data
-  },
-
-  // 회원가입 + 결제 트랜잭션
-  async signupWithPayment(signupWithPaymentData) {
-    const response = await apiClient.post('/api/member/signup-with-payment', signupWithPaymentData)
     return response.data
   },
 
@@ -78,7 +72,7 @@ export const memberAPI = {
 
   // 프로필 수정
   async updateProfile(profileData) {
-    const response = await apiClient.put('/api/member/profile', profileData)
+    const response = await apiClient.post('/api/member/profile', profileData)
     return response.data
   },
 
@@ -88,9 +82,7 @@ export const memberAPI = {
     return response.data
   },
 
-  // ========== 비밀번호 재설정 관련 API ==========
-  
-  // 비밀번호 재설정 요청 (인증 코드 전송)
+  // 비밀번호 재설정 요청
   async forgotPassword(email) {
     const response = await apiClient.post('/api/member/forgot-password', { email })
     return response.data
@@ -114,10 +106,154 @@ export const memberAPI = {
       confirmPassword
     })
     return response.data
+  },
+
+  // 비밀번호 맞는지 검사 
+  async accountForgot(password){
+    const response = await apiClient.post('/api/member/match-password', {
+      password
+    })
+    return response.data
+  },
+
+  // 비밀번호 재설정
+  async accountPasswordReset(newPassword, confirmPassword){
+    const response = await apiClient.post('/api/member/account-reset-password', {
+      newPassword,
+      confirmPassword
+    })
+    return response.data
   }
 }
 
-// 기타 API들
+//결제수단 API
+  export const paymentMethodAPI = {
+  // 결제수단 등록 (토스 빌링키 발급)
+  async registerPaymentMethod(cardData) {
+    const response = await apiClient.post('/api/payment-methods/register', cardData)
+    return response.data
+  },
+
+  // 내 결제수단 목록 조회
+  async getMyPaymentMethods() {
+    const response = await apiClient.get('/api/payment-methods/my')
+    return response.data
+  },
+
+  // 결제수단 단건 조회
+  async getPaymentMethod(id) {
+    const response = await apiClient.get(`/api/payment-methods/${id}`)
+    return response.data
+  },
+
+  // 결제수단 삭제
+  async deletePaymentMethod(id) {
+    const response = await apiClient.delete(`/api/payment-methods/${id}`)
+    return response.data
+  },
+
+  // 카드 정보 유효성 검증 - 수정됨
+  validateCardInfo(cardInfo) {
+    const errors = []
+    
+    // 카드 번호 검증 (16자리 숫자)
+    if (!cardInfo.cardNumber || !/^\d{16}$/.test(cardInfo.cardNumber.replace(/\s/g, ''))) {
+      errors.push('카드번호는 16자리 숫자여야 합니다')
+    }
+    
+    // 만료일 검증 (MM/YY 형식)
+    if (!cardInfo.expiry || !/^\d{2}\/\d{2}$/.test(cardInfo.expiry)) {
+      errors.push('만료일은 MM/YY 형식이어야 합니다')
+    } else {
+      const [month, year] = cardInfo.expiry.split('/')
+      const currentYear = new Date().getFullYear() % 100
+      const currentMonth = new Date().getMonth() + 1
+      
+      if (parseInt(month) < 1 || parseInt(month) > 12) {
+        errors.push('올바른 월을 입력해주세요 (01-12)')
+      }
+      
+      if (parseInt(year) < currentYear || 
+          (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
+        errors.push('만료일이 이미 지났습니다')
+      }
+    }
+    
+    // 카드 비밀번호 검증 (2자리 숫자) - 파라미터명 변경
+    if (!cardInfo.cardPassword || !/^\d{2}$/.test(cardInfo.cardPassword)) {
+      errors.push('카드 비밀번호는 2자리 숫자여야 합니다')
+    }
+    
+    // 카드 소유자명 검증
+    if (!cardInfo.name || cardInfo.name.trim().length < 2) {
+      errors.push('카드 소유자명을 입력해주세요')
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    }
+  },
+
+  // 카드 번호 포맷팅 (4자리씩 공백으로 구분)
+  formatCardNumber(cardNumber) {
+    return cardNumber.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim()
+  },
+
+  // 만료일 포맷팅 (MM/YY)
+  formatExpiryDate(expiry) {
+    const digitsOnly = expiry.replace(/\D/g, '')
+    if (digitsOnly.length >= 2) {
+      return digitsOnly.substring(0, 2) + '/' + digitsOnly.substring(2, 4)
+    }
+    return digitsOnly
+  },
+
+  // 카드 타입에 따른 이미지 반환 - 새로 추가
+  getCardTypeImage(cardType) {
+    const cardImages = {
+      'VISA': '/images/hotel_account_img/visa.jpg',
+      'MasterCard': '/images/hotel_account_img/mastercard.jpg',
+      'AMEX': '/images/hotel_account_img/amex.jpg',
+      'JCB': '/images/hotel_account_img/hotel_account_jcb.jpg',
+      'DinersClub': '/images/hotel_account_img/dinersclub.jpg'
+    };
+    return cardImages[cardType] || '/images/hotel_account_img/hotel_account_visa.jpg';
+  },
+
+  // 카드사명을 한국어로 변환 - 새로 추가
+  getKoreanCardCompany(cardCompany) {
+    if (!cardCompany) return '카드사';
+    
+    const companyNames = {
+      'KB': 'KB국민카드',
+      'SAMSUNG': '삼성카드',
+      'HYUNDAI': '현대카드',
+      'LOTTE': '롯데카드',
+      'HANA': '하나카드',
+      'SHINHAN': '신한카드',
+      'WOORI': '우리카드',
+      'NH': 'NH농협카드',
+      'CITI': '씨티카드',
+      'KBANK': '케이뱅크카드',
+      // 토스에서 반환하는 영어 카드사명들
+      'KOOKMIN': 'KB국민카드',
+      'SAMSUNG_CARD': '삼성카드',
+      'HYUNDAI_CARD': '현대카드',
+      'LOTTE_CARD': '롯데카드',
+      'HANA_CARD': '하나카드',
+      'SHINHAN_CARD': '신한카드',
+      'WOORI_CARD': '우리카드',
+      'NH_CARD': 'NH농협카드',
+      'CITI_CARD': '씨티카드',
+      'KAKAO_BANK': '카카오뱅크카드',
+      'K_BANK': '케이뱅크카드'
+    };
+    return companyNames[cardCompany.toUpperCase()] || cardCompany;
+  }
+}
+
+// 호텔 API
 export const hotelAPI = {
   // 무료시설 조회
   async getFreebies() {
@@ -178,15 +314,13 @@ export const authUtils = {
     }
   },
 
-  // 로그아웃 (서버 API 호출 + 로컬 스토리지 정리)
+  // 로그아웃
   async logout() {
     try {
-      // 서버에 로그아웃 요청 (토큰 블랙리스트 등록)
       await memberAPI.logout()
     } catch (error) {
       console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
     } finally {
-      // 로컬 스토리지에서 토큰과 사용자 정보 삭제
       localStorage.removeItem('jwt_token')
       localStorage.removeItem('user_info')
     }
