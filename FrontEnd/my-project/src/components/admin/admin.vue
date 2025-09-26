@@ -71,12 +71,11 @@
         <div class="search-section">
           <input v-model="searchQuery" @keyup.enter="handleSearch"
                  placeholder="검색어를 입력하세요..." class="search-input">
-          <button @click="handleSearch" class="search-btn">전체 검색</button>
-          <button @click="searchByName" class="search-name-btn" 
-                  v-if="canSearchByName">이름 검색</button>
+          <button @click="handleSearch" class="search-btn">검색</button>
+          <!-- searchByName 버튼과 canSearchByName computed 제거됨 -->
         </div>
         <button @click="openCreateModal" class="create-btn">새로 추가</button>
-      </div>
+      </div>  
 
       <!-- Data Table -->
       <div class="table-container">
@@ -311,7 +310,7 @@ export default {
         // { key: 'coupons', name: '쿠폰' }
       ],
       
-      // 테이블 컬럼 정의
+      // 테이블 컬럼 정의 (ViewDto 기반으로 수정)
       tableColumns: {
         countries: [
           { key: 'id', label: 'ID' },
@@ -321,17 +320,18 @@ export default {
         cities: [
           { key: 'id', label: 'ID' },
           { key: 'cityName', label: '도시명' },
-          { key: 'countryName', label: '국가명' },
+          { key: 'countryName', label: '국가명' }, // ViewDto에서 가져온 값
           { key: 'cityContent', label: '설명' }
         ],
         city_images: [
           { key: 'id', label: 'ID' },
-          { key: 'cityName', label: '도시명' },
           { key: 'cityImageName', label: '이미지명' },
+          { key: 'cityName', label: '도시명' }, // ViewDto에서 가져온 값
+          { key: 'countryName', label: '국가명' }, // ViewDto에서 가져온 값
           { key: 'cityImagePath', label: '이미지', type: 'image' },
           { key: 'cityImageIndex', label: '순서', type: 'number' },
           { key: 'createdAt', label: '등록일', type: 'date' }
-           ],
+        ],
         // amenities: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'amenitiesName', label: '편의시설명' }
@@ -522,11 +522,6 @@ export default {
       }
       
       return pages;
-    },
-
-    canSearchByName() {
-      const searchableTables = ['cities', 'city_images', 'hotels', 'hotel_images', 'rooms', 'room_images'];
-      return searchableTables.includes(this.currentTable);
     }
   },
   
@@ -683,48 +678,28 @@ export default {
               case 'cityId':
                 field.options = this.foreignKeyData.cities || [];
                 break;
-              case 'hotelId':
-                field.options = this.foreignKeyData.hotels || [];
-                break;
-              case 'roomId':
-                field.options = this.foreignKeyData.rooms || [];
-                break;
-              case 'amenitiesId':
-                field.options = this.foreignKeyData.amenities || [];
-                break;
-              case 'freebiesId':
-                field.options = this.foreignKeyData.freebies || [];
-                break;
+              // case 'hotelId':
+              //   field.options = this.foreignKeyData.hotels || [];
+              //   break;
+              // case 'roomId':
+              //   field.options = this.foreignKeyData.rooms || [];
+              //   break;
+              // case 'amenitiesId':
+              //   field.options = this.foreignKeyData.amenities || [];
+              //   break;
+              // case 'freebiesId':
+              //   field.options = this.foreignKeyData.freebies || [];
+              //   break;
             }
           }
         });
       });
     },
 
-    // 검색
+    // 검색 (기존 이름 검색 기능 제거)
     async handleSearch() {
       this.currentPage = 1;
       await this.loadTableData();
-    },
-
-    async searchByName() {
-      if (!this.searchQuery.trim()) {
-        this.showNotification('검색어를 입력해주세요.', 'error');
-        return;
-      }
-
-      this.isLoading = true;
-      try {
-        const response = await adminAPI.searchByName(this.currentTable, this.searchQuery);
-        this.currentTableData = response.data || [];
-        this.totalPages = 1;
-        this.currentPage = 1;
-      } catch (error) {
-        console.error('검색 실패:', error);
-        this.showNotification('검색에 실패했습니다.', 'error');
-      } finally {
-        this.isLoading = false;
-      }
     },
 
     // 페이지네이션
@@ -748,42 +723,42 @@ export default {
       this.editingId = item.id;
       this.formData = { ...item };
       
-      // 외래키 ID 설정
+      // 외래키 ID 설정 (ViewDto 기반으로 수정)
       this.setForeignKeyIds(item);
       
       this.showModal = true;
     },
 
     setForeignKeyIds(item) {
-      if (this.currentTable === 'cities' && item.countryDto) {
-        this.formData.countryId = item.countryDto.id;
+      if (this.currentTable === 'cities' && item.countryId) {
+        this.formData.countryId = item.countryId;
       }
-      if (this.currentTable === 'city_images' && item.cityDto) {
-        this.formData.cityId = item.cityDto.id;
+      if (this.currentTable === 'city_images' && item.cityId) {
+        this.formData.cityId = item.cityId;
       }
-      if (this.currentTable === 'hotels' && item.cityDto) {
-        this.formData.cityId = item.cityDto.id;
-      }
-      if (this.currentTable === 'hotel_images' && item.hotelDto) {
-        this.formData.hotelId = item.hotelDto.id;
-      }
-      if (this.currentTable === 'rooms' && item.hotelDto) {
-        this.formData.hotelId = item.hotelDto.id;
-      }
-      if (this.currentTable === 'room_images' && item.roomDto) {
-        this.formData.roomId = item.roomDto.id;
-      }
-      if (this.currentTable === 'room_pricing' && item.roomDto) {
-        this.formData.roomId = item.roomDto.id;
-      }
-      if (this.currentTable === 'hotel_amenities') {
-        if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
-        if (item.amenitiesDto) this.formData.amenitiesId = item.amenitiesDto.id;
-      }
-      if (this.currentTable === 'hotel_freebies') {
-        if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
-        if (item.freebiesDto) this.formData.freebiesId = item.freebiesDto.id;
-      }
+      // if (this.currentTable === 'hotels' && item.cityDto) {
+      //   this.formData.cityId = item.cityDto.id;
+      // }
+      // if (this.currentTable === 'hotel_images' && item.hotelDto) {
+      //   this.formData.hotelId = item.hotelDto.id;
+      // }
+      // if (this.currentTable === 'rooms' && item.hotelDto) {
+      //   this.formData.hotelId = item.hotelDto.id;
+      // }
+      // if (this.currentTable === 'room_images' && item.roomDto) {
+      //   this.formData.roomId = item.roomDto.id;
+      // }
+      // if (this.currentTable === 'room_pricing' && item.roomDto) {
+      //   this.formData.roomId = item.roomDto.id;
+      // }
+      // if (this.currentTable === 'hotel_amenities') {
+      //   if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
+      //   if (item.amenitiesDto) this.formData.amenitiesId = item.amenitiesDto.id;
+      // }
+      // if (this.currentTable === 'hotel_freebies') {
+      //   if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
+      //   if (item.freebiesDto) this.formData.freebiesId = item.freebiesDto.id;
+      // }
     },
     
     closeModal() {
@@ -803,11 +778,12 @@ export default {
         let folder = 'general';
         if (this.currentTable === 'city_images') {
           folder = 'city';
-        } else if (this.currentTable === 'hotel_images') {
-          folder = 'hotel';
-        } else if (this.currentTable === 'room_images') {
-          folder = 'room';
-        }
+        } 
+        // else if (this.currentTable === 'hotel_images') {
+        //   folder = 'hotel';
+        // } else if (this.currentTable === 'room_images') {
+        //   folder = 'room';
+        // }
         
         const formData = new FormData();
         formData.append('file', file);

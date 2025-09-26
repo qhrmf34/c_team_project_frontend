@@ -278,7 +278,7 @@ export const hotelAPI = {
 
 // 관리자 API
 export const adminAPI = {
-  // 기본 CRUD 메서드
+  // 기본 CRUD 메서드 (getList가 검색 기능 통합)
   async getList(tableName, params = {}) {
     const response = await apiClient.get(`/api/admin/${tableName}`, { params })
     return response.data
@@ -304,13 +304,7 @@ export const adminAPI = {
     return response.data
   },
 
-  // 검색 기능
-  async searchByName(tableName, name) {
-    const response = await apiClient.get(`/api/admin/${tableName}/search`, {
-      params: { name }
-    })
-    return response.data
-  },
+  // searchByName 메서드 제거됨 (getList로 통합)
 
   // 파일 업로드 (폴더별)
   async uploadFile(formData, folder = 'general') {
@@ -346,7 +340,7 @@ export const adminAPI = {
     return this.uploadFile(formData, 'room')
   },
 
-  // 유틸리티 메서드
+  // 유틸리티 메서드 (기존과 동일)
   getImageUrl(imagePath) {
     if (!imagePath) return ''
     if (imagePath.startsWith('http')) return imagePath
@@ -380,21 +374,20 @@ export const adminAPI = {
   },
 
   // 이미지 파일 검증
-validateImageFile: function (file) {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  validateImageFile: function (file) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    const maxSize = 5 * 1024 * 1024 // 5MB
 
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('JPG, PNG, GIF 파일만 업로드 가능합니다.')
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('JPG, PNG, GIF 파일만 업로드 가능합니다.')
+    }
+
+    if (file.size > maxSize) {
+      throw new Error('파일 크기는 5MB 이하만 가능합니다.')
+    }
+
+    return true
   }
-
-  if (file.size > maxSize) {
-    throw new Error('파일 크기는 5MB 이하만 가능합니다.')
-  }
-
-  return true
-}
-
 }
 // 인증 관련 유틸리티
 export const authUtils = {
