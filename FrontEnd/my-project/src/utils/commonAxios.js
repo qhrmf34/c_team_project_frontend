@@ -304,8 +304,21 @@ export const adminAPI = {
     return response.data
   },
 
-  // 파일 업로드
-  async uploadFile(formData) {
+  // 검색 기능
+  async searchByName(tableName, name) {
+    const response = await apiClient.get(`/api/admin/${tableName}/search`, {
+      params: { name }
+    })
+    return response.data
+  },
+
+  // 파일 업로드 (폴더별)
+  async uploadFile(formData, folder = 'general') {
+    // FormData에 folder 정보 추가
+    if (folder !== 'general') {
+      formData.append('folder', folder)
+    }
+    
     const response = await apiClient.post('/api/admin/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -314,10 +327,30 @@ export const adminAPI = {
     return response.data
   },
 
+  // 폴더별 파일 업로드 편의 메서드
+  async uploadCityImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'city')
+  },
+
+  async uploadHotelImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'hotel')
+  },
+
+  async uploadRoomImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'room')
+  },
+
   // 유틸리티 메서드
   getImageUrl(imagePath) {
     if (!imagePath) return ''
-    return `${apiClient.defaults.baseURL}/uploads/${imagePath}`
+    if (imagePath.startsWith('http')) return imagePath
+    return `${apiClient.defaults.baseURL}/uploads${imagePath}`
   },
   
   formatDate(dateString) {
@@ -328,7 +361,40 @@ export const adminAPI = {
   formatNumber(number) {
     if (!number) return '0'
     return new Intl.NumberFormat('ko-KR').format(number)
+  },
+
+  // 파일 크기 포맷
+  formatFileSize(bytes) {
+    if (!bytes) return '0 B'
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i]
+  },
+
+  // 이미지 미리보기 URL 생성
+  createPreviewUrl(file) {
+    if (file instanceof File) {
+      return URL.createObjectURL(file)
+    }
+    return null
+  },
+
+  // 이미지 파일 검증
+validateImageFile: function (file) {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+  const maxSize = 5 * 1024 * 1024 // 5MB
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('JPG, PNG, GIF 파일만 업로드 가능합니다.')
   }
+
+  if (file.size > maxSize) {
+    throw new Error('파일 크기는 5MB 이하만 가능합니다.')
+  }
+
+  return true
+}
+
 }
 // 인증 관련 유틸리티
 export const authUtils = {
