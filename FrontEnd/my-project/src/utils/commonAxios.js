@@ -289,7 +289,7 @@ export const adminAPI = {
     return response.data
   },
 
-  async create(tableName, data) {
+  async insert(tableName, data) {
     const response = await apiClient.post(`/api/admin/${tableName}`, data)
     return response.data
   },

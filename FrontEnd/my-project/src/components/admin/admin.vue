@@ -12,7 +12,7 @@
         
         <div class="nav-right">
           <span class="admin-badge">관리자</span>
-          <div class="user-profile" @click="toggleDropdown">
+          <div class="user-profile" @click="toggleDropdown">f
             <div class="user-avatar">
               <div class="online-dot"></div>
             </div>
@@ -746,7 +746,7 @@ export default {
           await adminAPI.update(this.currentTable, this.editingId, this.formData);
           alert('수정이 완료되었습니다.');
         } else {
-          await adminAPI.create(this.currentTable, this.formData);
+          await adminAPI.insert(this.currentTable, this.formData);
           alert('등록이 완료되었습니다.');
         }
         
