@@ -300,7 +300,7 @@
               </div>
             </div>
 
-            <!-- Add Card Modal - 수정된 부분 -->
+            <!-- Add Card Modal - -->
             <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
               <div class="modal-full">
                 <div class="modal-content">
@@ -551,11 +551,11 @@ export default {
       phoneNumber: '',
       email: '',
       
-      // 카드 폼 수정 (CVC → cardPassword)
+      // 카드 폼 
       cardForm: {
         cardNumber: '',
         expDate: '',
-        cardPassword: '', // CVC에서 cardPassword로 변경
+        cardPassword: '', 
         cardName: '',
         country: 'KR', // 기본값을 한국으로 변경
         saveInfo: false

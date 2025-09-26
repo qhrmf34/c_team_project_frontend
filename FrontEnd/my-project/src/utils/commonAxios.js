@@ -276,6 +276,60 @@ export const hotelAPI = {
   }
 }
 
+// 관리자 API
+export const adminAPI = {
+  // 기본 CRUD 메서드
+  async getList(tableName, params = {}) {
+    const response = await apiClient.get(`/api/admin/${tableName}`, { params })
+    return response.data
+  },
+
+  async getById(tableName, id) {
+    const response = await apiClient.get(`/api/admin/${tableName}/${id}`)
+    return response.data
+  },
+
+  async create(tableName, data) {
+    const response = await apiClient.post(`/api/admin/${tableName}`, data)
+    return response.data
+  },
+
+  async update(tableName, id, data) {
+    const response = await apiClient.put(`/api/admin/${tableName}/${id}`, data)
+    return response.data
+  },
+
+  async delete(tableName, id) {
+    const response = await apiClient.delete(`/api/admin/${tableName}/${id}`)
+    return response.data
+  },
+
+  // 파일 업로드
+  async uploadFile(formData) {
+    const response = await apiClient.post('/api/admin/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  // 유틸리티 메서드
+  getImageUrl(imagePath) {
+    if (!imagePath) return ''
+    return `${apiClient.defaults.baseURL}/uploads/${imagePath}`
+  },
+  
+  formatDate(dateString) {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('ko-KR')
+  },
+  
+  formatNumber(number) {
+    if (!number) return '0'
+    return new Intl.NumberFormat('ko-KR').format(number)
+  }
+}
 // 인증 관련 유틸리티
 export const authUtils = {
   // 토큰 저장
