@@ -299,7 +299,7 @@ export default {
         { key: 'cities', name: '도시' },
         { key: 'city_images', name: '도시 이미지' },
         { key: 'amenities', name: '편의시설' },
-        // { key: 'freebies', name: '무료서비스' },
+        { key: 'freebies', name: '무료서비스' },
         { key: 'hotels', name: '호텔' },
         // { key: 'hotel_images', name: '호텔 이미지' },
         // { key: 'hotel_amenities', name: '호텔 편의시설' },
@@ -336,10 +336,10 @@ export default {
            { key: 'id', label: 'ID' },
            { key: 'amenitiesName', label: '편의시설명' }
         ],
-        // freebies: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'freebiesName', label: '무료서비스명' }
-        // ],
+        freebies: [
+          { key: 'id', label: 'ID' },
+          { key: 'freebiesName', label: '무료서비스명' }
+        ],
         hotels: [
           { key: 'id', label: 'ID' },
           { key: 'hotelName', label: '호텔명' },
@@ -420,9 +420,9 @@ export default {
         amenities: [
           { key: 'amenitiesName', label: '편의시설명', type: 'text', required: true, placeholder: '편의시설명을 입력하세요' }
         ],
-        // freebies: [
-        //   { key: 'freebiesName', label: '무료서비스명', type: 'text', required: true, placeholder: '무료서비스명을 입력하세요' }
-        // ],
+        freebies: [
+          { key: 'freebiesName', label: '무료서비스명', type: 'text', required: true, placeholder: '무료서비스명을 입력하세요' }
+        ],
         hotels: [
           { key: 'hotelName', label: '호텔명', type: 'text', required: true, placeholder: '호텔명을 입력하세요' },
           { key: 'cityId', label: '도시', type: 'foreign', required: true, options: [] },
@@ -652,13 +652,13 @@ export default {
           name: item.amenitiesName
         }));
         
-        // // 무료서비스 데이터
-        // const freebiesResponse = await adminAPI.getList('freebies');
-        // const freebies = freebiesResponse.data.content || freebiesResponse.data || [];
-        // this.foreignKeyData.freebies = freebies.map(item => ({
-        //   id: item.id,
-        //   name: item.freebiesName
-        // }));
+        // 무료서비스 데이터
+        const freebiesResponse = await adminAPI.getList('freebies');
+        const freebies = freebiesResponse.data.content || freebiesResponse.data || [];
+        this.foreignKeyData.freebies = freebies.map(item => ({
+          id: item.id,
+          name: item.freebiesName
+        }));
         
         this.updateForeignKeyOptions();
         
@@ -686,10 +686,10 @@ export default {
               //   break;
               case 'amenitiesId':
                 field.options = this.foreignKeyData.amenities || [];
-              break;
-              // case 'freebiesId':
-              //   field.options = this.foreignKeyData.freebies || [];
-              //   break;
+                break;
+              case 'freebiesId':
+                field.options = this.foreignKeyData.freebies || [];
+                break;
             }
           }
         });
