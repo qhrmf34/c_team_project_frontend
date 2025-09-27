@@ -298,7 +298,7 @@ export default {
         { key: 'countries', name: '국가' },
         { key: 'cities', name: '도시' },
         { key: 'city_images', name: '도시 이미지' },
-        // { key: 'amenities', name: '편의시설' },
+        { key: 'amenities', name: '편의시설' },
         // { key: 'freebies', name: '무료서비스' },
         { key: 'hotels', name: '호텔' },
         // { key: 'hotel_images', name: '호텔 이미지' },
@@ -332,10 +332,10 @@ export default {
           { key: 'cityImageIndex', label: '순서', type: 'number' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
-        // amenities: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'amenitiesName', label: '편의시설명' }
-        // ],
+        amenities: [
+           { key: 'id', label: 'ID' },
+           { key: 'amenitiesName', label: '편의시설명' }
+        ],
         // freebies: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'freebiesName', label: '무료서비스명' }
@@ -417,9 +417,9 @@ export default {
           { key: 'cityImagePath', label: '이미지 파일', type: 'file', required: true },
           { key: 'cityImageIndex', label: '순서', type: 'number', required: true, placeholder: '이미지 순서를 입력하세요' }
         ],
-        // amenities: [
-        //   { key: 'amenitiesName', label: '편의시설명', type: 'text', required: true, placeholder: '편의시설명을 입력하세요' }
-        // ],
+        amenities: [
+          { key: 'amenitiesName', label: '편의시설명', type: 'text', required: true, placeholder: '편의시설명을 입력하세요' }
+        ],
         // freebies: [
         //   { key: 'freebiesName', label: '무료서비스명', type: 'text', required: true, placeholder: '무료서비스명을 입력하세요' }
         // ],
@@ -644,13 +644,13 @@ export default {
         //   name: item.roomName
         // }));
         
-        // // 편의시설 데이터
-        // const amenitiesResponse = await adminAPI.getList('amenities');
-        // const amenities = amenitiesResponse.data.content || amenitiesResponse.data || [];
-        // this.foreignKeyData.amenities = amenities.map(item => ({
-        //   id: item.id,
-        //   name: item.amenitiesName
-        // }));
+        // 편의시설 데이터
+        const amenitiesResponse = await adminAPI.getList('amenities');
+        const amenities = amenitiesResponse.data.content || amenitiesResponse.data || [];
+        this.foreignKeyData.amenities = amenities.map(item => ({
+          id: item.id,
+          name: item.amenitiesName
+        }));
         
         // // 무료서비스 데이터
         // const freebiesResponse = await adminAPI.getList('freebies');
@@ -684,9 +684,9 @@ export default {
               // case 'roomId':
               //   field.options = this.foreignKeyData.rooms || [];
               //   break;
-              // case 'amenitiesId':
-              //   field.options = this.foreignKeyData.amenities || [];
-              //   break;
+              case 'amenitiesId':
+                field.options = this.foreignKeyData.amenities || [];
+              break;
               // case 'freebiesId':
               //   field.options = this.foreignKeyData.freebies || [];
               //   break;
