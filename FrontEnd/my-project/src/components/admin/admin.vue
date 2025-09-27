@@ -300,7 +300,7 @@ export default {
         { key: 'city_images', name: '도시 이미지' },
         // { key: 'amenities', name: '편의시설' },
         // { key: 'freebies', name: '무료서비스' },
-        // { key: 'hotels', name: '호텔' },
+        { key: 'hotels', name: '호텔' },
         // { key: 'hotel_images', name: '호텔 이미지' },
         // { key: 'hotel_amenities', name: '호텔 편의시설' },
         // { key: 'hotel_freebies', name: '호텔 무료서비스' },
@@ -340,14 +340,14 @@ export default {
         //   { key: 'id', label: 'ID' },
         //   { key: 'freebiesName', label: '무료서비스명' }
         // ],
-        // hotels: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'hotelName', label: '호텔명' },
-        //   { key: 'cityName', label: '도시' },
-        //   { key: 'hotelType', label: '타입' },
-        //   { key: 'hotelStar', label: '성급', type: 'number' },
-        //   { key: 'createdAt', label: '등록일', type: 'date' }
-        // ],
+        hotels: [
+          { key: 'id', label: 'ID' },
+          { key: 'hotelName', label: '호텔명' },
+          { key: 'cityName', label: '도시' },
+          { key: 'hotelType', label: '타입' },
+          { key: 'hotelStar', label: '성급', type: 'number' },
+          { key: 'createdAt', label: '등록일', type: 'date' }
+        ],
         // hotel_images: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'hotelName', label: '호텔명' },
@@ -423,18 +423,18 @@ export default {
         // freebies: [
         //   { key: 'freebiesName', label: '무료서비스명', type: 'text', required: true, placeholder: '무료서비스명을 입력하세요' }
         // ],
-        // hotels: [
-        //   { key: 'hotelName', label: '호텔명', type: 'text', required: true, placeholder: '호텔명을 입력하세요' },
-        //   { key: 'cityId', label: '도시', type: 'foreign', required: true, options: [] },
-        //   { key: 'hotelType', label: '호텔 타입', type: 'enum', required: true, options: ['hotel', 'motel', 'resort'] },
-        //   { key: 'hotelLatitude', label: '위도', type: 'number', required: true, placeholder: '위도를 입력하세요' },
-        //   { key: 'hotelLongitude', label: '경도', type: 'number', required: true, placeholder: '경도를 입력하세요' },
-        //   { key: 'hotelContent', label: '호텔 설명', type: 'textarea', placeholder: '호텔 설명을 입력하세요' },
-        //   { key: 'hotelStar', label: '성급', type: 'number', placeholder: '호텔 성급 (1-5)' },
-        //   { key: 'hotelNumber', label: '전화번호', type: 'text', placeholder: '호텔 전화번호' },
-        //   { key: 'checkinTime', label: '체크인 시간', type: 'time', required: true },
-        //   { key: 'checkoutTime', label: '체크아웃 시간', type: 'time', required: true }
-        // ],
+        hotels: [
+          { key: 'hotelName', label: '호텔명', type: 'text', required: true, placeholder: '호텔명을 입력하세요' },
+          { key: 'cityId', label: '도시', type: 'foreign', required: true, options: [] },
+          { key: 'hotelType', label: '호텔 타입', type: 'enum', required: true, options: ['hotel', 'motel', 'resort'] },
+          { key: 'hotelLatitude', label: '위도', type: 'number', required: true, placeholder: '위도를 입력하세요' },
+          { key: 'hotelLongitude', label: '경도', type: 'number', required: true, placeholder: '경도를 입력하세요' },
+          { key: 'hotelContent', label: '호텔 설명', type: 'textarea', placeholder: '호텔 설명을 입력하세요' },
+          { key: 'hotelStar', label: '성급', type: 'number', placeholder: '호텔 성급 (1-5)' },
+          { key: 'hotelNumber', label: '전화번호', type: 'text', placeholder: '호텔 전화번호' },
+          { key: 'checkinTime', label: '체크인 시간', type: 'time', required: true },
+          { key: 'checkoutTime', label: '체크아웃 시간', type: 'time', required: true }
+        ],
         // hotel_images: [
         //   { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
         //   { key: 'hotelImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
@@ -628,13 +628,13 @@ export default {
           name: item.cityName
         }));
         
-        // // 호텔 데이터
-        // const hotelsResponse = await adminAPI.getList('hotels');
-        // const hotels = hotelsResponse.data.content || hotelsResponse.data || [];
-        // this.foreignKeyData.hotels = hotels.map(item => ({
-        //   id: item.id,
-        //   name: item.hotelName
-        // }));
+        // 호텔 데이터
+        const hotelsResponse = await adminAPI.getList('hotels');
+        const hotels = hotelsResponse.data.content || hotelsResponse.data || [];
+        this.foreignKeyData.hotels = hotels.map(item => ({
+          id: item.id,
+          name: item.hotelName
+        }));
         
         // // 객실 데이터
         // const roomsResponse = await adminAPI.getList('rooms');
@@ -678,9 +678,9 @@ export default {
               case 'cityId':
                 field.options = this.foreignKeyData.cities || [];
                 break;
-              // case 'hotelId':
-              //   field.options = this.foreignKeyData.hotels || [];
-              //   break;
+              case 'hotelId':
+                field.options = this.foreignKeyData.hotels || [];
+                break;
               // case 'roomId':
               //   field.options = this.foreignKeyData.rooms || [];
               //   break;
@@ -736,9 +736,9 @@ export default {
       if (this.currentTable === 'city_images' && item.cityId) {
         this.formData.cityId = item.cityId;
       }
-      // if (this.currentTable === 'hotels' && item.cityDto) {
-      //   this.formData.cityId = item.cityDto.id;
-      // }
+      if (this.currentTable === 'hotels' && item.cityDto) {
+        this.formData.cityId = item.cityDto.id;
+      }
       // if (this.currentTable === 'hotel_images' && item.hotelDto) {
       //   this.formData.hotelId = item.hotelDto.id;
       // }
