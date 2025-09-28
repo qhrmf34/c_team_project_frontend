@@ -301,7 +301,7 @@ export default {
         { key: 'amenities', name: '편의시설' },
         { key: 'freebies', name: '무료서비스' },
         { key: 'hotels', name: '호텔' },
-        // { key: 'hotel_images', name: '호텔 이미지' },
+        { key: 'hotel_images', name: '호텔 이미지' },
         { key: 'hotel_amenities', name: '호텔 편의시설' },
         { key: 'hotel_freebies', name: '호텔 무료서비스' },
         // { key: 'rooms', name: '객실' },
@@ -348,14 +348,14 @@ export default {
           { key: 'hotelStar', label: '성급', type: 'number' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
-        // hotel_images: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'hotelName', label: '호텔명' },
-        //   { key: 'hotelImageName', label: '이미지명' },
-        //   { key: 'hotelImagePath', label: '이미지', type: 'image' },
-        //   { key: 'hotelImageIndex', label: '순서', type: 'number' },
-        //   { key: 'createdAt', label: '등록일', type: 'date' }
-        // ],
+        hotel_images: [
+          { key: 'id', label: 'ID' },
+          { key: 'hotelName', label: '호텔명' },
+          { key: 'hotelImageName', label: '이미지명' },
+          { key: 'hotelImagePath', label: '이미지', type: 'image' },
+          { key: 'hotelImageIndex', label: '순서', type: 'number' },
+          { key: 'createdAt', label: '등록일', type: 'date' }
+        ],
         hotel_amenities: [
           { key: 'id', label: 'ID' },
           { key: 'hotelName', label: '호텔명' },
@@ -435,12 +435,12 @@ export default {
           { key: 'checkinTime', label: '체크인 시간', type: 'time', required: true },
           { key: 'checkoutTime', label: '체크아웃 시간', type: 'time', required: true }
         ],
-        // hotel_images: [
-        //   { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
-        //   { key: 'hotelImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
-        //   { key: 'hotelImagePath', label: '이미지 파일', type: 'file', required: true },
-        //   { key: 'hotelImageIndex', label: '순서', type: 'number', required: true, placeholder: '이미지 순서를 입력하세요' }
-        // ],
+        hotel_images: [
+          { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
+          { key: 'hotelImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
+          { key: 'hotelImagePath', label: '이미지 파일', type: 'file', required: true },
+          { key: 'hotelImageIndex', label: '순서', type: 'number', required: true, placeholder: '이미지 순서를 입력하세요' }
+        ],
         hotel_amenities: [
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
           { key: 'amenitiesId', label: '편의시설', type: 'foreign', required: true, options: [] },
@@ -739,9 +739,9 @@ export default {
       if (this.currentTable === 'hotels' && item.cityDto) {
         this.formData.cityId = item.cityDto.id;
       }
-      // if (this.currentTable === 'hotel_images' && item.hotelDto) {
-      //   this.formData.hotelId = item.hotelDto.id;
-      // }
+      if (this.currentTable === 'hotel_images' && item.hotelDto) {
+        this.formData.hotelId = item.hotelDto.id;
+      }
       // if (this.currentTable === 'rooms' && item.hotelDto) {
       //   this.formData.hotelId = item.hotelDto.id;
       // }
@@ -779,9 +779,10 @@ export default {
         if (this.currentTable === 'city_images') {
           folder = 'city';
         } 
-        // else if (this.currentTable === 'hotel_images') {
-        //   folder = 'hotel';
-        // } else if (this.currentTable === 'room_images') {
+        else if (this.currentTable === 'hotel_images') {
+          folder = 'hotel';
+        }
+        // else if (this.currentTable === 'room_images') {
         //   folder = 'room';
         // }
         
