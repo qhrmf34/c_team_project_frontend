@@ -304,7 +304,7 @@ export default {
         { key: 'hotel_images', name: '호텔 이미지' },
         { key: 'hotel_amenities', name: '호텔 편의시설' },
         { key: 'hotel_freebies', name: '호텔 무료서비스' },
-        // { key: 'rooms', name: '객실' },
+        { key: 'rooms', name: '객실' },
         // { key: 'room_images', name: '객실 이미지' },
         // { key: 'room_pricing', name: '객실 가격' },
         // { key: 'coupons', name: '쿠폰' }
@@ -370,14 +370,14 @@ export default {
           { key: 'isAvailable', label: '이용가능', type: 'boolean' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
-        // rooms: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'roomName', label: '객실명' },
-        //   { key: 'hotelName', label: '호텔명' },
-        //   { key: 'roomNumber', label: '객실번호', type: 'number' },
-        //   { key: 'basePrice', label: '기본가격', type: 'number' },
-        //   { key: 'roomView', label: '전망' }
-        // ],
+        rooms: [
+          { key: 'id', label: 'ID' },
+          { key: 'roomName', label: '객실명' },
+          { key: 'hotelName', label: '호텔명' },
+          { key: 'roomNumber', label: '객실번호', type: 'number' },
+          { key: 'basePrice', label: '기본가격', type: 'number' },
+          { key: 'roomView', label: '전망' }
+        ],
         // room_images: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'roomName', label: '객실명' },
@@ -451,15 +451,15 @@ export default {
           { key: 'freebiesId', label: '무료서비스', type: 'foreign', required: true, options: [] },
           { key: 'isAvailable', label: '이용가능 여부', type: 'boolean', required: true }
         ],
-        // rooms: [
-        //   { key: 'roomName', label: '객실명', type: 'text', required: true, placeholder: '객실명을 입력하세요' },
-        //   { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
-        //   { key: 'roomNumber', label: '객실번호', type: 'number', required: true, placeholder: '객실번호를 입력하세요' },
-        //   { key: 'basePrice', label: '기본가격', type: 'number', required: true, placeholder: '기본가격을 입력하세요' },
-        //   { key: 'roomSingleBed', label: '싱글베드 수', type: 'number', placeholder: '싱글베드 개수' },
-        //   { key: 'roomDoubleBed', label: '더블베드 수', type: 'number', placeholder: '더블베드 개수' },
-        //   { key: 'roomView', label: '전망', type: 'text', placeholder: '객실 전망 (예: 바다뷰, 시티뷰)' }
-        // ],
+        rooms: [
+          { key: 'roomName', label: '객실명', type: 'text', required: true, placeholder: '객실명을 입력하세요' },
+          { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
+          { key: 'roomNumber', label: '객실번호', type: 'number', required: true, placeholder: '객실번호를 입력하세요' },
+          { key: 'basePrice', label: '기본가격', type: 'number', required: true, placeholder: '기본가격을 입력하세요' },
+          { key: 'roomSingleBed', label: '싱글베드 수', type: 'number', placeholder: '싱글베드 개수' },
+          { key: 'roomDoubleBed', label: '더블베드 수', type: 'number', placeholder: '더블베드 개수' },
+          { key: 'roomView', label: '전망', type: 'text', placeholder: '객실 전망 (예: 바다뷰, 시티뷰)' }
+        ],
         // room_images: [
         //   { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
         //   { key: 'roomImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
@@ -636,13 +636,13 @@ export default {
           name: item.hotelName
         }));
         
-        // // 객실 데이터
-        // const roomsResponse = await adminAPI.getList('rooms');
-        // const rooms = roomsResponse.data.content || roomsResponse.data || [];
-        // this.foreignKeyData.rooms = rooms.map(item => ({
-        //   id: item.id,
-        //   name: item.roomName
-        // }));
+        // 객실 데이터
+        const roomsResponse = await adminAPI.getList('rooms');
+        const rooms = roomsResponse.data.content || roomsResponse.data || [];
+        this.foreignKeyData.rooms = rooms.map(item => ({
+          id: item.id,
+          name: item.roomName
+        }));
         
         // 편의시설 데이터
         const amenitiesResponse = await adminAPI.getList('amenities');
@@ -681,9 +681,9 @@ export default {
               case 'hotelId':
                 field.options = this.foreignKeyData.hotels || [];
                 break;
-              // case 'roomId':
-              //   field.options = this.foreignKeyData.rooms || [];
-              //   break;
+              case 'roomId':
+                field.options = this.foreignKeyData.rooms || [];
+                break;
               case 'amenitiesId':
                 field.options = this.foreignKeyData.amenities || [];
                 break;
@@ -742,9 +742,9 @@ export default {
       if (this.currentTable === 'hotel_images' && item.hotelDto) {
         this.formData.hotelId = item.hotelDto.id;
       }
-      // if (this.currentTable === 'rooms' && item.hotelDto) {
-      //   this.formData.hotelId = item.hotelDto.id;
-      // }
+      if (this.currentTable === 'rooms' && item.hotelDto) {
+        this.formData.hotelId = item.hotelDto.id;
+      }
       // if (this.currentTable === 'room_images' && item.roomDto) {
       //   this.formData.roomId = item.roomDto.id;
       // }
