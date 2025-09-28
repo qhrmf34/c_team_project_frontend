@@ -302,7 +302,7 @@ export default {
         { key: 'freebies', name: '무료서비스' },
         { key: 'hotels', name: '호텔' },
         // { key: 'hotel_images', name: '호텔 이미지' },
-        // { key: 'hotel_amenities', name: '호텔 편의시설' },
+        { key: 'hotel_amenities', name: '호텔 편의시설' },
         // { key: 'hotel_freebies', name: '호텔 무료서비스' },
         // { key: 'rooms', name: '객실' },
         // { key: 'room_images', name: '객실 이미지' },
@@ -356,13 +356,13 @@ export default {
         //   { key: 'hotelImageIndex', label: '순서', type: 'number' },
         //   { key: 'createdAt', label: '등록일', type: 'date' }
         // ],
-        // hotel_amenities: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'hotelName', label: '호텔명' },
-        //   { key: 'amenitiesName', label: '편의시설명' },
-        //   { key: 'isAvailable', label: '이용가능', type: 'boolean' },
-        //   { key: 'createdAt', label: '등록일', type: 'date' }
-        // ],
+        hotel_amenities: [
+          { key: 'id', label: 'ID' },
+          { key: 'hotelName', label: '호텔명' },
+          { key: 'amenitiesName', label: '편의시설명' },
+          { key: 'isAvailable', label: '이용가능', type: 'boolean' },
+          { key: 'createdAt', label: '등록일', type: 'date' }
+        ],
         // hotel_freebies: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'hotelName', label: '호텔명' },
@@ -441,11 +441,11 @@ export default {
         //   { key: 'hotelImagePath', label: '이미지 파일', type: 'file', required: true },
         //   { key: 'hotelImageIndex', label: '순서', type: 'number', required: true, placeholder: '이미지 순서를 입력하세요' }
         // ],
-        // hotel_amenities: [
-        //   { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
-        //   { key: 'amenitiesId', label: '편의시설', type: 'foreign', required: true, options: [] },
-        //   { key: 'isAvailable', label: '이용가능 여부', type: 'boolean', required: true }
-        // ],
+        hotel_amenities: [
+          { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
+          { key: 'amenitiesId', label: '편의시설', type: 'foreign', required: true, options: [] },
+          { key: 'isAvailable', label: '이용가능 여부', type: 'boolean', required: true }
+        ],
         // hotel_freebies: [
         //   { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
         //   { key: 'freebiesId', label: '무료서비스', type: 'foreign', required: true, options: [] },
@@ -751,10 +751,10 @@ export default {
       // if (this.currentTable === 'room_pricing' && item.roomDto) {
       //   this.formData.roomId = item.roomDto.id;
       // }
-      // if (this.currentTable === 'hotel_amenities') {
-      //   if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
-      //   if (item.amenitiesDto) this.formData.amenitiesId = item.amenitiesDto.id;
-      // }
+      if (this.currentTable === 'hotel_amenities') {
+        if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
+        if (item.amenitiesDto) this.formData.amenitiesId = item.amenitiesDto.id;
+      }
       // if (this.currentTable === 'hotel_freebies') {
       //   if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
       //   if (item.freebiesDto) this.formData.freebiesId = item.freebiesDto.id;
