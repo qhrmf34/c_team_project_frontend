@@ -353,7 +353,6 @@ export default {
           { key: 'hotelName', label: '호텔명' },
           { key: 'hotelImageName', label: '이미지명' },
           { key: 'hotelImagePath', label: '이미지', type: 'image' },
-          { key: 'hotelImageIndex', label: '순서', type: 'number' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
         hotel_amenities: [
@@ -439,7 +438,6 @@ export default {
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
           { key: 'hotelImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
           { key: 'hotelImagePath', label: '이미지 파일', type: 'file', required: true },
-          { key: 'hotelImageIndex', label: '순서', type: 'number', required: true, placeholder: '이미지 순서를 입력하세요' }
         ],
         hotel_amenities: [
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
@@ -473,7 +471,7 @@ export default {
         coupons: [
           { key: 'couponName', label: '쿠폰명', type: 'text', required: true, placeholder: '쿠폰명을 입력하세요' },
           { key: 'couponContent', label: '쿠폰 설명', type: 'textarea', placeholder: '쿠폰 설명을 입력하세요' },
-          { key: 'discount', label: '할인율', type: 'number', required: true, placeholder: '할인율을 입력하세요 (예: 10.50)' },
+          { key: 'discount', label: '할인율', type: 'text', required: true, placeholder: '할인율을 입력하세요 (예: 10.50)' },
           { key: 'lastDate', label: '만료일', type: 'date', required: true },
           { key: 'isActive', label: '활성화', type: 'boolean', required: true }
         ]
