@@ -450,19 +450,19 @@ export default {
       activeFilter: 'all',
       rooms: [
         {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+          image: '/images/hotel_img/room1.jpg',
           details: 'Superior room · 1 double bed or 2 twin beds'
         },
         {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+          image: '/images/hotel_img/room2.jpg',
           details: 'Superior room · City view · 1 double bed or 2 twin beds'
         },
         {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+          image: '/images/hotel_img/room3.jpg',
           details: 'Superior room · 1 double bed or 2 twin beds'
         },
         {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+          image: '/images/hotel_img/room4.jpg',
           details: 'Superior room · 1 double bed or 2 twin beds'
         }
       ],

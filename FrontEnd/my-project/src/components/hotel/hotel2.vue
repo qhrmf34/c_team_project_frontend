@@ -445,7 +445,7 @@ export default {
         {
           id: 5,
           title: '그랜드 플라자 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
+          image: '/images/hotel_img/hotel5.jpg',
           imageCount: 12,
           price: '₩85,000',
           location: 'Beyoğlu, Galata Kulesi Sk. No:15, Istanbul 34421',
@@ -460,7 +460,7 @@ export default {
         {
           id: 6,
           title: '오션뷰 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
+          image: '/images/hotel_img/hotel6.jpg',
           imageCount: 15,
           price: '₩320,000',
           location: 'Kadıköy, Bağdat Cd. No:234, Istanbul 34710',
@@ -475,7 +475,7 @@ export default {
         {
           id: 7,
           title: '시티센터 비즈니스 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
+          image: '/images/hotel_img/hotel7.jpg',
           imageCount: 8,
           price: '₩95,000',
           location: 'Şişli, Büyükdere Cd. No:145, Istanbul 34394',
@@ -490,7 +490,7 @@ export default {
         {
           id: 8,
           title: '부티크 가든 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
+          image: '/images/hotel_img/hotel8.jpg',
           imageCount: 11,
           price: '₩180,000',
           location: 'Beşiktaş, Çırağan Cd. No:32, Istanbul 34349',
@@ -505,9 +505,24 @@ export default {
         {
           id: 9,
           title: '럭셔리 스파 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
+          image: '/images/hotel_img/hotel9.jpg',
           imageCount: 20,
           price: '₩450,000',
+          location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',
+          stars: '★★★★★',
+          type: '5 Star Hotel',
+          amenitiesCount: 30,
+          rating: '4.7',
+          ratingText: 'Excellent',
+          reviewCount: 89,
+          wishlisted: false
+        },
+        {
+          id: 10,
+          title: '테스트',
+          image: '/images/hotel_img/hotel10.jpg',
+          imageCount: 20,
+          price: '₩550,000',
           location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',
           stars: '★★★★★',
           type: '5 Star Hotel',
@@ -1357,7 +1372,7 @@ export default {
 
         .image-count {
             position: absolute;
-            width: 72px;
+            width: 75px;
             height: 32px;
             top: 10px;
             left: 220px;
