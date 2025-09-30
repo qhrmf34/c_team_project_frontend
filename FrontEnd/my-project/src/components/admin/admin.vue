@@ -306,8 +306,8 @@ export default {
         { key: 'hotel_freebies', name: '호텔 무료서비스' },
         { key: 'rooms', name: '객실' },
         { key: 'room_images', name: '객실 이미지' },
-        // { key: 'room_pricing', name: '객실 가격' },
-        // { key: 'coupons', name: '쿠폰' }
+        { key: 'room_pricing', name: '객실 가격' },
+        { key: 'coupons', name: '쿠폰' }
       ],
       
       // 테이블 컬럼 정의 (ViewDto 기반으로 수정)
@@ -385,19 +385,19 @@ export default {
           { key: 'roomImagePath', label: '이미지', type: 'image' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
-        // room_pricing: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'roomName', label: '객실명' },
-        //   { key: 'date', label: '날짜', type: 'date' },
-        //   { key: 'price', label: '가격', type: 'number' }
-        // ],
-        // coupons: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'couponName', label: '쿠폰명' },
-        //   { key: 'discount', label: '할인율', type: 'number' },
-        //   { key: 'lastDate', label: '만료일', type: 'date' },
-        //   { key: 'isActive', label: '활성화', type: 'boolean' }
-        // ]
+        room_pricing: [
+          { key: 'id', label: 'ID' },
+          { key: 'roomName', label: '객실명' },
+          { key: 'date', label: '날짜', type: 'date' },
+          { key: 'price', label: '가격', type: 'number' }
+        ],
+        coupons: [
+          { key: 'id', label: 'ID' },
+          { key: 'couponName', label: '쿠폰명' },
+          { key: 'discount', label: '할인율', type: 'number' },
+          { key: 'lastDate', label: '만료일', type: 'date' },
+          { key: 'isActive', label: '활성화', type: 'boolean' }
+        ]
       },
       
       // 폼 필드 정의
@@ -465,18 +465,18 @@ export default {
           { key: 'roomImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
           { key: 'roomImagePath', label: '이미지 파일', type: 'file', required: true }
         ],
-        // room_pricing: [
-        //   { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
-        //   { key: 'date', label: '날짜', type: 'date', required: true },
-        //   { key: 'price', label: '가격', type: 'number', required: true, placeholder: '해당 날짜의 가격을 입력하세요' }
-        // ],
-        // coupons: [
-        //   { key: 'couponName', label: '쿠폰명', type: 'text', required: true, placeholder: '쿠폰명을 입력하세요' },
-        //   { key: 'couponContent', label: '쿠폰 설명', type: 'textarea', placeholder: '쿠폰 설명을 입력하세요' },
-        //   { key: 'discount', label: '할인율', type: 'number', required: true, placeholder: '할인율을 입력하세요 (예: 10.50)' },
-        //   { key: 'lastDate', label: '만료일', type: 'date', required: true },
-        //   { key: 'isActive', label: '활성화', type: 'boolean', required: true }
-        // ]
+        room_pricing: [
+          { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
+          { key: 'date', label: '날짜', type: 'date', required: true },
+          { key: 'price', label: '가격', type: 'number', required: true, placeholder: '해당 날짜의 가격을 입력하세요' }
+        ],
+        coupons: [
+          { key: 'couponName', label: '쿠폰명', type: 'text', required: true, placeholder: '쿠폰명을 입력하세요' },
+          { key: 'couponContent', label: '쿠폰 설명', type: 'textarea', placeholder: '쿠폰 설명을 입력하세요' },
+          { key: 'discount', label: '할인율', type: 'number', required: true, placeholder: '할인율을 입력하세요 (예: 10.50)' },
+          { key: 'lastDate', label: '만료일', type: 'date', required: true },
+          { key: 'isActive', label: '활성화', type: 'boolean', required: true }
+        ]
       }
     }
   },
@@ -748,9 +748,9 @@ export default {
       if (this.currentTable === 'room_images' && item.roomDto) {
         this.formData.roomId = item.roomDto.id;
       }
-      // if (this.currentTable === 'room_pricing' && item.roomDto) {
-      //   this.formData.roomId = item.roomDto.id;
-      // }
+      if (this.currentTable === 'room_pricing' && item.roomDto) {
+        this.formData.roomId = item.roomDto.id;
+      }
       if (this.currentTable === 'hotel_amenities') {
         if (item.hotelDto) this.formData.hotelId = item.hotelDto.id;
         if (item.amenitiesDto) this.formData.amenitiesId = item.amenitiesDto.id;
