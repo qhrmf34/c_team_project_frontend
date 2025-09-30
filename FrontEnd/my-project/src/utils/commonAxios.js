@@ -276,6 +276,119 @@ export const hotelAPI = {
   }
 }
 
+// 관리자 API
+export const adminAPI = {
+  // 기본 CRUD 메서드 (getList가 검색 기능 통합)
+  async getList(tableName, params = {}) {
+    const response = await apiClient.get(`/api/admin/${tableName}`, { params })
+    return response.data
+  },
+
+  async getById(tableName, id) {
+    const response = await apiClient.get(`/api/admin/${tableName}/${id}`)
+    return response.data
+  },
+
+  async insert(tableName, data) {
+    const response = await apiClient.post(`/api/admin/${tableName}`, data)
+    return response.data
+  },
+
+  async update(tableName, id, data) {
+    const response = await apiClient.put(`/api/admin/${tableName}/${id}`, data)
+    return response.data
+  },
+
+  async delete(tableName, id) {
+    const response = await apiClient.delete(`/api/admin/${tableName}/${id}`)
+    return response.data
+  },
+
+  // searchByName 메서드 제거됨 (getList로 통합)
+
+  // 파일 업로드 (폴더별)
+  async uploadFile(formData, folder = 'general') {
+    // FormData에 folder 정보 추가
+    if (folder !== 'general') {
+      formData.append('folder', folder)
+    }
+    
+    const response = await apiClient.post('/api/admin/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  // 폴더별 파일 업로드 편의 메서드
+  async uploadCityImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'city')
+  },
+
+  async uploadHotelImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'hotel')
+  },
+
+  async uploadRoomImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return this.uploadFile(formData, 'room')
+  },
+
+  // 유틸리티 메서드 (기존과 동일)
+  getImageUrl(imagePath) {
+    if (!imagePath) return ''
+    if (imagePath.startsWith('http')) return imagePath
+    return `${apiClient.defaults.baseURL}/uploads${imagePath}`
+  },
+  
+  formatDate(dateString) {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('ko-KR')
+  },
+  
+  formatNumber(number) {
+    if (!number) return '0'
+    return new Intl.NumberFormat('ko-KR').format(number)
+  },
+
+  // 파일 크기 포맷
+  formatFileSize(bytes) {
+    if (!bytes) return '0 B'
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i]
+  },
+
+  // 이미지 미리보기 URL 생성
+  createPreviewUrl(file) {
+    if (file instanceof File) {
+      return URL.createObjectURL(file)
+    }
+    return null
+  },
+
+  // 이미지 파일 검증
+  validateImageFile: function (file) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    const maxSize = 5 * 1024 * 1024 // 5MB
+
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('JPG, PNG, GIF 파일만 업로드 가능합니다.')
+    }
+
+    if (file.size > maxSize) {
+      throw new Error('파일 크기는 5MB 이하만 가능합니다.')
+    }
+
+    return true
+  }
+}
 // 인증 관련 유틸리티
 export const authUtils = {
   // 토큰 저장
