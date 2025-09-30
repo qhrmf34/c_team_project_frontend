@@ -305,7 +305,7 @@ export default {
         { key: 'hotel_amenities', name: '호텔 편의시설' },
         { key: 'hotel_freebies', name: '호텔 무료서비스' },
         { key: 'rooms', name: '객실' },
-        // { key: 'room_images', name: '객실 이미지' },
+        { key: 'room_images', name: '객실 이미지' },
         // { key: 'room_pricing', name: '객실 가격' },
         // { key: 'coupons', name: '쿠폰' }
       ],
@@ -378,13 +378,13 @@ export default {
           { key: 'basePrice', label: '기본가격', type: 'number' },
           { key: 'roomView', label: '전망' }
         ],
-        // room_images: [
-        //   { key: 'id', label: 'ID' },
-        //   { key: 'roomName', label: '객실명' },
-        //   { key: 'roomImageName', label: '이미지명' },
-        //   { key: 'roomImagePath', label: '이미지', type: 'image' },
-        //   { key: 'createdAt', label: '등록일', type: 'date' }
-        // ],
+        room_images: [
+          { key: 'id', label: 'ID' },
+          { key: 'roomName', label: '객실명' },
+          { key: 'roomImageName', label: '이미지명' },
+          { key: 'roomImagePath', label: '이미지', type: 'image' },
+          { key: 'createdAt', label: '등록일', type: 'date' }
+        ],
         // room_pricing: [
         //   { key: 'id', label: 'ID' },
         //   { key: 'roomName', label: '객실명' },
@@ -460,11 +460,11 @@ export default {
           { key: 'roomDoubleBed', label: '더블베드 수', type: 'number', placeholder: '더블베드 개수' },
           { key: 'roomView', label: '전망', type: 'text', placeholder: '객실 전망 (예: 바다뷰, 시티뷰)' }
         ],
-        // room_images: [
-        //   { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
-        //   { key: 'roomImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
-        //   { key: 'roomImagePath', label: '이미지 파일', type: 'file', required: true }
-        // ],
+        room_images: [
+          { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
+          { key: 'roomImageName', label: '이미지명', type: 'text', required: true, placeholder: '이미지명을 입력하세요' },
+          { key: 'roomImagePath', label: '이미지 파일', type: 'file', required: true }
+        ],
         // room_pricing: [
         //   { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
         //   { key: 'date', label: '날짜', type: 'date', required: true },
@@ -745,9 +745,9 @@ export default {
       if (this.currentTable === 'rooms' && item.hotelDto) {
         this.formData.hotelId = item.hotelDto.id;
       }
-      // if (this.currentTable === 'room_images' && item.roomDto) {
-      //   this.formData.roomId = item.roomDto.id;
-      // }
+      if (this.currentTable === 'room_images' && item.roomDto) {
+        this.formData.roomId = item.roomDto.id;
+      }
       // if (this.currentTable === 'room_pricing' && item.roomDto) {
       //   this.formData.roomId = item.roomDto.id;
       // }
@@ -782,9 +782,9 @@ export default {
         else if (this.currentTable === 'hotel_images') {
           folder = 'hotel';
         }
-        // else if (this.currentTable === 'room_images') {
-        //   folder = 'room';
-        // }
+        else if (this.currentTable === 'room_images') {
+          folder = 'room';
+        }
         
         const formData = new FormData();
         formData.append('file', file);
