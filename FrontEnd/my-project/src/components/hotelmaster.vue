@@ -85,6 +85,13 @@
             <p>회원가입 페이지</p>
             <div class="card-path">/signup</div>
           </div>
+
+          <div class="nav-card admin-card" @click="navigateTo('/admin')">
+            <div class="card-icon">⚙️</div>
+            <h3>Admin</h3>
+            <p>관리자 페이지</p>
+            <div class="card-path">/admin</div>
+          </div>
         </div>
       </section>
 
@@ -100,6 +107,9 @@
           </button>
           <button class="action-btn secondary" @click="navigateTo('/hotelaccount')">
             계정 관리
+          </button>
+          <button class="action-btn admin" @click="navigateTo('/admin')">
+            관리자 페이지
           </button>
           <button class="action-btn outline" @click="refreshPage">
             페이지 새로고침
@@ -240,6 +250,21 @@ export default {
   border-color: #8dd3bb;
 }
 
+/* Admin 카드 특별 스타일링 */
+.admin-card::before {
+  background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+}
+
+.admin-card:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 8px 30px rgba(255, 107, 107, 0.2);
+}
+
+.admin-card .card-path {
+  border-left-color: #ff6b6b;
+  background: #fff5f5;
+}
+
 .card-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
@@ -309,6 +334,18 @@ export default {
   background: linear-gradient(135deg, #5a6fd8, #6a4190);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Admin 버튼 특별 스타일링 */
+.action-btn.admin {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+}
+
+.action-btn.admin:hover {
+  background: linear-gradient(135deg, #ee5a24, #d63031);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
 .action-btn.outline {
