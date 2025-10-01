@@ -239,6 +239,27 @@
                         :id="field.key" v-model="formData[field.key]" 
                         :placeholder="field.placeholder" :required="field.required"
                         rows="4" class="form-textarea"></textarea>
+              
+              <!-- 다중선택 (편의시설/무료서비스) -->
+              <div v-else-if="field.type === 'multiselect'" class="multiselect-container">
+                <div class="multiselect-header">
+                  <span class="selected-count">{{ getSelectedCount(field.key) }}개 선택됨</span>
+                  <button type="button" @click="toggleSelectAll(field.key, field.options)" 
+                          class="select-all-btn">
+                    {{ isAllSelected(field.key, field.options) ? '전체 해제' : '전체 선택' }}
+                  </button>
+                </div>
+                <div class="multiselect-grid">
+                  <label v-for="option in field.options" :key="option.id" 
+                         class="multiselect-item">
+                    <input type="checkbox" 
+                           :value="option.id"
+                           v-model="formData[field.key]"
+                           class="multiselect-checkbox">
+                    <span class="multiselect-label">{{ option.name }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -320,14 +341,14 @@ export default {
         cities: [
           { key: 'id', label: 'ID' },
           { key: 'cityName', label: '도시명' },
-          { key: 'countryName', label: '국가명' }, // ViewDto에서 가져온 값
+          { key: 'countryName', label: '국가명' },
           { key: 'cityContent', label: '설명' }
         ],
         city_images: [
           { key: 'id', label: 'ID' },
           { key: 'cityImageName', label: '이미지명' },
-          { key: 'cityName', label: '도시명' }, // ViewDto에서 가져온 값
-          { key: 'countryName', label: '국가명' }, // ViewDto에서 가져온 값
+          { key: 'cityName', label: '도시명' },
+          { key: 'countryName', label: '국가명' },
           { key: 'cityImagePath', label: '이미지', type: 'image' },
           { key: 'cityImageIndex', label: '순서', type: 'number' },
           { key: 'createdAt', label: '등록일', type: 'date' }
@@ -432,7 +453,9 @@ export default {
           { key: 'hotelStar', label: '성급', type: 'number', placeholder: '호텔 성급 (1-5)' },
           { key: 'hotelNumber', label: '전화번호', type: 'text', placeholder: '호텔 전화번호' },
           { key: 'checkinTime', label: '체크인 시간', type: 'time', required: true },
-          { key: 'checkoutTime', label: '체크아웃 시간', type: 'time', required: true }
+          { key: 'checkoutTime', label: '체크아웃 시간', type: 'time', required: true },
+          { key: 'amenities', label: '편의시설', type: 'multiselect', options: [] },
+          { key: 'freebies', label: '무료서비스', type: 'multiselect', options: [] }
         ],
         hotel_images: [
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
@@ -456,7 +479,7 @@ export default {
           { key: 'basePrice', label: '기본가격', type: 'number', required: true, placeholder: '기본가격을 입력하세요' },
           { key: 'roomSingleBed', label: '싱글베드 수', type: 'number', placeholder: '싱글베드 개수' },
           { key: 'roomDoubleBed', label: '더블베드 수', type: 'number', placeholder: '더블베드 개수' },
-          { key: 'roomView', label: '전망', type: 'text', placeholder: '객실 전망 (예: 바다뷰, 시티뷰)' }
+          { key: 'roomView', label: '전망', type: 'enum', options: ['CityView', 'OceanView'] }
         ],
         room_images: [
           { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
@@ -690,11 +713,19 @@ export default {
                 break;
             }
           }
+          // multiselect 타입도 처리
+          if (field.type === 'multiselect') {
+            if (field.key === 'amenities') {
+              field.options = this.foreignKeyData.amenities || [];
+            } else if (field.key === 'freebies') {
+              field.options = this.foreignKeyData.freebies || [];
+            }
+          }
         });
       });
     },
 
-    // 검색 (기존 이름 검색 기능 제거)
+    // 검색
     async handleSearch() {
       this.currentPage = 1;
       await this.loadTableData();
@@ -713,6 +744,13 @@ export default {
       this.isEditMode = false;
       this.editingId = null;
       this.formData = {};
+      
+      // 호텔 생성 시 빈 배열로 초기화
+      if (this.currentTable === 'hotels') {
+        this.formData.amenities = [];
+        this.formData.freebies = [];
+      }
+      
       this.showModal = true;
     },
     
@@ -721,8 +759,13 @@ export default {
       this.editingId = item.id;
       this.formData = { ...item };
       
-      // 외래키 ID 설정 (ViewDto 기반으로 수정)
+      // 외래키 ID 설정
       this.setForeignKeyIds(item);
+      
+      // 호텔 수정 시 기존 편의시설/무료서비스 로드
+      if (this.currentTable === 'hotels') {
+        this.loadHotelFacilities(item.id);
+      }
       
       this.showModal = true;
     },
@@ -812,12 +855,45 @@ export default {
     async saveItem() {
       this.isSaving = true;
       try {
-        if (this.isEditMode) {
-          await adminAPI.update(this.currentTable, this.editingId, this.formData);
-          this.showNotification('수정이 완료되었습니다.', 'success');
+        // 호텔 저장 시 편의시설/무료서비스 처리
+        if (this.currentTable === 'hotels') {
+          const hotelData = { ...this.formData };
+          const selectedAmenities = this.formData.amenities || [];
+          const selectedFreebies = this.formData.freebies || [];
+          
+          // 호텔 기본 정보에서 amenities/freebies 제거
+          delete hotelData.amenities;
+          delete hotelData.freebies;
+          
+          let hotelId;
+          if (this.isEditMode) {
+            await adminAPI.update(this.currentTable, this.editingId, hotelData);
+            hotelId = this.editingId;
+          } else {
+            const response = await adminAPI.insert(this.currentTable, hotelData);
+            // 새로 생성된 호텔 ID 추출 (응답 형식에 따라 조정 필요)
+            hotelId = response.data?.id || this.editingId;
+          }
+          
+          // 편의시설 연결 업데이트
+          if (this.isEditMode) {
+            await this.updateHotelFacilities(hotelId, selectedAmenities, 'amenities');
+            await this.updateHotelFacilities(hotelId, selectedFreebies, 'freebies');
+          } else {
+            await this.createHotelFacilities(hotelId, selectedAmenities, 'amenities');
+            await this.createHotelFacilities(hotelId, selectedFreebies, 'freebies');
+          }
+          
+          this.showNotification('호텔 및 시설 정보가 저장되었습니다.', 'success');
         } else {
-          await adminAPI.insert(this.currentTable, this.formData);
-          this.showNotification('등록이 완료되었습니다.', 'success');
+          // 다른 테이블은 기존 방식대로
+          if (this.isEditMode) {
+            await adminAPI.update(this.currentTable, this.editingId, this.formData);
+            this.showNotification('수정이 완료되었습니다.', 'success');
+          } else {
+            await adminAPI.insert(this.currentTable, this.formData);
+            this.showNotification('등록이 완료되었습니다.', 'success');
+          }
         }
         
         this.closeModal();
@@ -850,8 +926,7 @@ export default {
     getImageUrl(imagePath) {
       return adminAPI.getImageUrl(imagePath);
     },
-
-    formatDate(dateString) {
+formatDate(dateString) {
       return adminAPI.formatDate(dateString);
     },
 
@@ -864,6 +939,111 @@ export default {
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
+    },
+    
+    // 호텔 시설 관련 메서드
+    async loadHotelFacilities(hotelId) {
+      try {
+        // 편의시설 로드
+        const amenitiesResponse = await adminAPI.getList('hotel_amenities', { 
+          search: '', 
+          page: 0, 
+          size: 1000 
+        });
+        const hotelAmenities = (amenitiesResponse.data.content || amenitiesResponse.data || [])
+          .filter(item => item.hotelId === hotelId)
+          .map(item => item.amenitiesId);
+        
+        // 무료서비스 로드
+        const freebiesResponse = await adminAPI.getList('hotel_freebies', { 
+          search: '', 
+          page: 0, 
+          size: 1000 
+        });
+        const hotelFreebies = (freebiesResponse.data.content || freebiesResponse.data || [])
+          .filter(item => item.hotelId === hotelId)
+          .map(item => item.freebiesId);
+        
+        this.formData.amenities = hotelAmenities;
+        this.formData.freebies = hotelFreebies;
+      } catch (error) {
+        console.error('시설 정보 로드 실패:', error);
+      }
+    },
+    
+    async createHotelFacilities(hotelId, selectedIds, type) {
+      const tableName = type === 'amenities' ? 'hotel_amenities' : 'hotel_freebies';
+      const idKey = type === 'amenities' ? 'amenitiesId' : 'freebiesId';
+      
+      for (const id of selectedIds) {
+        try {
+          await adminAPI.insert(tableName, {
+            hotelId: hotelId,
+            [idKey]: id,
+            isAvailable: true
+          });
+        } catch (error) {
+          console.error(`${type} 연결 실패:`, error);
+        }
+      }
+    },
+    
+    async updateHotelFacilities(hotelId, selectedIds, type) {
+      const tableName = type === 'amenities' ? 'hotel_amenities' : 'hotel_freebies';
+      const idKey = type === 'amenities' ? 'amenitiesId' : 'freebiesId';
+      
+      try {
+        // 기존 연결 조회
+        const response = await adminAPI.getList(tableName, { 
+          search: '', 
+          page: 0, 
+          size: 1000 
+        });
+        const existing = (response.data.content || response.data || [])
+          .filter(item => item.hotelId === hotelId);
+        
+        const existingIds = existing.map(item => item[idKey]);
+        
+        // 삭제할 항목
+        const toDelete = existing.filter(item => !selectedIds.includes(item[idKey]));
+        for (const item of toDelete) {
+          await adminAPI.delete(tableName, item.id);
+        }
+        
+        // 추가할 항목
+        const toAdd = selectedIds.filter(id => !existingIds.includes(id));
+        for (const id of toAdd) {
+          await adminAPI.insert(tableName, {
+            hotelId: hotelId,
+            [idKey]: id,
+            isAvailable: true
+          });
+        }
+      } catch (error) {
+        console.error(`${type} 업데이트 실패:`, error);
+      }
+    },
+    
+    // 다중선택 헬퍼 메서드
+    getSelectedCount(fieldKey) {
+      return (this.formData[fieldKey] || []).length;
+    },
+    
+    toggleSelectAll(fieldKey, options) {
+      if (!this.formData[fieldKey]) {
+        this.formData[fieldKey] = [];
+      }
+      
+      if (this.isAllSelected(fieldKey, options)) {
+        this.formData[fieldKey] = [];
+      } else {
+        this.formData[fieldKey] = options.map(opt => opt.id);
+      }
+    },
+    
+    isAllSelected(fieldKey, options) {
+      if (!this.formData[fieldKey] || !options) return false;
+      return this.formData[fieldKey].length === options.length;
     }
   },
   
@@ -886,7 +1066,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 /* 기본 설정 */
 .admin-container {
@@ -1572,6 +1751,90 @@ nav {
   resize: vertical;
   min-height: 100px;
 }
+/* 다중선택 스타일 */
+.multiselect-container {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.multiselect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.selected-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8DD3BB;
+}
+
+.select-all-btn {
+  padding: 6px 12px;
+  background: rgba(141, 211, 187, 0.1);
+  color: #0f766e;
+  border: 1px solid rgba(141, 211, 187, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.select-all-btn:hover {
+  background: rgba(141, 211, 187, 0.2);
+  border-color: #8DD3BB;
+}
+
+.multiselect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.multiselect-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.multiselect-item:hover {
+  border-color: #8DD3BB;
+  background: rgba(141, 211, 187, 0.05);
+}
+
+.multiselect-checkbox {
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #8DD3BB;
+}
+
+.multiselect-checkbox:checked + .multiselect-label {
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.multiselect-label {
+  font-size: 13px;
+  color: #374151;
+  user-select: none;
+  flex: 1;
+}
 
 /* 파일 업로드 */
 .file-upload-group {
@@ -1885,6 +2148,19 @@ nav {
     left: 16px;
     min-width: auto;
   }
+  /* 다중선택 반응형 */
+  .multiselect-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    max-height: 200px;
+  }
+
+  .multiselect-item {
+    padding: 8px 10px;
+  }
+
+  .multiselect-label {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2013,6 +2289,21 @@ nav {
     padding: 4px 8px;
     font-size: 11px;
     min-width: 32px;
+  }
+  /* 다중선택 모바일 최적화 */
+  .multiselect-grid {
+    grid-template-columns: 1fr;
+    max-height: 180px;
+  }
+  
+  .multiselect-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .select-all-btn {
+    width: 100%;
   }
 }
 
