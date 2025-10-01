@@ -380,14 +380,12 @@ export default {
           { key: 'id', label: 'ID' },
           { key: 'hotelName', label: '호텔명' },
           { key: 'amenitiesName', label: '편의시설명' },
-          { key: 'isAvailable', label: '이용가능', type: 'boolean' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
         hotel_freebies: [
           { key: 'id', label: 'ID' },
           { key: 'hotelName', label: '호텔명' },
           { key: 'freebiesName', label: '무료서비스명' },
-          { key: 'isAvailable', label: '이용가능', type: 'boolean' },
           { key: 'createdAt', label: '등록일', type: 'date' }
         ],
         rooms: [
@@ -465,12 +463,10 @@ export default {
         hotel_amenities: [
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
           { key: 'amenitiesId', label: '편의시설', type: 'foreign', required: true, options: [] },
-          { key: 'isAvailable', label: '이용가능 여부', type: 'boolean', required: true }
         ],
         hotel_freebies: [
           { key: 'hotelId', label: '호텔', type: 'foreign', required: true, options: [] },
           { key: 'freebiesId', label: '무료서비스', type: 'foreign', required: true, options: [] },
-          { key: 'isAvailable', label: '이용가능 여부', type: 'boolean', required: true }
         ],
         rooms: [
           { key: 'roomName', label: '객실명', type: 'text', required: true, placeholder: '객실명을 입력하세요' },
@@ -980,7 +976,6 @@ formatDate(dateString) {
           await adminAPI.insert(tableName, {
             hotelId: hotelId,
             [idKey]: id,
-            isAvailable: true
           });
         } catch (error) {
           console.error(`${type} 연결 실패:`, error);
@@ -1016,7 +1011,6 @@ formatDate(dateString) {
           await adminAPI.insert(tableName, {
             hotelId: hotelId,
             [idKey]: id,
-            isAvailable: true
           });
         }
       } catch (error) {
