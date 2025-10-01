@@ -107,11 +107,10 @@
                     class="password-toggle" 
                     @click="togglePassword('signup')"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path v-if="!showPassword.signup" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle v-if="!showPassword.signup" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path v-if="showPassword.signup" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
+                  <img 
+                    :src="showPassword.signup ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                    alt="Toggle Password" 
+                  />
                   </button>
                 </div>
                 <label for="signup-password">Password</label>
@@ -131,11 +130,10 @@
                     class="password-toggle" 
                     @click="togglePassword('confirm')"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path v-if="!showPassword.confirm" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle v-if="!showPassword.confirm" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path v-if="showPassword.confirm" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
+                  <img 
+                    :src="showPassword.confirm ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                    alt="Toggle Password" 
+                  />
                   </button>
                 </div>
                 <label for="confirm-password">Confirm Password</label>
@@ -234,13 +232,7 @@
                   @input="formatCardNumber"
                 >
                 <div class="card-logo">
-                  <svg width="24" height="15" viewBox="0 0 40 24" fill="none">
-                    <rect width="40" height="24" rx="4" fill="#1A1F71"/>
-                    <path d="M16.5 7.5h7v9h-7z" fill="#FF5F00"/>
-                    <circle cx="13" cy="12" r="6" fill="#EB001B"/>
-                    <circle cx="27" cy="12" r="6" fill="#F79E1B"/>
-                    <text x="20" y="16" text-anchor="middle" fill="white" font-size="6" font-family="Arial">VISA</text>
-                  </svg>
+                  <img src="/images/login_img/login_visa.jpg" alt="VISA">
                 </div>
               </div>
               <label for="card-number">Card Number</label>
@@ -776,6 +768,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.password-toggle img{
+  width: 22.50015640258789px;
+  height: 15px;
+  top: 4.5px;
+  left: 0.75px;
+  angle: 0 deg;
+  opacity: 1;
+
 }
 
 .password-toggle:hover {

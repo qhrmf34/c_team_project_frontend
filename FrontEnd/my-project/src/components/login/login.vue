@@ -33,11 +33,10 @@
                     class="password-toggle" 
                     @click="togglePassword('login')"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path v-if="!showPassword.login" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle v-if="!showPassword.login" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path v-if="showPassword.login" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
+                  <img 
+                    :src="showPassword.login ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                    alt="Toggle Password" 
+                  />
                   </button>
                 </div>
                 <label for="password">Password</label>
@@ -155,11 +154,10 @@
                     class="password-toggle" 
                     @click="togglePassword('create')"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path v-if="!showPassword.create" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle v-if="!showPassword.create" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path v-if="showPassword.create" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
+                  <img 
+                    :src="showPassword.create ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                    alt="Toggle Password" 
+                  />
                   </button>
                 </div>
                 <label for="create-password">Create Password</label>
@@ -179,11 +177,10 @@
                     class="password-toggle" 
                     @click="togglePassword('reenter')"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path v-if="!showPassword.reenter" d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <circle v-if="!showPassword.reenter" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                      <path v-if="showPassword.reenter" d="M9.88 9.88a3 3 0 1 0 4.24 4.24M2 12s3-7 10-7a9.902 9.902 0 0 1 5.13 1.31m3.15 3.15a7.98 7.98 0 0 1 1.72 4.54s-3 7-10 7a9.902 9.902 0 0 1-5.13-1.31M2 2l20 20" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
+                  <img 
+                    :src="showPassword.reenter ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                    alt="Toggle Password" 
+                  />
                   </button>
                 </div>
                 <label for="re-enter-password">Re-enter Password</label>
@@ -703,6 +700,15 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.password-toggle img{
+  width: 22.50015640258789px;
+  height: 15px;
+  top: 4.5px;
+  left: 0.75px;
+  angle: 0 deg;
+  opacity: 1;
+
 }
 
 .password-toggle:hover {
