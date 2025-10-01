@@ -627,7 +627,7 @@ export default {
       }
     },
     
-    async loadForeignKeyData() {
+async loadForeignKeyData() {
       try {
         // 국가 데이터
         const countriesResponse = await adminAPI.getList('countries');
@@ -653,12 +653,15 @@ export default {
           name: item.hotelName
         }));
         
-        // 객실 데이터
+        // 객실 데이터 - 호텔명 포함
         const roomsResponse = await adminAPI.getList('rooms');
         const rooms = roomsResponse.data.content || roomsResponse.data || [];
         this.foreignKeyData.rooms = rooms.map(item => ({
           id: item.id,
-          name: item.roomName
+          name: `${item.roomName}_${item.hotelName}`,
+          basePrice: item.basePrice,
+          roomName: item.roomName,
+          hotelName: item.hotelName
         }));
         
         // 편의시설 데이터
