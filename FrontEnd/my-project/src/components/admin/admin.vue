@@ -168,10 +168,13 @@
               
               <!-- 숫자 -->
               <input v-else-if="field.type === 'number'" 
-                     type="number" :id="field.key" v-model="formData[field.key]" 
-                     :placeholder="field.placeholder" :required="field.required"
+                     type="number" 
+                     :id="field.key" 
+                     v-model="formData[field.key]" 
+                     :placeholder="field.placeholder"  
+                     :required="field.required"
                      class="form-input">
-              
+
               <!-- 날짜 -->
               <input v-else-if="field.type === 'date'" 
                      type="date" :id="field.key" v-model="formData[field.key]" 
@@ -203,8 +206,12 @@
               
               <!-- 외래키 -->
               <select v-else-if="field.type === 'foreign'" 
-                      :id="field.key" v-model="formData[field.key]" 
-                      :required="field.required" class="form-select">
+                      :id="field.key" 
+                      v-model="formData[field.key]" 
+                      :required="field.required" 
+                      class="form-select"
+                      @change="field.onChange ? handleFieldChange(field) : null">
+                <!-- onChange 속성이 있으면 handleFieldChange 호출 -->
                 <option value="">선택하세요</option>
                 <option v-for="option in field.options" :key="option.id" :value="option.id">
                   {{ option.name }}
@@ -483,7 +490,7 @@ export default {
           { key: 'roomImagePath', label: '이미지 파일', type: 'file', required: true }
         ],
         room_pricing: [
-          { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [] },
+          { key: 'roomId', label: '객실', type: 'foreign', required: true, options: [], onChange: 'onRoomChange' },
           { key: 'date', label: '날짜', type: 'date', required: true },
           { key: 'price', label: '가격', type: 'number', required: true, placeholder: '해당 날짜의 가격을 입력하세요' }
         ],
@@ -686,7 +693,32 @@ async loadForeignKeyData() {
         console.error('외래키 데이터 로드 실패:', error);
       }
     },
-    
+      handleFieldChange(field) {
+      // 객실 선택 필드가 변경되었는지 확인
+      if (field.onChange === 'onRoomChange' && field.key === 'roomId') {
+        const selectedRoomId = this.formData.roomId;
+
+        if (selectedRoomId) {
+          // foreignKeyData.rooms에서 선택한 객실 찾기
+          const selectedRoom = this.foreignKeyData.rooms.find(
+            room => room.id === selectedRoomId
+          );
+
+          if (selectedRoom) {
+            // room_pricing 테이블의 필드 정의 가져오기
+            const pricingFields = this.tableFields.room_pricing;
+
+            // price 필드 찾기
+            const priceField = pricingFields.find(f => f.key === 'price');
+
+            if (priceField) {
+              // placeholder 동적 변경 (Vue 반응성에 의해 자동으로 화면 업데이트)
+              priceField.placeholder = `기본가격: ${this.formatNumber(selectedRoom.basePrice)}원`;
+            }
+          }
+        }
+      }
+    },
     updateForeignKeyOptions() {
       Object.keys(this.tableFields).forEach(tableKey => {
         this.tableFields[tableKey].forEach(field => {
@@ -749,6 +781,13 @@ async loadForeignKeyData() {
         this.formData.amenities = [];
         this.formData.freebies = [];
       }
+      if (this.currentTable === 'room_pricing') {
+      const pricingFields = this.tableFields.room_pricing;
+      const priceField = pricingFields.find(f => f.key === 'price');
+      if (priceField) {
+        priceField.placeholder = '객실을 먼저 선택하세요';
+      }
+  }
       
       this.showModal = true;
     },
