@@ -637,7 +637,7 @@ export default {
 async loadForeignKeyData() {
       try {
         // 국가 데이터
-        const countriesResponse = await adminAPI.getList('countries');
+        const countriesResponse = await adminAPI.getList('countries', { page: 0, size: 1000 });
         const countries = countriesResponse.data.content || countriesResponse.data || [];
         this.foreignKeyData.countries = countries.map(item => ({
           id: item.id,
@@ -645,7 +645,7 @@ async loadForeignKeyData() {
         }));
         
         // 도시 데이터
-        const citiesResponse = await adminAPI.getList('cities');
+        const citiesResponse = await adminAPI.getList('cities', { page: 0, size: 1000 });
         const cities = citiesResponse.data.content || citiesResponse.data || [];
         this.foreignKeyData.cities = cities.map(item => ({
           id: item.id,
@@ -653,7 +653,7 @@ async loadForeignKeyData() {
         }));
         
         // 호텔 데이터
-        const hotelsResponse = await adminAPI.getList('hotels');
+        const hotelsResponse = await adminAPI.getList('hotels', { page: 0, size: 1000 });
         const hotels = hotelsResponse.data.content || hotelsResponse.data || [];
         this.foreignKeyData.hotels = hotels.map(item => ({
           id: item.id,
@@ -661,7 +661,7 @@ async loadForeignKeyData() {
         }));
         
         // 객실 데이터 - 호텔명 포함
-        const roomsResponse = await adminAPI.getList('rooms');
+        const roomsResponse = await adminAPI.getList('rooms', { page: 0, size: 1000 });
         const rooms = roomsResponse.data.content || roomsResponse.data || [];
         this.foreignKeyData.rooms = rooms.map(item => ({
           id: item.id,
@@ -672,7 +672,7 @@ async loadForeignKeyData() {
         }));
         
         // 편의시설 데이터
-        const amenitiesResponse = await adminAPI.getList('amenities');
+        const amenitiesResponse = await adminAPI.getList('amenities', { page: 0, size: 1000 });
         const amenities = amenitiesResponse.data.content || amenitiesResponse.data || [];
         this.foreignKeyData.amenities = amenities.map(item => ({
           id: item.id,
@@ -680,7 +680,7 @@ async loadForeignKeyData() {
         }));
         
         // 무료서비스 데이터
-        const freebiesResponse = await adminAPI.getList('freebies');
+        const freebiesResponse = await adminAPI.getList('freebies', { page: 0, size: 1000 });
         const freebies = freebiesResponse.data.content || freebiesResponse.data || [];
         this.foreignKeyData.freebies = freebies.map(item => ({
           id: item.id,
@@ -771,7 +771,7 @@ async loadForeignKeyData() {
     },
     
     // 모달
-    openCreateModal() {
+    async openCreateModal() {
       this.isEditMode = false;
       this.editingId = null;
       this.formData = {};
@@ -788,7 +788,7 @@ async loadForeignKeyData() {
         priceField.placeholder = '객실을 먼저 선택하세요';
       }
   }
-      
+      await this.loadForeignKeyData();
       this.showModal = true;
     },
     
