@@ -1197,4 +1197,314 @@ export default {
         .footer-column a:hover {
             opacity: 1;
         }
+        /* 반응형 디자인 - 노트북 */
+        
+        /* 1366px - 1536px (작은 노트북) */
+        @media screen and (max-width: 1536px) {
+            .header {
+                padding: 21px 60px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1100px;
+            }
+
+            .main-content {
+                padding: 150px 60px 0;
+            }
+
+            .newsletter-section {
+                padding: 80px 60px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+            }
+
+            .destination-card {
+                width: 280px;
+                height: 400px;
+            }
+
+            .tour-images {
+                width: 600px;
+            }
+
+            .tour-image {
+                width: 290px;
+                height: 190px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.95);
+            }
+        }
+
+        /* 1200px - 1366px (중간 노트북) */
+        @media screen and (max-width: 1366px) {
+            .header {
+                padding: 21px 40px;
+            }
+
+            .hero-section {
+                padding: 80px 40px 120px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1000px;
+                padding: 24px 20px;
+            }
+
+            .search-fields {
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 350px;
+            }
+
+            .date-field,
+            .guests-field {
+                width: 200px;
+            }
+
+            .main-content {
+                padding: 150px 40px 0;
+            }
+
+            .section-header {
+                margin-bottom: 60px;
+            }
+
+            .destination-cards {
+                gap: 10px;
+            }
+
+            .destination-card {
+                width: 260px;
+                height: 380px;
+            }
+
+            .more-travel {
+                gap: 20px;
+            }
+
+            .malaka-tour {
+                width: 480px;
+                height: 400px;
+                padding: 20px;
+            }
+
+            .tour-title {
+                font-size: 36px;
+            }
+
+            .tour-images {
+                width: 520px;
+            }
+
+            .image-row {
+                gap: 16px;
+            }
+
+            .tour-image {
+                width: 252px;
+                height: 180px;
+            }
+
+            .newsletter-section {
+                padding: 60px 40px;
+            }
+
+            .newsletter-content {
+                padding: 40px;
+            }
+
+            .newsletter-title {
+                font-size: 38px;
+                line-height: 48px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.85);
+            }
+
+            .footer-links {
+                gap: 40px;
+            }
+        }
+
+        /* 1024px - 1200px (작은 노트북 / 큰 태블릿) */
+        @media screen and (max-width: 1200px) {
+            .header {
+                padding: 16px 30px;
+                height: 75px;
+            }
+
+            nav {
+                max-width: 100%;
+            }
+
+            .nav-item {
+                font-size: 13px;
+            }
+
+            .hero-section {
+                height: 480px;
+                padding: 60px 30px 100px;
+            }
+
+            .hero-content {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .hero-title {
+                font-size: 38px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+                width: 100%;
+                max-width: 350px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 900px;
+                height: auto;
+                bottom: -100px;
+                padding: 20px;
+            }
+
+            .search-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .search-fields {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 100%;
+            }
+
+            .date-field,
+            .guests-field {
+                width: calc(50% - 6px);
+            }
+
+            .main-content {
+                padding: 170px 30px 0;
+            }
+
+            .section-title {
+                font-size: 28px;
+                margin-top: 60px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .destination-card {
+                width: 48%;
+                min-width: 240px;
+                height: 360px;
+            }
+
+            .more-travel {
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 180px;
+            }
+
+            .malaka-tour {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                min-height: 350px;
+            }
+
+            .tour-title {
+                font-size: 32px;
+            }
+
+            .tour-images {
+                width: 100%;
+                max-width: 600px;
+            }
+
+            .image-row {
+                gap: 12px;
+            }
+
+            .tour-image {
+                width: calc(50% - 6px);
+                height: 160px;
+            }
+
+            .newsletter-section {
+                padding: 50px 30px;
+                min-height: 422px;
+            }
+
+            .newsletter-content {
+                padding: 32px;
+                min-height: 305px;
+            }
+
+            .newsletter-title {
+                font-size: 32px;
+                line-height: 42px;
+            }
+
+            .newsletter-form {
+                width: 100%;
+            }
+
+            .mailbox-container {
+                transform: scale(0.75);
+            }
+
+            .footer-links {
+                gap: 30px;
+            }
+        }
+
+        /* 768px - 1024px (태블릿) */
+        @media screen and (max-width: 1024px) {
+            .user-dropdown {
+                left: auto;
+                right: 20px;
+                width: 300px;
+            }
+
+            .destination-card {
+                width: 45%;
+                min-width: 220px;
+            }
+
+            .travel-section {
+                margin-bottom: 80px;
+            }
+
+            .tour-image {
+                height: 140px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.7);
+            }
+        }
 </style>
