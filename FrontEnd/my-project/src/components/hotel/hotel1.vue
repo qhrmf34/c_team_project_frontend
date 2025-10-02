@@ -93,62 +93,22 @@
         </div>
 
         <div class="destination-cards">
-          <div class="destination-card">
-            <img src="/images/hotel_img/melbourne.jpg" alt="Melbourne" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>멜버른</h3>
-                  <p>Amazing journey</p>
-                </div>
-                <div class="card-price">₩130,000</div>
+        <div v-for="city in featuredCities" :key="city.id" class="destination-card">
+          <img :src="getCityImageUrl(city.cityImagePath)" 
+               :alt="city.cityName" 
+               style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+          <div class="card-overlay">
+            <div class="card-content">
+              <div class="card-info">
+                <h3>{{ city.cityName }}</h3>
+                <p>{{ city.cityContent || 'Amazing journey' }}</p>
               </div>
-              <button class="book-btn">Book a Hotel</button>
+              <div class="card-price">{{ formatPrice(city.minPrice) }}</div>
             </div>
+            <button class="book-btn">Book a Hotel</button>
           </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/paris.jpg" alt="Paris" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>파리</h3>
-                  <p>A Paris Adventure</p>
-                </div>
-                <div class="card-price">₩150,000</div>
               </div>
-              <button class="book-btn">Book a Hotel</button>
             </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/london.jpg" alt="London" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>런던</h3>
-                  <p>London eye adventure</p>
-                </div>
-                <div class="card-price">₩130,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/colombia.jpg" alt="Colombia" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>콜롬비아</h3>
-                  <p>Amazing streets</p>
-                </div>
-                <div class="card-price">₩150,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="travel-section">
@@ -269,7 +229,7 @@
 
 <script>
 // HotelOne.vue의 script 부분만 업데이트
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelOne',
@@ -287,7 +247,9 @@ export default {
       },
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      featuredCities: []
+
     }
   },
   
@@ -417,13 +379,38 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
+    },
+    async loadFeaturedCities() {
+    try {
+      const response = await hotelAPI.getFeaturedCities(4);
+      this.featuredCities = response.data || [];
+    } catch (error) {
+      console.error('추천 도시 로드 실패:', error);
+      this.featuredCities = [];
     }
+  },
+  
+  // 이미지 URL 생성
+  getCityImageUrl(imagePath) {
+    if (!imagePath) {
+      return '/images/hotel_img/melbourne.jpg'; // 기본 이미지
+    }
+    return adminAPI.getImageUrl(imagePath);
+  },
+  
+  // 가격 포맷팅
+  formatPrice(price) {
+    if (!price) return '₩0';
+    return '₩' + adminAPI.formatNumber(price);
+  }
   },
 
   
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+    this.loadFeaturedCities();
+
   },
   
   beforeUnmount() {
