@@ -74,7 +74,7 @@
       </div>
     </section>
 
-    <main class="main-content">
+     <main class="main-content">
       <aside class="filters-section">
         <h2 class="filters-title">Filters</h2>
         
@@ -143,8 +143,8 @@
           <div class="filter-content" :class="{ collapsed: filters.freebies.collapsed }">
             <div class="checkbox-group">
               <div class="checkbox-item" v-for="freebie in freebies" :key="freebie.id">
-                <input type="checkbox" :id="freebie.id" v-model="freebie.checked">
-                <label :for="freebie.id">{{ freebie.label }}</label>
+                <input type="checkbox" :id="'freebie-' + freebie.id" v-model="freebie.checked">
+                <label :for="'freebie-' + freebie.id">{{ freebie.label }}</label>
               </div>
             </div>
           </div>
@@ -160,8 +160,8 @@
           <div class="filter-content" :class="{ collapsed: filters.amenities.collapsed }">
             <div class="checkbox-group">
               <div class="checkbox-item" v-for="amenity in amenities" :key="amenity.id">
-                <input type="checkbox" :id="amenity.id" v-model="amenity.checked">
-                <label :for="amenity.id">{{ amenity.label }}</label>
+                <input type="checkbox" :id="'amenity-' + amenity.id" v-model="amenity.checked">
+                <label :for="'amenity-' + amenity.id">{{ amenity.label }}</label>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@
         </div>
 
         <div class="results-header">
-          <div class="results-count">Showing <span>{{ showingCount }}</span> of <span style="color: red;">257 places</span></div>
+          <div class="results-count">Showing <span>{{ showingCount }}</span> of <span style="color: red;">{{ totalCount }} places</span></div>
           <div class="sort-container">
             <span class="sort-label">Sort by</span>
             <div class="custom-select-wrapper">
@@ -222,7 +222,11 @@
               </div>
               <div class="hotel-meta">
                 <span class="stars">{{ hotel.stars }}</span>
-                <span class="hotel-type">{{ hotel.type }}</span>
+                <span class="hotel-type">
+                  <template v-if="hotel.hotelType === 'hotel'">Hotel</template>
+                  <template v-else-if="hotel.hotelType === 'motel'">Motel</template>
+                  <template v-else-if="hotel.hotelType === 'resort'">Resort</template>
+                </span>
                 <span class="amenities">
                   <img src="/images/hotel_img/coffee.jpg"/> {{ hotel.amenitiesCount }}+ Amenities
                 </span>
@@ -332,7 +336,7 @@
 </template>
 
 <script>
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelTwo',
@@ -360,169 +364,35 @@ export default {
         max: 1200
       },
       ratingOptions: [0, 1, 2, 3, 4],
-      selectedRating: 4,
-      freebies: [
-        { id: 'free-breakfast', label: '조식포함', checked: false },
-        { id: 'free-parking', label: '무료주차', checked: false },
-        { id: 'wifi', label: 'WiFi', checked: false },
-        { id: 'room-service', label: '룸서비스', checked: false },
-        { id: 'spa', label: '무료취소', checked: false }
-      ],
-      amenities: [
-        { id: 'fitness', label: '24시 프론트데스크', checked: false },
-        { id: 'pool', label: '야외수영장', checked: false },
-        { id: 'business', label: '피트니스', checked: false },
-        { id: 'pets', label: '수영장', checked: false }
-      ],
+      selectedRating: 0,
+      freebies: [],
+      amenities: [],
       tabs: [
-        { name: 'hotels', title: 'Hotels', count: 257 },
-        { name: 'motels', title: 'Motels', count: 51 },
-        { name: 'resorts', title: 'Resorts', count: 72 }
+        { name: 'hotels', title: 'Hotels', count: 0 },
+        { name: 'motels', title: 'Motels', count: 0 },
+        { name: 'resorts', title: 'Resorts', count: 0 }
       ],
+
+      hotels: [],
+
       activeTab: 'hotels',
       sortBy: 'Recommended',
-      hotels: [
-        {
-          id: 1,
-          title: '해튼호텔',
-          image: '/images/hotel_img/hotel1.jpg',
-          imageCount: 9,
-          price: '₩240,000',
-          location: 'Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 20,
-          rating: '4.2',
-          ratingText: 'Very Good',
-          reviewCount: 371,
-          wishlisted: false
-        },
-        {
-          id: 2,
-          title: '마제스틱 말라카 호텔',
-          image: '/images/hotel_img/hotel2.jpg',
-          imageCount: 9,
-          price: '₩120,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 20,
-          rating: '4.2',
-          ratingText: 'Very Good',
-          reviewCount: 54,
-          wishlisted: false
-        },
-        {
-          id: 3,
-          title: '카나휘 리모 호텔',
-          image: '/images/hotel_img/hotel3.jpg',
-          imageCount: 9,
-          price: '₩130,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 20,
-          rating: '4.2',
-          ratingText: 'Very Good',
-          reviewCount: 54,
-          wishlisted: false
-        },
-        {
-          id: 4,
-          title: '베이알 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 9,
-          price: '₩104,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 20,
-          rating: '4.2',
-          ratingText: 'Very Good',
-          reviewCount: 54,
-          wishlisted: false
-        },
-        {
-          id: 5,
-          title: '그랜드 플라자 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 12,
-          price: '₩85,000',
-          location: 'Beyoğlu, Galata Kulesi Sk. No:15, Istanbul 34421',
-          stars: '★★★★☆',
-          type: '4 Star Hotel',
-          amenitiesCount: 15,
-          rating: '4.0',
-          ratingText: 'Good',
-          reviewCount: 289,
-          wishlisted: false
-        },
-        {
-          id: 6,
-          title: '오션뷰 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 15,
-          price: '₩320,000',
-          location: 'Kadıköy, Bağdat Cd. No:234, Istanbul 34710',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 25,
-          rating: '4.5',
-          ratingText: 'Excellent',
-          reviewCount: 156,
-          wishlisted: false
-        },
-        {
-          id: 7,
-          title: '시티센터 비즈니스 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 8,
-          price: '₩95,000',
-          location: 'Şişli, Büyükdere Cd. No:145, Istanbul 34394',
-          stars: '★★★★☆',
-          type: '4 Star Hotel',
-          amenitiesCount: 12,
-          rating: '3.8',
-          ratingText: 'Good',
-          reviewCount: 423,
-          wishlisted: false
-        },
-        {
-          id: 8,
-          title: '부티크 가든 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 11,
-          price: '₩180,000',
-          location: 'Beşiktaş, Çırağan Cd. No:32, Istanbul 34349',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 18,
-          rating: '4.3',
-          ratingText: 'Very Good',
-          reviewCount: 198,
-          wishlisted: false
-        },
-        {
-          id: 9,
-          title: '럭셔리 스파 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 20,
-          price: '₩450,000',
-          location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenitiesCount: 30,
-          rating: '4.7',
-          ratingText: 'Excellent',
-          reviewCount: 89,
-          wishlisted: false
-        }
-      ],
+
+      
+      
+      // 백엔드 연동용 변수들
+      totalCount: 0,
+      currentPage: 0,
+      totalPages: 0,
+      pageSize: 10,
+      isLoading: false,
+      
       // 사용자 정보
       userInfo: null,
       isLoggedIn: false
     }
   },
+  
   computed: {
     showingCount() {
       return this.showingAll ? this.hotels.length : Math.min(3, this.hotels.length);
@@ -535,17 +405,14 @@ export default {
         width: (maxPercent - minPercent) + '%'
       };
     },
-    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -556,12 +423,8 @@ export default {
           }
         }
       }
-      
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
-    
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -574,35 +437,47 @@ export default {
       }
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
-
   },
+  
   methods: {
+    // ===== 기존 UI 메서드 =====
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
+    
     toggleFilter(filterName) {
       this.filters[filterName].collapsed = !this.filters[filterName].collapsed;
     },
-    selectRating(rating) {
-      this.selectedRating = rating;
-    },
-    setActiveTab(tabName) {
-      this.activeTab = tabName;
-    },
-    toggleWishlist(hotelId) {
-      const hotel = this.hotels.find(h => h.id === hotelId);
-      if (hotel) {
-        hotel.wishlisted = !hotel.wishlisted;
+    
+    updatePriceSlider() {
+      if (parseInt(this.priceRange.min) > parseInt(this.priceRange.max) - 10) {
+        this.priceRange.min = parseInt(this.priceRange.max) - 10;
+      }
+      if (parseInt(this.priceRange.max) < parseInt(this.priceRange.min) + 10) {
+        this.priceRange.max = parseInt(this.priceRange.min) + 10;
       }
     },
+    
     viewPlace(hotel) {
       console.log('View place:', hotel.title);
-      // 호텔 상세 페이지로 이동하는 로직
+      this.$router.push({
+        path: '/hotelthree',
+        query: { hotelId: hotel.id }
+      });
     },
+
+    convertHotelType(tabName) {
+      const typeMap = {
+        'hotels': 'hotel',
+        'motels': 'motel',
+        'resorts': 'resort'
+      };
+    return typeMap[tabName] || null;
+    },
+    
     toggleShowMore() {
       this.showingAll = !this.showingAll;
       if (!this.showingAll) {
-        // Scroll back to top of results
         this.$nextTick(() => {
           const resultsSection = document.querySelector('.results-section');
           if (resultsSection) {
@@ -614,19 +489,7 @@ export default {
         });
       }
     },
-    updatePriceSlider() {
-      // Ensure min is not greater than max
-      if (parseInt(this.priceRange.min) > parseInt(this.priceRange.max) - 10) {
-        this.priceRange.min = parseInt(this.priceRange.max) - 10;
-      }
-      if (parseInt(this.priceRange.max) < parseInt(this.priceRange.min) + 10) {
-        this.priceRange.max = parseInt(this.priceRange.min) + 10;
-      }
-    },
-    search() {
-      console.log('Search:', this.searchData);
-      // 검색 로직
-    },
+    
     subscribe() {
       if (this.newsletter.email) {
         alert('구독이 완료되었습니다!');
@@ -635,13 +498,15 @@ export default {
         alert('이메일을 입력해주세요.');
       }
     },
+    
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
     },
-          // 사용자 정보 로드
+    
+    // ===== 사용자 관련 (기존 유지) =====
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -653,32 +518,23 @@ export default {
       }
     },
     
-    // 로그아웃 처리 (개선된 버전)
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
           console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
           authUtils.logout();
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         }
       }
     },
     
-    // 계정 페이지로 이동
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
@@ -687,7 +543,7 @@ export default {
         this.$router.push('/login');
       }
     },
-    //찜목록 페이지로 이동
+    
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -696,7 +552,7 @@ export default {
         this.$router.push('/login');
       }
     },
-    //호텔 페이지로 이동
+    
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -704,20 +560,269 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
+    },
+    
+    updateTabCounts(hotelTypeCounts) {
+    // {hotel: 3, motel: 1, resort: 2} 형태
+    this.tabs.forEach(tab => {
+      const type = tab.name.slice(0, -1); // 'hotels' → 'hotel'
+      if (hotelTypeCounts[type] !== undefined) {
+        tab.count = hotelTypeCounts[type];
+      }
+    });
+    console.log('업데이트된 탭:', this.tabs);
+  },
+    
+    
+    // 필터 옵션 로드
+  async loadFilterOptions() {
+  try {
+    console.log('필터 옵션 로드 시작...');
+    const response = await hotelAPI.getFilterOptions();
+    console.log('필터 API 응답:', response);
+    
+    if (response.code === 200) {
+      const filters = response.data;
+      console.log('필터 데이터:', filters);
+      
+      this.freebies = filters.freebies.map(item => ({
+        id: item.id,
+        label: item.freebiesName,
+        checked: false
+      }));
+      
+      this.amenities = filters.amenities.map(item => ({
+        id: item.id,
+        label: item.amenitiesName,
+        checked: false
+      }));
+      
+      if (filters.priceRange) {
+        this.priceRange.min = Math.floor(filters.priceRange.min / 1000);
+        this.priceRange.max = Math.ceil(filters.priceRange.max / 1000);
+      }
+      
+      // 호텔 타입별 카운트 업데이트 추가
+      if (filters.hotelTypeCounts) {
+        console.log('호텔 타입 카운트:', filters.hotelTypeCounts);
+        this.updateTabCounts(filters.hotelTypeCounts);
+      }
+    }
+  } catch (error) {
+    console.error('필터 옵션 로드 중 오류:', error);
+  }
+},
+    
+    /**
+     * 호텔 검색 (수정됨)
+     * GET /api/hotels
+     */
+    async search(pageOrEvent = 0) {
+      console.log('검색 시작...');
+      this.isLoading = true;
+        
+      // 이벤트 객체가 전달된 경우 처리
+      let page = 0;
+      if (typeof pageOrEvent === 'number') {
+        page = pageOrEvent;
+      } else if (pageOrEvent && typeof pageOrEvent === 'object') {
+        // 이벤트 객체인 경우 무시하고 현재 페이지 유지
+        page = this.currentPage || 0;
+      }
+        
+      try {
+        const params = {
+        destination: this.searchData.destination || null,
+        checkIn: this.searchData.checkIn || null,
+        checkOut: this.searchData.checkOut || null,
+        guests: this.extractGuestsNumber(this.searchData.guests),
+        rooms: this.extractRoomsNumber(this.searchData.guests),
+        minPrice: this.priceRange.min * 1000,
+        maxPrice: this.priceRange.max * 1000,
+        rating: this.selectedRating,
+        hotelType: this.convertHotelType(this.activeTab),
+        freebies: this.getSelectedFreebies(),
+        amenities: this.getSelectedAmenities(),
+        sortBy: this.convertSortBy(this.sortBy),
+        page: page,
+        size: this.pageSize
+      };
+        
+      console.log('검색 파라미터:', params);
+
+      const response = await hotelAPI.searchHotels(params);
+        
+      if (response.code === 200) {
+        const data = response.data;
+        console.log('받은 데이터:', data);
+        
+        this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+        this.totalCount = data.totalCount;
+        this.currentPage = data.currentPage;
+        this.totalPages = data.totalPages;
+        
+        console.log('변환된 호텔 목록:', this.hotels);
+      }
+      
+      } catch (error) {
+        console.error('검색 중 오류:', error);
+        alert('검색 중 오류가 발생했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+  },
+    
+    /**
+     * 평점 선택 (수정됨)
+     */
+    selectRating(rating) {
+      this.selectedRating = rating;
+      this.search(); // 백엔드 검색 호출
+    },
+    
+    /**
+     * 탭 변경 (수정됨)
+     */
+    setActiveTab(tabName) {
+      this.activeTab = tabName;
+      this.search(); // 백엔드 검색 호출
+    },
+    
+    // 찜하기
+    async toggleWishlist(hotelId) {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+  
+      const hotel = this.hotels.find(h => h.id === hotelId);
+        if (hotel) {
+          try {
+            await hotelAPI.toggleWishlist(hotelId);
+            hotel.wishlisted = !hotel.wishlisted;
+            console.log('찜하기 토글:', hotelId, hotel.wishlisted);
+          } catch (error) {
+            console.error('찜하기 처리 중 오류:', error);
+            alert('찜하기 처리 중 오류가 발생했습니다.');
+          }
+        }
+      },
+    
+    /**
+     * 백엔드 데이터를 화면용으로 변환
+     */
+    convertHotelData(hotel) {
+      return {
+        id: hotel.id,
+        title: hotel.title,
+        image: hotel.image || '/images/hotel_img/hotel1.jpg',
+        imageCount: hotel.imageCount || 0,
+        price: this.formatPrice(hotel.price),
+        location: hotel.location || hotel.cityName,
+        stars: this.generateStars(hotel.stars),
+        type: hotel.type,  // ← 이렇게 원래대로 수정
+        hotelType: hotel.hotelType,
+        amenitiesCount: hotel.amenitiesCount || 0,
+        rating: hotel.rating ? hotel.rating.toFixed(1) : '0.0',
+        ratingText: hotel.ratingText || 'No Rating',
+        reviewCount: hotel.reviewCount || 0,
+        wishlisted: hotel.wishlisted || false,
+        cityName: hotel.cityName
+      };
+    },
+    
+    /**
+     * 가격 포맷팅
+     */
+    formatPrice(price) {
+      if (!price) return '₩0';
+      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+    },
+    
+    /**
+     * 별점을 별 문자로 변환
+     */
+    generateStars(starCount) {
+      if (!starCount) return '';
+      const fullStars = '★'.repeat(starCount);
+      const emptyStars = '☆'.repeat(5 - starCount);
+      return fullStars + emptyStars;
+    },
+    
+    /**
+     * 선택된 무료 서비스 ID 목록
+     */
+    getSelectedFreebies() {
+      return this.freebies
+        .filter(f => f.checked)
+        .map(f => f.id);
+    },
+    
+    /**
+     * 선택된 편의시설 ID 목록
+     */
+    getSelectedAmenities() {
+      return this.amenities
+        .filter(a => a.checked)
+        .map(a => a.id);
+    },
+    
+    /**
+     * 투숙객 수 추출
+     */
+    extractGuestsNumber(guestsStr) {
+      const match = guestsStr.match(/(\d+)\s+guests?/);
+      return match ? parseInt(match[1]) : 2;
+    },
+    
+    /**
+     * 객실 수 추출
+     */
+    extractRoomsNumber(guestsStr) {
+      const match = guestsStr.match(/(\d+)\s+rooms?/);
+      return match ? parseInt(match[1]) : 1;
+    },
+    
+    /**
+     * 정렬 기준 변환
+     */
+    convertSortBy(sortBy) {
+      const sortMap = {
+        'Recommended': 'recommended',
+        'Price: Low to High': 'price_asc',
+        'Price: High to Low': 'price_desc',
+        'Rating': 'rating'
+      };
+      return sortMap[sortBy] || 'recommended';
     }
   },
-
-
   
 
-  mounted() {
-    document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
-  },
+  async mounted() {
+  document.addEventListener('click', this.handleClickOutside);
+  this.loadUserInfo();
+  
+  // URL 쿼리 파라미터 읽기 (hotel3에서 전달된 값)
+  if (this.$route.query.destination) {
+    this.searchData.destination = this.$route.query.destination;
+  }
+  if (this.$route.query.checkIn) {
+    this.searchData.checkIn = this.$route.query.checkIn;
+  }
+  if (this.$route.query.checkOut) {
+    this.searchData.checkOut = this.$route.query.checkOut;
+  }
+  
+  // 필터 옵션 로드 후 검색 실행
+  await this.loadFilterOptions();
+  this.search();
+},
+  
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
-    // 라우터 변경 시에도 사용자 정보 다시 확인
+  
   watch: {
     '$route'() {
       this.loadUserInfo();
@@ -882,6 +987,8 @@ export default {
         
         .vertical-line{
             width: 0.5px;
+            min-width: 0.5px;
+            flex-shrink: 0;
             height: 1420px;
             top: 287px;
             left: 471px;
@@ -981,7 +1088,7 @@ export default {
         /* Main Content */
         .main-content {
             display: flex;
-            gap: 40px;
+            gap: 32px;
             padding: 24px 104px 60px;
             max-width: 1440px;
             margin: 0 auto;
@@ -990,8 +1097,8 @@ export default {
 
         /* Filters Section */
         .filters-section {
-            width: 343px;
-            padding: 24px;
+            max-width: 343px;
+            min-width: 343px;
             height: fit-content;
         }
 
@@ -1180,6 +1287,8 @@ export default {
         /* Results Section */
         .results-section {
             flex: 1;
+            max-width: 840px;
+            width: auto;
         }
 
         /* Tabs */

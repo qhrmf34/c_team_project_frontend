@@ -1,10 +1,11 @@
 <template>
   <div>
+    <!-- Header -->
     <header class="header">
       <nav>
         <div class="nav-left">
           <a href="#" class="nav-item" @click="goToHotel">
-            <span><img src="/images/hotel_img/hotel.jpg" ></span>
+            <span><img src="/images/hotel_img/hotel.jpg"></span>
             Hotels
           </a>
         </div>
@@ -25,6 +26,7 @@
       </nav>
     </header>
 
+    <!-- User Dropdown -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
@@ -51,33 +53,46 @@
     </div>
 
     <!-- Breadcrumb -->
-    <div class="breadcrumb">
-      <a href="#" style="color: rgba(255, 134, 130, 1);">Turkey</a> > <a href="#" style="color: rgba(255, 134, 130, 1);">Istanbul</a> > <span>해튼호텔</span>
+    <div class="breadcrumb" v-if="hotel">
+      <a href="#" @click.prevent="searchByCountry(hotel.countryName)" style="color: rgba(255, 134, 130, 1);">
+        {{ hotel.countryName || 'Turkey' }}
+      </a> > 
+      <a href="#" @click.prevent="searchByCity(hotel.cityName)" style="color: rgba(255, 134, 130, 1);">
+        {{ hotel.cityName || 'Istanbul' }}
+      </a> > 
+      <span>{{ hotel.hotelName }}</span>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" v-if="hotel">
       <!-- Hotel Header -->
       <div class="hotel-header">
         <div class="hotel-info">
-          <h1 class="hotel-title">해튼호텔<span class="stars">★★★★★</span><span class="stars-hotel">5 Star Hotel</span></h1>
+          <h1 class="hotel-title">
+            {{ hotel.hotelName }}
+            <span class="stars">{{ generateStars(hotel.starRating) }}</span>
+            <span class="stars-hotel">{{ hotel.starRating }} Star Hotel</span>
+          </h1>
           <div class="hotel-location-line">
             <span><img src="/images/hotel_img/map.jpg"></span>
-            <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
+            <span>{{ hotel.address }}</span>
           </div>
           <div class="hotel-meta-left">
             <div class="rating-info">
-              <span class="rating-score">4.2</span>
-              <span class="rating-text1">Very Good </span><span class="rating-text2">371 reviews</span>
+              <span class="rating-score">{{ hotel.averageRating ? hotel.averageRating.toFixed(1) : '0.0' }}</span>
+              <span class="rating-text1">{{ getRatingText(hotel.averageRating) }} </span>
+              <span class="rating-text2">{{ hotel.reviewCount }} reviews</span>
             </div>
           </div>
         </div>
     
         <div class="hotel-actions">
           <div class="hotel-price">
-            <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
+            <div class="price-amount">{{ formatPrice(hotel.minPrice) }}<span class="price-unit">/night</span></div>
           </div>
           <div class="hotel-buttons">
-            <button class="action-btn"><img src="/images/hotel_img/heart2.jpg"/></button>
+            <button class="action-btn" @click="toggleWishlist">
+              <img src="/images/hotel_img/heart2.jpg"/>
+            </button>
             <button class="action-btn"><img src="/images/hotel_img/share.jpg"></button>
             <button class="book-now-btn">Book now</button>
           </div>
@@ -87,23 +102,23 @@
       <!-- Image Gallery -->
       <div class="image-gallery">
         <div class="main-image">
-          <img src="/images/hotel_img/findhotel1.jpg" alt="해튼호텔 메인">
+          <img :src="hotel.images[0] || '/images/hotel_img/findhotel1.jpg'" :alt="hotel.hotelName">
         </div>
         <div class="sub-images">
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="/images/hotel_img/findhotel2.jpg" alt="호텔 객실">
+              <img :src="hotel.images[1] || '/images/hotel_img/findhotel2.jpg'" alt="호텔 객실">
             </div>
             <div class="gallery-item item3">
-              <img src="/images/hotel_img/findhotel3.jpg" alt="호텔 로비">
+              <img :src="hotel.images[2] || '/images/hotel_img/findhotel3.jpg'" alt="호텔 로비">
             </div>
           </div>  
           <div class="sub-row">
             <div class="gallery-item">
-              <img src="/images/hotel_img/findhotel4.jpg" alt="호텔 외관">
+              <img :src="hotel.images[3] || '/images/hotel_img/findhotel4.jpg'" alt="호텔 외관">
             </div>
             <div class="gallery-item item5">
-              <img src="/images/hotel_img/findhotel5.jpg" alt="호텔 수영장">
+              <img :src="hotel.images[4] || '/images/hotel_img/findhotel5.jpg'" alt="호텔 수영장">
               <button class="view-all-photos">View all photos</button>
             </div>
           </div>     
@@ -115,37 +130,21 @@
           <!-- Overview Section -->
           <div class="overview-section">
             <h2 class="overview-title">Overview</h2>
-
-            <p class="overview-text">
-              반다르 힐리르 지역에 위치한 대형 호텔로 쇼핑몰과 관광지가 가까워 접근성이 뛰어납니다. 실외 수영장, 스파, 피트니스 센터, 그리고 가족 단위 여행객을 위한 키즈 풀까지 갖추고 있어 편리
-              하고 실속 있는 여행을 원하는 분들에게 적합합니다. 넓은 객실과 모던한 시설은 물론, 비즈니스 센터와 회의실도 완비되어 있어 단체 관광이나 기업 연수에도 어울립니다.
-            </p>
+            <p class="overview-text">{{ hotel.description }}</p>
 
             <div class="content-row">
-              <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number">4.2</div>
-                <div class="rating-label">Very good</div>
-                <div class="review-count">371 reviews</div>
+              <div class="rating-box" @click="filterByCard(null)">
+                <div class="rating-number">{{ hotel.averageRating ? hotel.averageRating.toFixed(1) : '0.0' }}</div>
+                <div class="rating-label">전체</div>
+                <div class="review-count">{{ hotel.reviewCount }} reviews</div>
               </div>
-              <div class="rating-box" @click="selectRatingBox($event)">
+              <div class="rating-box" 
+                   v-for="(count, card) in reviewCardStats" 
+                   :key="card"
+                   @click="filterByCard(card)">
                 <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
-                <div class="rating-label">Near park</div>
-                <div class="review-count">215 reviews</div>
-              </div>
-              <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
-                <div class="rating-label">Near nightlife</div>
-                <div class="review-count">89 reviews</div>
-              </div>
-              <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
-                <div class="rating-label">Near theater</div>
-                <div class="review-count">142 reviews</div>
-              </div>
-              <div class="rating-box" @click="selectRatingBox($event)">
-                <div class="rating-number"><img src="/images/hotel_img/star.jpg"></div>
-                <div class="rating-label">Clean Hotel</div>
-                <div class="review-count">142 reviews</div>
+                <div class="rating-label">{{ getCardLabel(card) }}</div>
+                <div class="review-count">{{ count }} reviews</div>
               </div>
             </div>
           </div>
@@ -155,13 +154,13 @@
           <div class="room-section">
             <h3 class="room-title">잔여 객실</h3>
             
-            <div v-for="(room, index) in rooms" :key="index" class="room-item">
-              <img :src="room.image" :alt="room.details" class="room-image">
+            <div v-for="room in hotel.rooms" :key="room.id" class="room-item">
+              <img :src="room.image || '/images/hotel_img/room-default.jpg'" :alt="room.roomName" class="room-image">
               <div class="room-info">
-                <div class="room-details">{{ room.details }}</div>
+                <div class="room-details">{{ room.roomName }} · {{ room.bedType }}</div>
               </div>
               <div class="room-price-section">
-                <div class="room-price">₩240,000<span style="font-size: 14px; font-weight: 400;">/night</span></div>
+                <div class="room-price">{{ formatPrice(room.basePrice) }}<span style="font-size: 14px; font-weight: 400;">/night</span></div>
                 <button class="room-book-btn">Book now</button>
               </div>
             </div>
@@ -171,14 +170,10 @@
           <!-- Map Section -->
           <div class="map-section">
             <h3 class="map-title">지도보기</h3>
-            <div class="map-container" @click="openGoogleMaps">
-              <div class="map-placeholder">
-                <div>Google Maps API 키가 필요</div>
-              </div>
-            </div>
+            <div id="googleMap" class="map-container"></div>
             <div class="map-actions">
               <div class="map-address">
-                <img src="/images/hotel_img/map.jpg"/> Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437
+                <img src="/images/hotel_img/map.jpg"/> {{ hotel.address }}
               </div>
               <button class="view-map-btn" @click="openGoogleMaps">View on google maps</button>
             </div>
@@ -189,51 +184,17 @@
           <div class="amenities-section">
             <h3 class="amenities-title">Amenities</h3>
             <div class="amenities-grid">
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/outdoor.jpg"></span>
-                <span class="amenity-text">Outdoor pool</span>
+              <!-- 실제 편의시설 표시 -->
+              <div class="amenity-item" v-for="(amenity, index) in displayedAmenities" :key="index">
+                <span><img :src="getAmenityIcon(amenity.amenitiesName)"></span>
+                <span class="amenity-text">{{ amenity.amenitiesName }}</span>
               </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/fitness.jpg"></span>
-                <span class="amenity-text">Fitness center</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/outdoor.jpg"></span>
-                <span class="amenity-text">Indoor pool</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/bar.jpg"></span>
-                <span class="amenity-text">Bar/Lounge</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/spa.jpg"/></span>
-                <span class="amenity-text">Spa and wellness center</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/wifi.jpg"></span>
-                <span class="amenity-text">Free Wi-Fi</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/restaurant.jpg"></span>
-                <span class="amenity-text">Restaurant</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/cafe.jpg"></span>
-                <span class="amenity-text">Tes/coffee machine</span>
-              </div>
-              <div class="amenity-item">
-                <span><img src="/images/hotel_img/roomservice.jpg"></span>
-                <span class="amenity-text">Room service</span>
-              </div>
-              
-              <!-- Hidden amenities -->
-              <div v-for="(amenity, index) in hiddenAmenities" :key="index" class="amenity-item" :class="{ hidden: !amenitiesExpanded }">
-                <span>{{ amenity.icon }}</span>
-                <span class="amenity-text">{{ amenity.text }}</span>
-              </div>
-              
-              <div class="amenity-item">
-                <span class="amenity-text plus" @click="toggleAmenities">{{ amenitiesExpanded ? '− 24 less' : '+ 24 more' }}</span>
+    
+              <!-- more/less 버튼 (편의시설이 3개보다 많을 때만 표시) -->
+              <div class="amenity-item" v-if="hotel.amenities && hotel.amenities.length > 3">
+                <span class="amenity-text plus" @click="toggleAmenities">
+                  {{ amenitiesExpanded ? '− less' : `+ ${hotel.amenities.length - 3} more` }}
+                </span>
               </div>
             </div>
           </div>
@@ -246,10 +207,10 @@
               <div class="reviews-info">
                 <h3 class="reviews-title">Reviews</h3>
                 <div class="reviews-summary">
-                  <span class="review-score-big">4.2</span>
+                  <span class="review-score-big">{{ hotel.averageRating ? hotel.averageRating.toFixed(1) : '0.0' }}</span>
                   <div>
-                    <div class="review-summary-text">Very good</div>
-                    <div class="review-summary-text2">371 verified reviews</div>
+                    <div class="review-summary-text">{{ getRatingText(hotel.averageRating) }}</div>
+                    <div class="review-summary-text2">{{ hotel.reviewCount }} verified reviews</div>
                   </div>
                 </div>
               </div>
@@ -265,14 +226,16 @@
               <label for="star-rating">평점을 선택해주세요</label>
               <div class="star-rating" id="star-rating">
                 <div>
-                  <span v-for="n in 5" :key="n" class="star" :class="{ active: n <= selectedRating }" @click="setRating(n)" @mouseover="highlightStars()">★</span>
+                  <span v-for="n in 5" :key="n" class="star" :class="{ active: n <= selectedRating }" @click="setRating(n)">★</span>
                 </div>
                 <div>
-                  <span class="star-choice-btn">Very good</span>
-                  <span class="star-choice-btn">Near park</span>
-                  <span class="star-choice-btn">Near nightlife</span>
-                  <span class="star-choice-btn">Near theater</span>
-                  <span class="star-choice-btn">clean Hotel</span>
+                  <span class="star-choice-btn" 
+                        v-for="card in reviewCardOptions" 
+                        :key="card.value"
+                        :class="{ active: selectedCard === card.value }"
+                        @click="selectCard(card.value)">
+                    {{ card.label }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -296,24 +259,24 @@
           </div>
 
           <div id="reviewsList">
-            <div v-for="review in filteredReviews" :key="review.id" class="review-item" :data-rating="review.rating">
+            <div v-for="review in filteredReviews" :key="review.id" class="review-item">
               <div class="review-header">
                 <div class="review-user-info">
                   <div class="reviewer-avatar"></div>
                   <div class="reviewer-info">
-                    <div class="reviewer-name">{{ review.rating }}.0 Amazing | {{ review.name }}</div>
-                    <div class="review-rating">{{ review.date }}</div>
+                    <div class="reviewer-name">{{ review.rating }}.0 {{ getRatingText(review.rating) }} | {{ review.memberName }}</div>
+                    <div class="review-rating">{{ formatDate(review.createdAt) }}</div>
                   </div>
                 </div>
-                <button class="report-btn" @click="showReportModal">신고</button>
+                <button class="report-btn" @click="showReportModal(review.id)">신고</button>
               </div>
-              <p class="review-text">{{ review.text }}</p>
+              <p class="review-text">{{ review.reviewContent }}</p>
             </div>
           </div>
 
           <div class="review-pagination">
             <button class="pagination-btn">‹</button>
-            <span class="pagination-info">1 of 12</span>
+            <span class="pagination-info">1 of {{ Math.ceil(hotel.reviewCount / 10) }}</span>
             <button class="pagination-btn">›</button>
           </div>
         </div>
@@ -347,99 +310,99 @@
       </div>
     </div>
 
-    <section class="newsletter-section">
-          </section>
-
-      <div class="newsletter-content">
-        <div class="newsletter-left">
-          <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
-          <div class="newsletter-info">
-            <div class="newsletter-brand">The Travel</div>
-            <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
-          </div>
-          <div class="newsletter-form">
-            <input 
-              type="email" 
-              id="newsletterEmail"
-              name="newsletterEmail"
-              class="newsletter-input" 
-              placeholder="Your email address" 
-              v-model="newsletterEmail"
-            >
-            <button class="subscribe-btn" @click="subscribe">Subscribe</button>
-          </div>
+    <!-- Newsletter & Footer -->
+    <section class="newsletter-section"></section>
+    <div class="newsletter-content">
+      <div class="newsletter-left">
+        <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
+        <div class="newsletter-info">
+          <div class="newsletter-brand">The Travel</div>
+          <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
         </div>
-
-        <div class="mailbox-container">
-          <div class="mailbox-back"></div>
-          <div class="mailbox-base"></div>
-          <div class="mailbox-front"></div>
-          <div class="mailbox-flag"></div>
-          <div class="mailbox-flag2"></div>
-          <div class="mailbox-pole"></div>
-          <div class="mailbox-stand-base"></div>
-          <div class="mailbox-stand-front"></div>
+        <div class="newsletter-form">
+          <input 
+            type="email" 
+            id="newsletterEmail"
+            name="newsletterEmail"
+            class="newsletter-input" 
+            placeholder="Your email address" 
+            v-model="newsletterEmail"
+          >
+          <button class="subscribe-btn" @click="subscribe">Subscribe</button>
         </div>
       </div>
 
-      <div class="footer-content">
-        <div class="social-icons">
-          <span><img src="/images/hotel_img/facebook.jpg"></span>
-          <span><img src="/images/hotel_img/twitter.jpg"></span>
-          <span><img src="/images/hotel_img/youtube.jpg"></span>
-          <span><img src="/images/hotel_img/instagram.jpg"></span>
+      <div class="mailbox-container">
+        <div class="mailbox-back"></div>
+        <div class="mailbox-base"></div>
+        <div class="mailbox-front"></div>
+        <div class="mailbox-flag"></div>
+        <div class="mailbox-flag2"></div>
+        <div class="mailbox-pole"></div>
+        <div class="mailbox-stand-base"></div>
+        <div class="mailbox-stand-front"></div>
+      </div>
+    </div>
+
+    <div class="footer-content">
+      <div class="social-icons">
+        <span><img src="/images/hotel_img/facebook.jpg"></span>
+        <span><img src="/images/hotel_img/twitter.jpg"></span>
+        <span><img src="/images/hotel_img/youtube.jpg"></span>
+        <span><img src="/images/hotel_img/instagram.jpg"></span>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-column">
+          <h4>Our Destinations</h4>
+          <a href="#">Canada</a>
+          <a href="#">Alaksa</a>
+          <a href="#">France</a>
+          <a href="#">Iceland</a>
         </div>
 
-        <div class="footer-links">
-          <div class="footer-column">
-            <h4>Our Destinations</h4>
-            <a href="#">Canada</a>
-            <a href="#">Alaksa</a>
-            <a href="#">France</a>
-            <a href="#">Iceland</a>
-          </div>
+        <div class="footer-column">
+          <h4>Our Activities</h4>
+          <a href="#">Northern Lights</a>
+          <a href="#">Cruising & sailing</a>
+          <a href="#">Multi-activities</a>
+          <a href="#">Kayaking</a>
+        </div>
 
-          <div class="footer-column">
-            <h4>Our Activities</h4>
-            <a href="#">Northern Lights</a>
-            <a href="#">Cruising & sailing</a>
-            <a href="#">Multi-activities</a>
-            <a href="#">Kayaking</a>
-          </div>
+        <div class="footer-column">
+          <h4>Travel Blogs</h4>
+          <a href="#">Bali Travel Guide</a>
+          <a href="#">Sri Lanka Travel Guide</a>
+          <a href="#">Peru Travel Guide</a>
+          <a href="#">Bali Travel Guide</a>
+        </div>
 
-          <div class="footer-column">
-            <h4>Travel Blogs</h4>
-            <a href="#">Bali Travel Guide</a>
-            <a href="#">Sri Lanka Travel Guide</a>
-            <a href="#">Peru Travel Guide</a>
-            <a href="#">Bali Travel Guide</a>
-          </div>
+        <div class="footer-column">
+          <h4>About Us</h4>
+          <a href="#">Our Story</a>
+          <a href="#">Work with us</a>
+        </div>
 
-          <div class="footer-column">
-            <h4>About Us</h4>
-            <a href="#">Our Story</a>
-            <a href="#">Work with us</a>
-          </div>
-
-          <div class="footer-column">
-            <h4>Contact Us</h4>
-            <a href="#">Our Story</a>
-            <a href="#">Work with us</a>
-          </div>
+        <div class="footer-column">
+          <h4>Contact Us</h4>
+          <a href="#">Our Story</a>
+          <a href="#">Work with us</a>
         </div>
       </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelThree',
   data() {
     return {
-      isDropdownOpen: false,
+      isDropdownActive: false,
       selectedRating: 0,
+      selectedCard: null,
       amenitiesExpanded: false,
       isReviewFormVisible: false,
       isReportModalVisible: false,
@@ -448,94 +411,68 @@ export default {
       reportDescription: '',
       newsletterEmail: '',
       activeFilter: 'all',
-      rooms: [
-        {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-          details: 'Superior room · 1 double bed or 2 twin beds'
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-          details: 'Superior room · City view · 1 double bed or 2 twin beds'
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-          details: 'Superior room · 1 double bed or 2 twin beds'
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-          details: 'Superior room · 1 double bed or 2 twin beds'
-        }
+      selectedReviewId: null,
+      
+      hotel: null,
+      reviews: [],
+      reviewCardStats: {},
+      
+      reviewCardOptions: [
+        { value: 'NearPark', label: 'Near park' },
+        { value: 'NearNightLife', label: 'Near nightlife' },
+        { value: 'NearTheater', label: 'Near theater' },
+        { value: 'CleanHotel', label: 'Clean Hotel' }
       ],
-      hiddenAmenities: [
-        { icon: '🅿️', text: 'Parking' },
-        { icon: '🧴', text: 'Spa' },
-        { icon: '🚗', text: 'Car rental' },
-        { icon: '👔', text: 'Dry cleaning' },
-        { icon: '🧳', text: 'Luggage storage' },
-        { icon: '🔒', text: 'Safety deposit box' },
-        { icon: '🎵', text: 'Entertainment' },
-        { icon: '🚿', text: 'Private bathroom' },
-        { icon: '📺', text: 'TV' },
-        { icon: '❄️', text: 'Minibar' },
-        { icon: '☕', text: 'Coffee maker' },
-        { icon: '🛁', text: 'Bathtub' },
-        { icon: '🌊', text: 'Hot tub' },
-        { icon: '🎮', text: 'Game room' },
-        { icon: '🌺', text: 'Garden' }
-      ],
+      
       reviewFilters: [
         { key: 'all', label: 'All reviews' },
         { key: 'highest', label: 'Highest rated' },
         { key: 'lowest', label: 'Lowest rated' }
       ],
-      reviews: [
-        {
-          id: 1,
-          rating: 5,
-          name: '김정민',
-          date: '2024년 1월',
-          text: '좋아요.'
-        },
-        {
-          id: 2,
-          rating: 4,
-          name: '김민지',
-          date: '2024년 1월',
-          text: '굿굿'
-        }
-      ],
+      
       reportOptions: [
-        { value: 'spam', label: '스팸/광고' },
-        { value: 'inappropriate', label: '부적절한 내용' },
-        { value: 'fake', label: '허위 정보' },
-        { value: 'abusive', label: '욕설/비방' },
-        { value: 'other', label: '기타' }
+        { value: 'Spam', label: '스팸/광고' },
+        { value: 'Inappropriate', label: '부적절한 내용' },
+        { value: 'Fake', label: '허위 정보' },
+        { value: 'Abusive', label: '욕설/비방' },
+        { value: 'Other', label: '기타' }
       ],
-      // 사용자 정보
+      
       userInfo: null,
       isLoggedIn: false
     }
   },
+  
   computed: {
     filteredReviews() {
+      let result = [...this.reviews];
+      
       if (this.activeFilter === 'highest') {
-        return [...this.reviews].sort((a, b) => b.rating - a.rating);
+        result.sort((a, b) => b.rating - a.rating);
       } else if (this.activeFilter === 'lowest') {
-        return [...this.reviews].sort((a, b) => a.rating - b.rating);
+        result.sort((a, b) => a.rating - b.rating);
       }
-      return this.reviews;
+      
+      return result;
     },
-        // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    
+    displayedAmenities() {
+      if (!this.hotel || !this.hotel.amenities) return [];
+  
+      if (this.amenitiesExpanded) {
+        return this.hotel.amenities;  // 전체 표시
+      }
+      return this.hotel.amenities.slice(0, 3);  // 처음 3개만
+    },
+
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -547,11 +484,9 @@ export default {
         }
       }
       
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -565,23 +500,222 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
-  mounted() {
+  
+  async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+    this.loadUserInfo();
+    
+    const hotelId = this.$route.query.hotelId;
+    if (hotelId) {
+      await this.loadHotelDetail(hotelId);
+      await this.loadReviews(hotelId);
+      await this.loadReviewStats(hotelId);
+    } else {
+      alert('호텔 정보를 찾을 수 없습니다.');
+      this.$router.push('/hoteltwo');
+    }
   },
+  
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
-    // 라우터 변경 시에도 사용자 정보 다시 확인
+  
   watch: {
     '$route'() {
       this.loadUserInfo();
     }
   },
+  
   methods: {
+    // ===== 백엔드 API 호출 =====
+    
+    async loadHotelDetail(hotelId) {
+  try {
+    const response = await hotelAPI.getHotelDetail(hotelId);
+    
+    if (response.code === 200) {
+      this.hotel = response.data;
+      console.log('호텔 상세 정보:', this.hotel);
+      
+      // 각 객실의 이미지를 조회 (추가)
+      if (this.hotel.rooms && this.hotel.rooms.length > 0) {
+        await this.loadRoomImages();
+      }
+      
+      this.$nextTick(() => {
+        this.initializeMap();
+      });
+    }
+  } catch (error) {
+    console.error('호텔 정보 로드 중 오류:', error);
+    alert('호텔 정보를 불러올 수 없습니다.');
+  }
+},
+
+    // 객실 이미지 로드 메서드 추가
+    async loadRoomImages() {
+    for (let room of this.hotel.rooms) {
+      try {
+        const response = await hotelAPI.getRoomImages(room.id);
+        if (response.code === 200 && response.data.length > 0) {
+          const imagePath = response.data[0].roomImagePath;
+          room.image = `http://localhost:8089/uploads${imagePath}`;
+        }
+        } catch (error) {
+        console.error(`객실 ${room.id} 이미지 로드 실패:`, error);
+        room.image = '/images/hotel_img/room-default.jpg';
+        }
+      }
+    },
+
+    // 이미지 URL 생성 메서드 추가
+    getRoomImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/room-default.jpg';
+      return `http://localhost:8089/uploads${imagePath}`;
+    },
+    
+    async loadReviews(hotelId, sortBy = null, reviewCard = null) {
+      try {
+        const response = await hotelAPI.getHotelReviews(hotelId, sortBy, reviewCard);
+        
+        if (response.code === 200) {
+          this.reviews = response.data;
+          console.log('리뷰 목록:', this.reviews);
+        }
+      } catch (error) {
+        console.error('리뷰 로드 중 오류:', error);
+      }
+    },
+    
+    async loadReviewStats(hotelId) {
+      try {
+        const response = await hotelAPI.getReviewStats(hotelId);
+        
+        if (response.code === 200) {
+          this.reviewCardStats = response.data;
+          console.log('리뷰 통계:', this.reviewCardStats);
+        }
+      } catch (error) {
+        console.error('리뷰 통계 로드 중 오류:', error);
+      }
+    },
+    
+    async submitReview() {
+      alert('예약 완료 후 리뷰를 작성할 수 있습니다.');
+      return;
+    },
+    
+    async submitReport() {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      if (!this.selectedReportReason) {
+        alert('신고 사유를 선택해주세요.');
+        return;
+      }
+
+      const reportData = {
+        reviewsId: this.selectedReviewId,
+        reportType: this.selectedReportReason,
+        reportContent: this.reportDescription
+      };
+
+      try {
+        const response = await hotelAPI.reportReview(reportData);
+        
+        if (response.code === 200) {
+          alert('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
+          this.hideReportModal();
+        }
+      } catch (error) {
+        console.error('신고 중 오류:', error);
+        alert(error.response?.data?.message || '신고 처리 중 오류가 발생했습니다.');
+      }
+    },
+    
+    async toggleWishlist() {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      try {
+        await hotelAPI.toggleWishlist(this.hotel.id);
+        this.hotel.wishlisted = !this.hotel.wishlisted;
+      } catch (error) {
+        console.error('찜하기 처리 중 오류:', error);
+        alert('찜하기 처리 중 오류가 발생했습니다.');
+      }
+    },
+    
+    // ===== 지도 관련 =====
+    
+    initializeMap() {
+      if (!this.hotel || !window.google) {
+        console.log('Google Maps API가 로드되지 않았습니다.');
+        return;
+      }
+      
+      if (this.hotel.latitude && this.hotel.longitude) {
+        const position = {
+          lat: parseFloat(this.hotel.latitude),
+          lng: parseFloat(this.hotel.longitude)
+        };
+        
+        const map = new google.maps.Map(document.getElementById('googleMap'), {
+          center: position,
+          zoom: 15
+        });
+        
+        new google.maps.Marker({
+          position: position,
+          map: map,
+          title: this.hotel.hotelName
+        });
+      } else {
+        this.geocodeAddress(this.hotel.address);
+      }
+    },
+    
+    geocodeAddress(address) {
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK') {
+          const position = results[0].geometry.location;
+          
+          const map = new google.maps.Map(document.getElementById('googleMap'), {
+            center: position,
+            zoom: 15
+          });
+          
+          new google.maps.Marker({
+            position: position,
+            map: map,
+            title: this.hotel.hotelName
+          });
+        } else {
+          console.error('Geocoding 실패:', status);
+        }
+      });
+    },
+    
+    openGoogleMaps() {
+      const address = this.hotel.address;
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+      window.open(url, '_blank');
+    },
+    
+    // ===== UI 메서드 =====
+    
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
+    
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
@@ -589,90 +723,76 @@ export default {
       }
     },
     
-    selectRatingBox(event) {
-      const boxes = this.$el.querySelectorAll('.rating-box');
-      boxes.forEach(box => box.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-    },
     toggleAmenities() {
       this.amenitiesExpanded = !this.amenitiesExpanded;
     },
+    
     setRating(rating) {
       this.selectedRating = rating;
     },
-    highlightStars() {
-      // This method can be used for hover effects if needed
+    
+    selectCard(card) {
+      this.selectedCard = card;
     },
+    
     showReviewForm() {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
       this.isReviewFormVisible = true;
       this.$nextTick(() => {
         this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
       });
     },
+    
     hideReviewForm() {
       this.isReviewFormVisible = false;
       this.reviewText = '';
       this.selectedRating = 0;
+      this.selectedCard = null;
     },
-    submitReview() {
-      if (this.selectedRating === 0) {
-        alert('평점을 선택해주세요.');
+    
+    filterReviews(filter) {
+      this.activeFilter = filter;
+      
+      let sortBy = null;
+      if (filter === 'highest') sortBy = 'highest';
+      if (filter === 'lowest') sortBy = 'lowest';
+      
+      this.loadReviews(this.hotel.id, sortBy);
+    },
+    
+    filterByCard(card) {
+      this.loadReviews(this.hotel.id, null, card);
+    },
+    
+    showReportModal(reviewId) {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
         return;
       }
       
-      if (this.reviewText.trim() === '') {
-        alert('리뷰 내용을 작성해주세요.');
-        return;
-      }
-
-      const reviewData = {
-        rating: this.selectedRating,
-        content: this.reviewText,
-        member_id: 'current_user_id',
-        hotel_id: 'current_hotel_id'
-      };
-
-      console.log('Submitting review:', reviewData);
-      alert('리뷰가 등록되었습니다!');
-      this.hideReviewForm();
-    },
-    filterReviews(filter) {
-      this.activeFilter = filter;
-    },
-    showReportModal() {
+      this.selectedReviewId = reviewId;
       this.isReportModalVisible = true;
     },
+    
     hideReportModal() {
       this.isReportModalVisible = false;
       this.selectedReportReason = '';
       this.reportDescription = '';
+      this.selectedReviewId = null;
     },
+    
     hideReportModalOnOverlay(event) {
       if (event.target === event.currentTarget) {
         this.hideReportModal();
       }
     },
-    submitReport() {
-      if (!this.selectedReportReason) {
-        alert('신고 사유를 선택해주세요.');
-        return;
-      }
-
-      const reportData = {
-        choice_name: this.selectedReportReason,
-        report_content: this.reportDescription,
-        member_id: 'current_user_id'
-      };
-
-      console.log('Submitting report:', reportData);
-      alert('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
-      this.hideReportModal();
-    },
-    openGoogleMaps() {
-      const address = "Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437";
-      const url = `https://maps.googleapis.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-      window.open(url, '_blank');
-    },
+    
     subscribe() {
       if (this.newsletterEmail) {
         console.log('Subscribing email:', this.newsletterEmail);
@@ -680,7 +800,9 @@ export default {
         this.newsletterEmail = '';
       }
     },
-     // 사용자 정보 로드
+    
+    // ===== 사용자 관련 =====
+    
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -692,32 +814,23 @@ export default {
       }
     },
     
-    // 로그아웃 처리 (개선된 버전)
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
           console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
           authUtils.logout();
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         }
       }
     },
     
-    // 계정 페이지로 이동
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
@@ -726,7 +839,7 @@ export default {
         this.$router.push('/login');
       }
     },
-    //찜목록 페이지로 이동
+    
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -734,8 +847,8 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    },    
-    //호텔 페이지로 이동
+    },
+    
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -743,13 +856,124 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    }
+    },
     
+    // ===== 유틸리티 메서드 =====
+    
+    formatPrice(price) {
+      if (!price) return '₩0';
+      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+    },
+    
+    generateStars(starCount) {
+      if (!starCount) return '';
+      return '★'.repeat(starCount);
+    },
+    
+    getRatingText(rating) {
+      if (!rating) return 'No Rating';
+      if (rating >= 4.5) return 'Excellent';
+      if (rating >= 4.0) return 'Very Good';
+      if (rating >= 3.5) return 'Good';
+      if (rating >= 3.0) return 'Average';
+      if (rating >= 2.0) return 'Fair';
+      return 'Poor';
+    },
+    
+    getCardLabel(card) {
+      const labels = {
+        'NearPark': 'Near park',
+        'NearNightLife': 'Near nightlife',
+        'NearTheater': 'Near theater',
+        'CleanHotel': 'Clean Hotel'
+      };
+      return labels[card] || card;
+    },
+    
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+    },
+    
+    getAmenityIcon(amenityName) {
+      const iconMap = {
+        'Outdoor pool': '/images/hotel_img/outdoor.jpg',
+        'Fitness center': '/images/hotel_img/fitness.jpg',
+        'Indoor pool': '/images/hotel_img/outdoor.jpg',
+        'Bar/Lounge': '/images/hotel_img/bar.jpg',
+        'Spa and wellness center': '/images/hotel_img/spa.jpg',
+        'Free Wi-Fi': '/images/hotel_img/wifi.jpg',
+        'Restaurant': '/images/hotel_img/restaurant.jpg',
+        'Tea/coffee machine': '/images/hotel_img/cafe.jpg',
+        'Room service': '/images/hotel_img/roomservice.jpg'
+      };
+      return iconMap[amenityName] || '/images/hotel_img/default.jpg';
+    },
+
+    searchByCountry(countryName) {
+      this.$router.push({
+      path: '/hoteltwo',
+      query: { 
+        destination: countryName,
+        checkIn: this.getToday(),
+        checkOut: this.getTomorrow()
+        }
+      });
+    },
+  
+    // 도시로 검색
+    searchByCity(cityName) {
+      this.$router.push({
+        path: '/hoteltwo',
+        query: { 
+          destination: cityName,
+          checkIn: this.getToday(),
+          checkOut: this.getTomorrow()
+        }
+      });
+    },
+  
+    // 오늘 날짜
+    getToday() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    },
+  
+    // 내일 날짜
+    getTomorrow() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    
+    }
   }
 }
 </script>
 
 <style scoped>
+
+.star-choice-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 130px;
+  height: 40px;
+  border: 2px solid #8DD3BB;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 4px;
+}
+
+.star-choice-btn:hover {
+  background-color: #8DD3BB;
+}
+
+.star-choice-btn.active {
+  background-color: #8DD3BB;
+  font-weight: 600;
+}
 
 /* Header */
 .header {
