@@ -1137,7 +1137,7 @@ nav {
 }
 /* Breadcrumb */
 .breadcrumb {
-    width: 244px;
+    width: 100%;
     height: 24px;
     gap: 8px;
     background: #F8F9FA;
@@ -1147,9 +1147,8 @@ nav {
     font-size: 14px;
     color: #666666;
     display: flex;
-    justify-content: center;
     align-items: center;
-    margin-left: 80px;
+    margin-left: 104px;
     margin-bottom: 30px;
 }     
 
