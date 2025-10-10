@@ -586,7 +586,7 @@
 </template>
 
 <script>
-import { authUtils, memberAPI, paymentMethodAPI } from '@/utils/commonAxios'
+import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelAccount',
@@ -769,7 +769,7 @@ export default {
     await this.loadUserInfo();
     await this.loadUserProfile();
     await this.loadPaymentMethods(); // 결제수단 로드 추가
-
+    await this.loadMemberImages();
     // 쿼리 파라미터로 탭 설정
     if (this.$route.query.tab) {
       this.activeTab = this.$route.query.tab;
@@ -826,12 +826,49 @@ export default {
         this.isLoading = false;
       }
     },
+    async loadMemberImages() {
+      if (!this.isLoggedIn) return;
+
+      try {
+        // 프로필 이미지 조회
+        const profileResponse = await memberImageAPI.getProfileImage();
+        if (profileResponse && profileResponse.data && profileResponse.data.imagePath) {
+          this.profileAvatar = this.getImageUrl(profileResponse.data.imagePath);
+        }
+
+        // 배경 이미지 조회
+        const backgroundResponse = await memberImageAPI.getBackgroundImage();
+        if (backgroundResponse && backgroundResponse.data && backgroundResponse.data.imagePath) {
+          this.coverImage = this.getImageUrl(backgroundResponse.data.imagePath);
+        }
+      } catch (error) {
+        console.error('이미지 로드 실패:', error);
+        // 실패 시 기본 이미지 유지
+      }
+    },
     //계정에서 결제내역 클릭
     goToPaymentHistory() {
       this.activeTab = 'history';
       this.isDropdownActive = false; 
     },
+    getImageUrl(imagePath) {
+      if (!imagePath) {
+        return '';
+      }
 
+      // HTTP/HTTPS 절대 경로
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+      }
+
+      // 정적 이미지 (/images/)
+      if (imagePath.startsWith('/images/')) {
+        return imagePath;
+      }
+
+      // 서버 업로드 이미지 (/member/)
+      return `http://localhost:8089/uploads${imagePath}`;
+    },
     // 결제수단 목록 로드
     async loadPaymentMethods() {
     if (!this.isLoggedIn) return;
@@ -933,25 +970,63 @@ export default {
     },
     
     // Image Upload Methods
-    handleCoverImageChange(event) {
+    async handleCoverImageChange(event) {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.coverImage = e.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      try {
+        // 파일 유효성 검사
+        if (!file.type.startsWith('image/')) {
+          alert('이미지 파일만 업로드 가능합니다.');
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          alert('파일 크기는 5MB 이하만 가능합니다.');
+          return;
+        }
+
+        // 서버 업로드
+        const response = await memberImageAPI.uploadBackgroundImage(file);
+
+        if (response && response.data && response.data.imagePath) {
+          this.coverImage = this.getImageUrl(response.data.imagePath);
+          alert('배경 이미지가 변경되었습니다.');
+        }
+      } catch (error) {
+        console.error('배경 이미지 업로드 실패:', error);
+        const errorMessage = error.response?.data?.message || '배경 이미지 업로드에 실패했습니다.';
+        alert(errorMessage);
       }
     },
     
-    handleAvatarImageChange(event) {
+    async handleAvatarImageChange(event) {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.profileAvatar = e.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      try {
+        // 파일 유효성 검사
+        if (!file.type.startsWith('image/')) {
+          alert('이미지 파일만 업로드 가능합니다.');
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          alert('파일 크기는 5MB 이하만 가능합니다.');
+          return;
+        }
+
+        // 서버 업로드
+        const response = await memberImageAPI.uploadProfileImage(file);
+
+        if (response && response.data && response.data.imagePath) {
+          this.profileAvatar = this.getImageUrl(response.data.imagePath);
+          alert('프로필 이미지가 변경되었습니다.');
+        }
+      } catch (error) {
+        console.error('프로필 이미지 업로드 실패:', error);
+        const errorMessage = error.response?.data?.message || '프로필 이미지 업로드에 실패했습니다.';
+        alert(errorMessage);
       }
     },
     

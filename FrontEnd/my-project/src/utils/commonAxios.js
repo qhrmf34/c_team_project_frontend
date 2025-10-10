@@ -126,6 +126,44 @@ export const memberAPI = {
   }
 }
 
+// 회원 이미지 API
+export const memberImageAPI = {
+  // 프로필 이미지 조회
+  async getProfileImage() {
+    const response = await apiClient.get('/api/member/images/profile')
+    return response.data
+  },
+
+  // 배경 이미지 조회
+  async getBackgroundImage() {
+    const response = await apiClient.get('/api/member/images/background')
+    return response.data
+  },
+
+  // 프로필 이미지 업로드
+  async uploadProfileImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/api/member/images/profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  // 배경 이미지 업로드
+  async uploadBackgroundImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/api/member/images/background', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  }
+}
 //결제수단 API
   export const paymentMethodAPI = {
   // 결제수단 등록 (토스 빌링키 발급)
