@@ -39,9 +39,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
+      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+        <img src="/images/hotel_img/card.jpg">결제내역
+      </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -769,6 +769,11 @@ export default {
     await this.loadUserInfo();
     await this.loadUserProfile();
     await this.loadPaymentMethods(); // 결제수단 로드 추가
+
+    // 쿼리 파라미터로 탭 설정
+    if (this.$route.query.tab) {
+      this.activeTab = this.$route.query.tab;
+    }
   },
   
   beforeUnmount() {
@@ -778,8 +783,12 @@ export default {
   
   // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
-    '$route'() {
+    '$route'(to) {
       this.loadUserInfo();
+      // 쿼리 파라미터가 변경되면 탭도 변경
+       if (to.query.tab) {
+      this.activeTab = to.query.tab;
+    }
     }
   },
   
@@ -816,6 +825,11 @@ export default {
       } finally {
         this.isLoading = false;
       }
+    },
+    //계정에서 결제내역 클릭
+    goToPaymentHistory() {
+      this.activeTab = 'history';
+      this.isDropdownActive = false; 
     },
 
     // 결제수단 목록 로드
