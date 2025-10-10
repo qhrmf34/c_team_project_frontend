@@ -37,9 +37,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
+      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+        <img src="/images/hotel_img/card.jpg">결제내역
+      </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -166,6 +166,9 @@
             </div>
           </div>
         </div>
+        <button class="reset-filters-btn" @click="resetFilters">
+          Reset All Filters
+        </button>
       </aside>
       
       <div class="vertical-line"></div>
@@ -336,8 +339,7 @@
 </template>
 
 <script>
-import { authUtils, hotelAPI } from '@/utils/commonAxios'
-
+import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
 export default {
   name: 'HotelTwo',
   data() {
@@ -552,6 +554,18 @@ export default {
         this.$router.push('/login');
       }
     },
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
     
     goToHotel() {
       if (this.isLoggedIn) {
@@ -563,15 +577,17 @@ export default {
     },
     
     updateTabCounts(hotelTypeCounts) {
-    // {hotel: 3, motel: 1, resort: 2} 형태
-    this.tabs.forEach(tab => {
-      const type = tab.name.slice(0, -1); // 'hotels' → 'hotel'
-      if (hotelTypeCounts[type] !== undefined) {
-        tab.count = hotelTypeCounts[type];
-      }
-    });
-    console.log('업데이트된 탭:', this.tabs);
-  },
+      // {hotel: 3, motel: 1, resort: 2} 형태
+      this.tabs.forEach(tab => {
+        const type = this.convertHotelType(tab.name); 
+        if (type && hotelTypeCounts[type] !== undefined) {
+          tab.count = hotelTypeCounts[type];
+        } else {
+          tab.count = 0;
+        }
+      });
+      console.log('업데이트된 탭:', this.tabs);
+    },
     
     
     // 필터 옵션 로드
@@ -614,64 +630,68 @@ export default {
 },
     
     /**
-     * 호텔 검색 (수정됨)
+     * 호텔 검색 
      * GET /api/hotels
      */
     async search(pageOrEvent = 0) {
       console.log('검색 시작...');
       this.isLoading = true;
-        
-      // 이벤트 객체가 전달된 경우 처리
+
       let page = 0;
       if (typeof pageOrEvent === 'number') {
         page = pageOrEvent;
       } else if (pageOrEvent && typeof pageOrEvent === 'object') {
-        // 이벤트 객체인 경우 무시하고 현재 페이지 유지
         page = this.currentPage || 0;
       }
-        
+
       try {
         const params = {
-        destination: this.searchData.destination || null,
-        checkIn: this.searchData.checkIn || null,
-        checkOut: this.searchData.checkOut || null,
-        guests: this.extractGuestsNumber(this.searchData.guests),
-        rooms: this.extractRoomsNumber(this.searchData.guests),
-        minPrice: this.priceRange.min * 1000,
-        maxPrice: this.priceRange.max * 1000,
-        rating: this.selectedRating,
-        hotelType: this.convertHotelType(this.activeTab),
-        freebies: this.getSelectedFreebies(),
-        amenities: this.getSelectedAmenities(),
-        sortBy: this.convertSortBy(this.sortBy),
-        page: page,
-        size: this.pageSize
-      };
-        
-      console.log('검색 파라미터:', params);
+          destination: this.searchData.destination || null,
+          checkIn: this.searchData.checkIn || null,
+          checkOut: this.searchData.checkOut || null,
+          guests: this.extractGuestsNumber(this.searchData.guests),
+          rooms: this.extractRoomsNumber(this.searchData.guests),
+          minPrice: this.priceRange.min * 1000,
+          maxPrice: this.priceRange.max * 1000,
+          rating: this.selectedRating,
+          hotelType: this.convertHotelType(this.activeTab),
+          freebies: this.getSelectedFreebies(),
+          amenities: this.getSelectedAmenities(),
+          sortBy: this.convertSortBy(this.sortBy),
+          page: page,
+          size: this.pageSize
+        };
 
-      const response = await hotelAPI.searchHotels(params);
-        
-      if (response.code === 200) {
-        const data = response.data;
-        console.log('받은 데이터:', data);
-        
-        this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
-        this.totalCount = data.totalCount;
-        this.currentPage = data.currentPage;
-        this.totalPages = data.totalPages;
-        
-        console.log('변환된 호텔 목록:', this.hotels);
-      }
+        console.log('검색 파라미터:', params);
       
+        const response = await hotelAPI.searchHotels(params);
+
+        if (response.code === 200) {
+          const data = response.data;
+          console.log('받은 데이터:', data);
+        
+          this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+          this.totalCount = data.totalCount;
+          this.currentPage = data.currentPage;
+          this.totalPages = data.totalPages;
+
+          // 탭별 카운트 업데이트 (검색 조건에 따른 동적 카운트)
+          if (data.hotelTypeCounts) {
+            console.log('호텔 타입 카운트:', data.hotelTypeCounts);
+            this.updateTabCounts(data.hotelTypeCounts);
+          }
+
+          console.log('변환된 호텔 목록:', this.hotels);
+          console.log('업데이트된 탭:', this.tabs);
+        }
+
       } catch (error) {
         console.error('검색 중 오류:', error);
         alert('검색 중 오류가 발생했습니다.');
       } finally {
         this.isLoading = false;
       }
-  },
-    
+    },  
     /**
      * 평점 선택 (수정됨)
      */
@@ -716,12 +736,12 @@ export default {
       return {
         id: hotel.id,
         title: hotel.title,
-        image: hotel.image || '/images/hotel_img/hotel1.jpg',
+        image: this.getImageUrl(hotel.image),
         imageCount: hotel.imageCount || 0,
         price: this.formatPrice(hotel.price),
         location: hotel.location || hotel.cityName,
         stars: this.generateStars(hotel.stars),
-        type: hotel.type,  // ← 이렇게 원래대로 수정
+        type: hotel.type,
         hotelType: hotel.hotelType,
         amenitiesCount: hotel.amenitiesCount || 0,
         rating: hotel.rating ? hotel.rating.toFixed(1) : '0.0',
@@ -731,7 +751,12 @@ export default {
         cityName: hotel.cityName
       };
     },
-    
+        resetFilters() {
+      // 페이지 리로드
+      this.$router.push('/hoteltwo').then(() => {
+        window.location.reload();
+      });
+    },
     /**
      * 가격 포맷팅
      */
@@ -795,7 +820,17 @@ export default {
         'Rating': 'rating'
       };
       return sortMap[sortBy] || 'recommended';
+    },
+    /**
+     * 이미지 URL 생성
+     */
+    getImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg'; // 기본 이미지
+      // 서버 업로드 이미지 (경로가 /hotel/ 또는 /room/ 등으로 시작)
+      if (imagePath.startsWith('/images/')) return imagePath; // 정적 이미지
+      return adminAPI.getImageUrl(imagePath); // 서버 업로드 이미지
     }
+
   },
   
 
@@ -1415,6 +1450,37 @@ export default {
             font-size: 14px;
             color: #112211;
         
+        }
+
+        /* 초기화 버튼 스타일 추가 */
+        .reset-filters-btn {
+          width: 100%;
+          padding: 14px 20px;
+          margin-top: 24px;
+          background: #FFFFFF;
+          border: 1.5px solid #8DD3BB;
+          border-radius: 8px;
+          font-family: Montserrat;
+          font-weight: 600;
+          font-size: 14px;
+          color: #112211;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .reset-filters-btn:hover {
+          background: #8DD3BB;
+          transform: translateY(-2px);
+          box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.3);
+        }
+
+        .reset-filters-btn:active {
+          transform: translateY(0);
+          box-shadow: 0px 2px 6px rgba(141, 211, 187, 0.2);
         }
 
         /* 호텔 카드 */

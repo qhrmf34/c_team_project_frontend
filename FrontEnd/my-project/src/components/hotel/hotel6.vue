@@ -53,9 +53,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
+      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+        <img src="/images/hotel_img/card.jpg">결제내역
+      </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -97,58 +97,32 @@
       <div class="tab-content" :class="{ active: activeTab === 'places' }">
         <main class="main-content">
           <section class="results-section">
-            <div class="hotel-cards" :class="{ 'show-all': showingAll }">
-              <!-- Visible Hotels -->
-              <div v-for="hotel in visibleHotels" :key="hotel.id" class="hotel-card">
-                <div class="hotel-image-container">
-                  <img :src="hotel.image" :alt="hotel.name" class="hotel-image">
-                  <div class="image-count">{{ hotel.imageCount }} images</div>
-                </div>
-                <div class="hotel-content">
-                  <h3 class="hotel-title">{{ hotel.name }}</h3>
-                  <div class="price-info">
-                    <div class="price-label">starting from</div>
-                    <div class="price-amount">{{ hotel.price }}<span class="price-unit">/night</span></div>
-                    <div class="price-tax">excl. tax</div>
-                  </div>
-                  <div class="hotel-location">
-                    <span><img src="/images/hotel_img/map.jpg" alt="map"/></span>
-                    <span>{{ hotel.location }}</span>
-                  </div>
-                  <div class="hotel-meta">
-                    <span class="stars">{{ hotel.stars }}</span>
-                    <span class="hotel-type">{{ hotel.type }}</span>
-                    <span class="amenities">
-                      <img src="/images/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
-                    </span>
-                  </div>
-                  <div class="rating-section">
-                    <span class="rating-score">{{ hotel.rating }}</span>
-                    <span class="rating-text">{{ hotel.ratingText }}</span>
-                  </div>
-                  <div class="hotel-beeline"></div>
-                  <div class="bottom-section">
-                    <div class="button-container">
-                      <button class="wishlist-btn" @click="toggleWishlist(hotel)" :style="{ color: hotel.wishlisted ? '#FF6B6B' : '#666666' }">
-                        {{ hotel.wishlisted ? '♥' : '♡' }}
-                      </button>
-                      <button class="view-place-btn">View Place</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <!-- 로딩 중 -->
+            <div v-if="isLoading" class="loading-state">
+              <p>로딩 중...</p>
+            </div>
 
-              <!-- Hidden Hotels -->
-              <div v-for="hotel in hiddenHotels" :key="hotel.id" class="hotel-card hidden-hotels">
+            <!-- 찜한 호텔이 없을 때 -->
+            <div v-else-if="hotels.length === 0" class="empty-state">
+              <h3>찜한 호텔이 없습니다</h3>
+              <p>마음에 드는 호텔을 찜해보세요!</p>
+            </div>
+
+            <!-- 찜한 호텔 목록 -->
+            <div v-else class="hotel-cards" :class="{ 'show-all': showingAll }">
+              <div v-for="(hotel, index) in hotels" 
+                   :key="hotel.id" 
+                   class="hotel-card"
+                   :class="{ 'hidden-hotels': index >= 3 }">
                 <div class="hotel-image-container">
-                  <img :src="hotel.image" :alt="hotel.name" class="hotel-image">
+                  <img :src="getImageUrl(hotel.image)" :alt="hotel.title" class="hotel-image">
                   <div class="image-count">{{ hotel.imageCount }} images</div>
                 </div>
                 <div class="hotel-content">
-                  <h3 class="hotel-title">{{ hotel.name }}</h3>
+                  <h3 class="hotel-title">{{ hotel.title }}</h3>
                   <div class="price-info">
                     <div class="price-label">starting from</div>
-                    <div class="price-amount">{{ hotel.price }}<span class="price-unit">/night</span></div>
+                    <div class="price-amount">{{ formatPrice(hotel.price) }}<span class="price-unit">/night</span></div>
                     <div class="price-tax">excl. tax</div>
                   </div>
                   <div class="hotel-location">
@@ -156,30 +130,36 @@
                     <span>{{ hotel.location }}</span>
                   </div>
                   <div class="hotel-meta">
-                    <span class="stars">{{ hotel.stars }}</span>
+                    <span class="stars">{{ generateStars(hotel.stars) }}</span>
                     <span class="hotel-type">{{ hotel.type }}</span>
                     <span class="amenities">
-                      <img src="/images/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenities }}
+                      <img src="/images/hotel_img/coffee.jpg" alt="coffee"/> {{ hotel.amenitiesCount }}+ Amenities
                     </span>
                   </div>
                   <div class="rating-section">
-                    <span class="rating-score">{{ hotel.rating }}</span>
-                    <span class="rating-text">{{ hotel.ratingText }}</span>
+                    <span class="rating-score">{{ hotel.rating ? hotel.rating.toFixed(1) : '0.0' }}</span>
+                    <span class="rating-text">{{ hotel.ratingText }} {{ hotel.reviewCount }} reviews</span>
                   </div>
                   <div class="hotel-beeline"></div>
                   <div class="bottom-section">
                     <div class="button-container">
-                      <button class="wishlist-btn" @click="toggleWishlist(hotel)" :style="{ color: hotel.wishlisted ? '#FF6B6B' : '#666666' }">
+                      <button 
+                        class="wishlist-btn" 
+                        @click="toggleWishlist(hotel)"
+                        :style="{ color: hotel.wishlisted ? '#FF6B6B' : '#666666' }">
                         {{ hotel.wishlisted ? '♥' : '♡' }}
                       </button>
-                      <button class="view-place-btn">View Place</button>
+                      <button class="view-place-btn" @click="viewPlace(hotel)">View Place</button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <button class="show-more-btn" @click="toggleShowMore">
+          
+            <button 
+              v-if="hotels.length > 3"
+              class="show-more-btn" 
+              @click="toggleShowMore">
               {{ showingAll ? 'Show less results' : 'Show more results' }}
             </button>
           </section>
@@ -265,7 +245,7 @@
 </template>
 
 <script>
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelSix',
@@ -275,144 +255,20 @@ export default {
       activeTab: 'places',
       showingAll: false,
       email: '',
+      isLoading: false,
+      hotels: [],
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false,
-      visibleHotels: [
-        {
-          id: 1,
-          name: '해튼호텔',
-          image: '/images/hotel_img/hotel1.jpg',
-          imageCount: 9,
-          price: '₩240,000',
-          location: 'Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '20+ Amenities',
-          rating: '4.2',
-          ratingText: 'Very Good 371 reviews',
-          wishlisted: false
-        },
-        {
-          id: 2,
-          name: '마제스틱 말라카 호텔',
-          image: '/images/hotel_img/hotel2.jpg',
-          imageCount: 9,
-          price: '₩120,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '20+ Amenities',
-          rating: '4.2',
-          ratingText: 'Very Good 54 reviews',
-          wishlisted: false
-        },
-        {
-          id: 3,
-          name: '카나휘 리모 호텔',
-          image: '/images/hotel_img/hotel3.jpg',
-          imageCount: 9,
-          price: '₩130,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '20+ Amenities',
-          rating: '4.2',
-          ratingText: 'Very Good 54 reviews',
-          wishlisted: false
-        }
-      ],
-      hiddenHotels: [
-        {
-          id: 4,
-          name: '베이알 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 9,
-          price: '₩104,000',
-          location: 'Kuçukayasofya No. 40 Sultanahmet, Istanbul 34022',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '20+ Amenities',
-          rating: '4.2',
-          ratingText: 'Very Good 54 reviews',
-          wishlisted: false
-        },
-        {
-          id: 5,
-          name: '그랜드 플라자 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 12,
-          price: '₩85,000',
-          location: 'Beyoğlu, Galata Kulesi Sk. No:15, Istanbul 34421',
-          stars: '★★★★☆',
-          type: '4 Star Hotel',
-          amenities: '15+ Amenities',
-          rating: '4.0',
-          ratingText: 'Good 289 reviews',
-          wishlisted: false
-        },
-        {
-          id: 6,
-          name: '오션뷰 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 15,
-          price: '₩320,000',
-          location: 'Kadıköy, Bağdat Cd. No:234, Istanbul 34710',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '25+ Amenities',
-          rating: '4.5',
-          ratingText: 'Excellent 156 reviews',
-          wishlisted: false
-        },
-        {
-          id: 7,
-          name: '시티센터 비즈니스 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 8,
-          price: '₩95,000',
-          location: 'Şişli, Büyükdere Cd. No:145, Istanbul 34394',
-          stars: '★★★★☆',
-          type: '4 Star Hotel',
-          amenities: '12+ Amenities',
-          rating: '3.8',
-          ratingText: 'Good 423 reviews',
-          wishlisted: false
-        },
-        {
-          id: 8,
-          name: '부티크 가든 호텔',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 11,
-          price: '₩180,000',
-          location: 'Beşiktaş, Çırağan Cd. No:32, Istanbul 34349',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '18+ Amenities',
-          rating: '4.3',
-          ratingText: 'Very Good 198 reviews',
-          wishlisted: false
-        },
-        {
-          id: 9,
-          name: '럭셔리 스파 리조트',
-          image: '/images/hotel_img/hotel4.jpg',
-          imageCount: 20,
-          price: '₩450,000',
-          location: 'Ortaköy, Mecidiye Köprüsü Sk. No:1, Istanbul 34347',
-          stars: '★★★★★',
-          type: '5 Star Hotel',
-          amenities: '30+ Amenities',
-          rating: '4.7',
-          ratingText: 'Excellent 89 reviews',
-          wishlisted: false
-        }
-      ]
+      isLoggedIn: false
     }
   },
-  mounted() {
+  async mounted() {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+        // 로그인 상태라면 찜한 호텔 목록 로드
+    if (this.isLoggedIn) {
+      await this.loadWishlistHotels();
+    }
   },
   
   beforeUnmount() {
@@ -467,6 +323,87 @@ export default {
     }
   },
   methods: {
+    //결제내역이동
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+        // ===== 찜한 호텔 목록 로드 =====
+    async loadWishlistHotels() {
+      this.isLoading = true;
+      try {
+        const response = await hotelAPI.getWishlistHotels();
+        
+        if (response.code === 200) {
+          this.hotels = response.data;
+          console.log('찜한 호텔 목록:', this.hotels);
+        }
+      } catch (error) {
+        console.error('찜한 호텔 목록 로드 중 오류:', error);
+        alert('찜한 호텔 목록을 불러올 수 없습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    // ===== 찜하기 토글 =====
+    async toggleWishlist(hotel) {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      try {
+        await hotelAPI.toggleWishlist(hotel.id);
+        
+        // 찜 목록에서 제거
+        this.hotels = this.hotels.filter(h => h.id !== hotel.id);
+        
+        alert('찜 목록에서 제거되었습니다.');
+      } catch (error) {
+        console.error('찜하기 처리 중 오류:', error);
+        alert('찜하기 처리 중 오류가 발생했습니다.');
+      }
+    },
+    
+    // ===== 호텔 상세 보기 =====
+    viewPlace(hotel) {
+      this.$router.push({
+        path: '/hotelthree',
+        query: { hotelId: hotel.id }
+      });
+    },
+    
+    // ===== 이미지 URL =====
+    getImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg';
+      if (imagePath.startsWith('http')) return imagePath;
+      if (imagePath.startsWith('/images/')) return imagePath;
+      return adminAPI.getImageUrl(imagePath);
+    },
+    
+    // ===== 가격 포맷 =====
+    formatPrice(price) {
+      if (!price) return '₩0';
+      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+    },
+    
+    // ===== 별점 생성 =====
+    generateStars(starCount) {
+      if (!starCount) return '';
+      const fullStars = '★'.repeat(starCount);
+      const emptyStars = '☆'.repeat(5 - starCount);
+      return fullStars + emptyStars;
+    },
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
@@ -495,9 +432,7 @@ export default {
         })
       }
     },
-    toggleWishlist(hotel) {
-      hotel.wishlisted = !hotel.wishlisted
-    },
+
     subscribe() {
       if (this.email) {
         console.log('Subscribed:', this.email)
@@ -1177,7 +1112,6 @@ nav {
   font-size: 14px;
   cursor: pointer;
   margin-top: 24px;
-  margin-bottom: 200px;
 }
 
 /* Newsletter Section */
@@ -1192,6 +1126,7 @@ nav {
   margin-top: 60px;
   z-index: 0;
   margin-bottom: -513px;
+  margin-top: 200px;
 }
 
 .newsletter-content {
@@ -1430,4 +1365,12 @@ nav {
 .footer-column a:hover {
   opacity: 1;
 }
+/* 로딩 상태 */
+.loading-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #666;
+  font-family: Montserrat;
+}
+
 </style>

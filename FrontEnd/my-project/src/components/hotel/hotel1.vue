@@ -37,9 +37,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
+      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+        <img src="/images/hotel_img/card.jpg">결제내역
+      </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -89,67 +89,28 @@
             <h2 class="section-title">여행에 빠지다</h2>
             <p class="section-subtitle">특가상품으로 진행하는 여행을 예약해보세요</p>
           </div>
-          <button class="see-all-btn travel-section-btn">See All</button>
+          <button class="see-all-btn travel-section-btn" @click="goToHotelSearch">See All</button>
         </div>
 
-        <div class="destination-cards">
-          <div class="destination-card">
-            <img src="/images/hotel_img/melbourne.jpg" alt="Melbourne" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>멜버른</h3>
-                  <p>Amazing journey</p>
-                </div>
-                <div class="card-price">₩130,000</div>
+      <!-- 1. 도시 카드의 Book a Hotel 버튼에 클릭 이벤트 추가 -->
+      <div class="destination-cards">
+        <div v-for="city in featuredCities" :key="city.id" class="destination-card">
+          <img :src="getCityImageUrl(city.cityImagePath)" 
+               :alt="city.cityName" 
+               style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+          <div class="card-overlay">
+            <div class="card-content">
+              <div class="card-info">
+                <h3>{{ city.cityName }}</h3>
+                <p>{{ city.cityContent || 'Amazing journey' }}</p>
               </div>
-              <button class="book-btn">Book a Hotel</button>
+              <div class="card-price">{{ formatPrice(city.minPrice) }}</div>
             </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/paris.jpg" alt="Paris" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>파리</h3>
-                  <p>A Paris Adventure</p>
-                </div>
-                <div class="card-price">₩150,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/london.jpg" alt="London" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>런던</h3>
-                  <p>London eye adventure</p>
-                </div>
-                <div class="card-price">₩130,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/colombia.jpg" alt="Colombia" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>콜롬비아</h3>
-                  <p>Amazing streets</p>
-                </div>
-                <div class="card-price">₩150,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
+            <button class="book-btn" @click="bookHotelByCity(city.cityName)">Book a Hotel</button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
       <section class="travel-section">
         <div class="section-header">
@@ -269,7 +230,7 @@
 
 <script>
 // HotelOne.vue의 script 부분만 업데이트
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelOne',
@@ -287,7 +248,9 @@ export default {
       },
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      featuredCities: []
+
     }
   },
   
@@ -333,271 +296,305 @@ export default {
     }
   },
   
-  methods: {
-    toggleDropdown() {
-      this.isDropdownActive = !this.isDropdownActive;
-    },
-    
-    subscribe() {
-      if (this.newsletter.email) {
-        alert('구독이 완료되었습니다!');
-        this.newsletter.email = '';
-      } else {
-        alert('이메일을 입력해주세요.');
-      }
-    },
-    
-    handleClickOutside(event) {
-      if (!this.$refs.userDropdown.contains(event.target) && 
-          !event.target.closest('.user-profile')) {
-        this.isDropdownActive = false;
-      }
-    },
-    
-    // 사용자 정보 로드
-    loadUserInfo() {
-      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
-      if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
-      } else {
-        this.userInfo = null;
-      }
-    },
-    
-    // 로그아웃 처리 (개선된 버전)
-    async handleLogout() {
-      if (confirm('로그아웃하시겠습니까?')) {
-        try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
-          await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
+    methods: {
+        toggleDropdown() {
+          this.isDropdownActive = !this.isDropdownActive;
+        },
+
+        subscribe() {
+          if (this.newsletter.email) {
+            alert('구독이 완료되었습니다!');
+            this.newsletter.email = '';
+          } else {
+            alert('이메일을 입력해주세요.');
+          }
+        },
+
+        handleClickOutside(event) {
+          if (!this.$refs.userDropdown.contains(event.target) && 
+              !event.target.closest('.user-profile')) {
+            this.isDropdownActive = false;
+          }
+        },
+
+        loadUserInfo() {
+          this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+
+          if (this.isLoggedIn) {
+            this.userInfo = authUtils.getUserInfo();
+            console.log('사용자 정보:', this.userInfo);
+          } else {
+            this.userInfo = null;
+          }
+        },
+
+        async handleLogout() {
+          if (confirm('로그아웃하시겠습니까?')) {
+            try {
+              await authUtils.logout();
+              this.loadUserInfo();
+              alert('로그아웃되었습니다.');
+              this.$router.push('/login');
+            } catch (error) {
+              console.error('로그아웃 중 오류:', error);
+              authUtils.logout();
+              this.loadUserInfo();
+              alert('로그아웃되었습니다.');
+              this.$router.push('/login');
+            }
+          }
+        },
+
+        goToAccount() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelaccount');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        goToHotel() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelone');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        goToFavourites() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelsix');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        async loadFeaturedCities() {
+          try {
+            const response = await hotelAPI.getFeaturedCities(4);
+            this.featuredCities = response.data || [];
+          } catch (error) {
+            console.error('추천 도시 로드 실패:', error);
+            this.featuredCities = [];
+          }
+        },
+
+        getCityImageUrl(imagePath) {
+          if (!imagePath) {
+            return '/images/hotel_img/melbourne.jpg';
+          }
+          return adminAPI.getImageUrl(imagePath);
+        },
+
+        formatPrice(price) {
+          if (!price) return '₩0';
+          return '₩' + adminAPI.formatNumber(price);
+        },
+
+        bookHotelByCity(cityName) {
+          this.$router.push({
+            path: '/hoteltwo',
+            query: { 
+              destination: cityName,
+              checkIn: this.getToday(),
+              checkOut: this.getTomorrow()
+            }
+          });
+        },
+
+        goToHotelSearch() {
+          this.$router.push('/hoteltwo');
+        },
+
+        getToday() {
+          const today = new Date();
+          return today.toISOString().split('T')[0];
+        },
+
+        getTomorrow() {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return tomorrow.toISOString().split('T')[0];
+        },      
+        goToPaymentHistory() {
+          if (this.isLoggedIn) {
+            this.$router.push({
+              path: '/hotelaccount',
+              query: { tab: 'history' }
+            });
+            this.isDropdownActive = false; // 드롭다운 닫기
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        }
+      },
+
+
+      mounted() {
+        document.addEventListener('click', this.handleClickOutside);
+        this.loadUserInfo();
+        this.loadFeaturedCities();
+      },
+
+      beforeUnmount() {
+        document.removeEventListener('click', this.handleClickOutside);
+      },
+
+      watch: {
+        '$route'() {
           this.loadUserInfo();
-          
-          alert('로그아웃되었습니다.');
-          this.$router.push('/login');
-        } catch (error) {
-          console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
-          authUtils.logout();
-          this.loadUserInfo();
-          
-          alert('로그아웃되었습니다.');
-          this.$router.push('/login');
         }
       }
-    },
-    
-    // 계정 페이지로 이동
-    goToAccount() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelaccount');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-    //호텔 페이지로 이동
-    goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-    //찜목록 페이지로 이동
-    goToFavourites() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelsix');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
     }
-  },
-
-  
-  mounted() {
-    document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
-  },
-  
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside);
-  },
-  
-  // 라우터 변경 시에도 사용자 정보 다시 확인
-  watch: {
-    '$route'() {
-      this.loadUserInfo();
-    }
-  }
-}
 </script>
 
 <style scoped>
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 21px 104px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            height: 87px;
-            width: 100%;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1232px;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-item {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 14px;
-            line-height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #112211;
-            text-decoration: none;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: #D9D9D9;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .online-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #112211;
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: fixed;
-            top: 82px;
-            left: 64%;
-            width: 329px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 32px;
-            display: none;
-            z-index: 1001;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dropdown-avatar {
-            width: 64px;
-            height: 64px;
-            background: #D9D9D9;
-            border-radius: 50%;
-        }
-
-        .dropdown-info h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .dropdown-info p {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.75;
-        }
-
-        .dropdown-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-            padding-top: 24px;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #112211;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            padding: 4px 0;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            color: #7dd3c0;
-        }
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 21px 104px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 87px;
+    width: 100%;
+}
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1232px;
+    margin: 0 auto;
+}
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+.nav-item {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    line-height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #112211;
+    text-decoration: none;
+}
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+}
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    background: #D9D9D9;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    position: relative;
+}
+.online-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #112211;
+    border-radius: 50%;
+    bottom: 2px;
+    right: 2px;
+}
+/* User Dropdown */
+.user-dropdown {
+    position: fixed;
+    top: 82px;
+    left: 64%;
+    width: 329px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 32px;
+    display: none;
+    z-index: 1001;
+}
+.user-dropdown.active {
+    display: block;
+}
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.dropdown-avatar {
+    width: 64px;
+    height: 64px;
+    background: #D9D9D9;
+    border-radius: 50%;
+}
+.dropdown-info h3 {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    margin-bottom: 4px;
+}
+.dropdown-info p {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.75;
+}
+.dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+    padding-top: 24px;
+}
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #112211;
+    text-decoration: none;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 100%;
+    padding: 4px 0;
+    cursor: pointer;
+}
+.dropdown-item:hover {
+    color: #7dd3c0;
+}
 
 .hero-section {
     background: #000; /* 폴백 배경 */
@@ -1209,5 +1206,315 @@ export default {
 
         .footer-column a:hover {
             opacity: 1;
+        }
+        /* 반응형 디자인 - 노트북 */
+        
+        /* 1366px - 1536px (작은 노트북) */
+        @media screen and (max-width: 1536px) {
+            .header {
+                padding: 21px 60px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1100px;
+            }
+
+            .main-content {
+                padding: 150px 60px 0;
+            }
+
+            .newsletter-section {
+                padding: 80px 60px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+            }
+
+            .destination-card {
+                width: 280px;
+                height: 400px;
+            }
+
+            .tour-images {
+                width: 600px;
+            }
+
+            .tour-image {
+                width: 290px;
+                height: 190px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.95);
+            }
+        }
+
+        /* 1200px - 1366px (중간 노트북) */
+        @media screen and (max-width: 1366px) {
+            .header {
+                padding: 21px 40px;
+            }
+
+            .hero-section {
+                padding: 80px 40px 120px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1000px;
+                padding: 24px 20px;
+            }
+
+            .search-fields {
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 350px;
+            }
+
+            .date-field,
+            .guests-field {
+                width: 200px;
+            }
+
+            .main-content {
+                padding: 150px 40px 0;
+            }
+
+            .section-header {
+                margin-bottom: 60px;
+            }
+
+            .destination-cards {
+                gap: 10px;
+            }
+
+            .destination-card {
+                width: 260px;
+                height: 380px;
+            }
+
+            .more-travel {
+                gap: 20px;
+            }
+
+            .malaka-tour {
+                width: 480px;
+                height: 400px;
+                padding: 20px;
+            }
+
+            .tour-title {
+                font-size: 36px;
+            }
+
+            .tour-images {
+                width: 520px;
+            }
+
+            .image-row {
+                gap: 16px;
+            }
+
+            .tour-image {
+                width: 252px;
+                height: 180px;
+            }
+
+            .newsletter-section {
+                padding: 60px 40px;
+            }
+
+            .newsletter-content {
+                padding: 40px;
+            }
+
+            .newsletter-title {
+                font-size: 38px;
+                line-height: 48px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.85);
+            }
+
+            .footer-links {
+                gap: 40px;
+            }
+        }
+
+        /* 1024px - 1200px (작은 노트북 / 큰 태블릿) */
+        @media screen and (max-width: 1200px) {
+            .header {
+                padding: 16px 30px;
+                height: 75px;
+            }
+
+            nav {
+                max-width: 100%;
+            }
+
+            .nav-item {
+                font-size: 13px;
+            }
+
+            .hero-section {
+                height: 480px;
+                padding: 60px 30px 100px;
+            }
+
+            .hero-content {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .hero-title {
+                font-size: 38px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+                width: 100%;
+                max-width: 350px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 900px;
+                height: auto;
+                bottom: -100px;
+                padding: 20px;
+            }
+
+            .search-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .search-fields {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 100%;
+            }
+
+            .date-field,
+            .guests-field {
+                width: calc(50% - 6px);
+            }
+
+            .main-content {
+                padding: 170px 30px 0;
+            }
+
+            .section-title {
+                font-size: 28px;
+                margin-top: 60px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .destination-card {
+                width: 48%;
+                min-width: 240px;
+                height: 360px;
+            }
+
+            .more-travel {
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 180px;
+            }
+
+            .malaka-tour {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                min-height: 350px;
+            }
+
+            .tour-title {
+                font-size: 32px;
+            }
+
+            .tour-images {
+                width: 100%;
+                max-width: 600px;
+            }
+
+            .image-row {
+                gap: 12px;
+            }
+
+            .tour-image {
+                width: calc(50% - 6px);
+                height: 160px;
+            }
+
+            .newsletter-section {
+                padding: 50px 30px;
+                min-height: 422px;
+            }
+
+            .newsletter-content {
+                padding: 32px;
+                min-height: 305px;
+            }
+
+            .newsletter-title {
+                font-size: 32px;
+                line-height: 42px;
+            }
+
+            .newsletter-form {
+                width: 100%;
+            }
+
+            .mailbox-container {
+                transform: scale(0.75);
+            }
+
+            .footer-links {
+                gap: 30px;
+            }
+        }
+
+        /* 768px - 1024px (태블릿) */
+        @media screen and (max-width: 1024px) {
+            .user-dropdown {
+                left: auto;
+                right: 20px;
+                width: 300px;
+            }
+
+            .destination-card {
+                width: 45%;
+                min-width: 220px;
+            }
+
+            .travel-section {
+                margin-bottom: 80px;
+            }
+
+            .tour-image {
+                height: 140px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.7);
+            }
         }
 </style>

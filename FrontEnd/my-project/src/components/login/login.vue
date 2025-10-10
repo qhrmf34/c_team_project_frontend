@@ -860,10 +860,6 @@ p {
   border-color: #ccc;
 }
 
-.social-btn svg {
-  width: 24px;
-  height: 24px;
-}
 
 /* 뒤로가기 링크 */
 .back-link {
@@ -894,28 +890,4 @@ p {
   }
 }
 
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-  
-  .form-section,
-  .image-section {
-    width: 100%;
-  }
-  
-  .image-section {
-    height: 300px;
-  }
-  
-  .slider-container {
-    width: 100%;
-    height: 300px;
-  }
-  
-  .slide {
-    width: 100%;
-    height: 300px;
-  }
-}
 </style>

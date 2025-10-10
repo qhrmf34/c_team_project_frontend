@@ -10,7 +10,7 @@ const apiClient = axios.create({
   }
 })
 
-// 요청 인터셉터 - JWT 토큰 자동 추가
+// 요청 인터셉터 - JWT 토큰 자동 추가`
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('jwt_token')
@@ -126,6 +126,44 @@ export const memberAPI = {
   }
 }
 
+// 회원 이미지 API
+export const memberImageAPI = {
+  // 프로필 이미지 조회
+  async getProfileImage() {
+    const response = await apiClient.get('/api/member/images/profile')
+    return response.data
+  },
+
+  // 배경 이미지 조회
+  async getBackgroundImage() {
+    const response = await apiClient.get('/api/member/images/background')
+    return response.data
+  },
+
+  // 프로필 이미지 업로드
+  async uploadProfileImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/api/member/images/profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  // 배경 이미지 업로드
+  async uploadBackgroundImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/api/member/images/background', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  }
+}
 //결제수단 API
   export const paymentMethodAPI = {
   // 결제수단 등록 (토스 빌링키 발급)
@@ -260,6 +298,10 @@ export const hotelAPI = {
     const response = await apiClient.get('/api/test/freebies')
     return response.data
   },
+  async getRoomImages(roomId) {
+    const response = await apiClient.get(`/api/public/rooms/${roomId}/images`);
+    return response.data;
+  },
 
   // 무료시설 단건 조회
   async getFreebieById(id) {
@@ -273,7 +315,74 @@ export const hotelAPI = {
       params: { name }
     })
     return response.data
-  }
+  },
+  // 추천 도시 목록 조회
+  async getFeaturedCities(limit = 4) {
+    const response = await apiClient.get('/api/admin/cities/featured', {
+      params: { limit }
+    })
+    return response.data
+  },
+   // 호텔 검색
+  async searchHotels(params) {
+    const response = await apiClient.get('/api/hotels', { params })
+    return response.data
+  },
+  
+  // 필터 옵션 조회
+  async getFilterOptions() {
+    const response = await apiClient.get('/api/hotels/filters')
+    return response.data
+  },
+  
+  // 호텔 상세 조회
+  async getHotelDetail(id, params) {
+    const response = await apiClient.get(`/api/hotels/${id}`, { params })
+    return response.data
+  },
+  
+  // 호텔 리뷰 조회
+  async getHotelReviews(hotelId, sortBy = null, reviewCard = null) {
+    const params = {};
+    if (sortBy) params.sortBy = sortBy;
+    if (reviewCard) params.reviewCard = reviewCard;
+    
+    const response = await apiClient.get(`/api/reviews/hotel/${hotelId}/filter`, { params });
+    return response.data;
+  },
+  
+  // 리뷰 통계 조회
+  async getReviewStats(hotelId) {
+    const response = await apiClient.get(`/api/reviews/hotel/${hotelId}/stats`);
+    return response.data;
+  },
+  
+  // 리뷰 작성
+  async createReview(reviewData) {
+    const response = await apiClient.post('/api/reviews', reviewData);
+    return response.data;
+  },
+  
+  // 리뷰 신고
+  async reportReview(reportData) {
+    const response = await apiClient.post('/api/reports', reportData);
+    return response.data;
+  },
+  // 찜한 호텔 목록 조회
+  async getWishlistHotels() {
+    const response = await apiClient.get('/api/hotels/wishlist');
+    return response.data;
+  },
+  // 찜하기 토글 (중복 제거)
+  async toggleWishlist(hotelId) {
+    const response = await apiClient.post('/api/carts/toggle', { hotelId: hotelId });
+    return response.data;
+  },
+  // 찜 상태 확인 
+  async checkWishlist(hotelId) {
+    const response = await apiClient.get(`/api/carts/check/${hotelId}`);
+    return response.data;
+}
 }
 
 // 관리자 API

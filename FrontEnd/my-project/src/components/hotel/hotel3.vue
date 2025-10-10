@@ -39,9 +39,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
+      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+        <img src="/images/hotel_img/card.jpg">결제내역
+      </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -64,62 +64,65 @@
     </div>
 
     <div class="main-content" v-if="hotel">
-      <!-- Hotel Header -->
-      <div class="hotel-header">
-        <div class="hotel-info">
-          <h1 class="hotel-title">
-            {{ hotel.hotelName }}
-            <span class="stars">{{ generateStars(hotel.starRating) }}</span>
-            <span class="stars-hotel">{{ hotel.starRating }} Star Hotel</span>
-          </h1>
-          <div class="hotel-location-line">
-            <span><img src="/images/hotel_img/map.jpg"></span>
-            <span>{{ hotel.address }}</span>
-          </div>
-          <div class="hotel-meta-left">
-            <div class="rating-info">
-              <span class="rating-score">{{ hotel.averageRating ? hotel.averageRating.toFixed(1) : '0.0' }}</span>
-              <span class="rating-text1">{{ getRatingText(hotel.averageRating) }} </span>
-              <span class="rating-text2">{{ hotel.reviewCount }} reviews</span>
-            </div>
-          </div>
+    <!-- Hotel Header -->
+    <div class="hotel-header">
+      <div class="hotel-info">
+        <h1 class="hotel-title">
+          {{ hotel.hotelName }}
+          <span class="stars">{{ generateStars(hotel.starRating) }}</span>
+          <span class="stars-hotel">{{ hotel.starRating }} Star Hotel</span>
+        </h1>
+        <div class="hotel-location-line">
+          <span><img src="/images/hotel_img/map.jpg"></span>
+          <span>{{ hotel.address }}</span>
         </div>
-    
-        <div class="hotel-actions">
-          <div class="hotel-price">
-            <div class="price-amount">{{ formatPrice(hotel.minPrice) }}<span class="price-unit">/night</span></div>
-          </div>
-          <div class="hotel-buttons">
-            <button class="action-btn" @click="toggleWishlist">
-              <img src="/images/hotel_img/heart2.jpg"/>
-            </button>
-            <button class="action-btn"><img src="/images/hotel_img/share.jpg"></button>
-            <button class="book-now-btn">Book now</button>
+        <div class="hotel-meta-left">
+          <div class="rating-info">
+            <span class="rating-score">{{ hotel.averageRating ? hotel.averageRating.toFixed(1) : '0.0' }}</span>
+            <span class="rating-text1">{{ getRatingText(hotel.averageRating) }} </span>
+            <span class="rating-text2">{{ hotel.reviewCount }} reviews</span>
           </div>
         </div>
       </div>
 
+      <div class="hotel-actions">
+        <div class="hotel-price">
+          <div class="price-amount">{{ formatPrice(hotel.minPrice) }}<span class="price-unit">/night</span></div>
+        </div>
+        <div class="hotel-buttons">
+          <button class="action-btn" @click="toggleWishlist" :class="{ wishlisted: hotel.wishlisted }">
+            <img src="/images/hotel_img/heart2.jpg"/>
+          </button>
+          <button class="action-btn" @click="shareHotel">
+            <img src="/images/hotel_img/share.jpg">
+          </button>
+          <button class="book-now-btn">Book now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Gallery -->
       <!-- Image Gallery -->
       <div class="image-gallery">
         <div class="main-image">
-          <img :src="hotel.images[0] || '/images/hotel_img/findhotel1.jpg'" :alt="hotel.hotelName">
+          <img :src="hotel.images && hotel.images.length > 0 ? getImageUrl(hotel.images[0]) : '/images/hotel_img/findhotel1.jpg'" :alt="hotel.hotelName">
         </div>
         <div class="sub-images">
           <div class="sub-row">
             <div class="gallery-item">
-              <img :src="hotel.images[1] || '/images/hotel_img/findhotel2.jpg'" alt="호텔 객실">
+              <img src="/images/hotel_img/findhotel2.jpg" alt="호텔 객실">
             </div>
             <div class="gallery-item item3">
-              <img :src="hotel.images[2] || '/images/hotel_img/findhotel3.jpg'" alt="호텔 로비">
+              <img src="/images/hotel_img/findhotel3.jpg" alt="호텔 로비">
             </div>
           </div>  
           <div class="sub-row">
             <div class="gallery-item">
-              <img :src="hotel.images[3] || '/images/hotel_img/findhotel4.jpg'" alt="호텔 외관">
+              <img src="/images/hotel_img/findhotel4.jpg" alt="호텔 외관">
             </div>
             <div class="gallery-item item5">
-              <img :src="hotel.images[4] || '/images/hotel_img/findhotel5.jpg'" alt="호텔 수영장">
-              <button class="view-all-photos">View all photos</button>
+              <img src="/images/hotel_img/findhotel5.jpg" alt="호텔 수영장">
+              <button class="view-all-photos" @click="openGallery">View all photos</button>
             </div>
           </div>     
         </div>
@@ -287,14 +290,14 @@
     <div class="modal-overlay" :class="{ active: isReportModalVisible }" @click="hideReportModalOnOverlay">
       <div class="modal-content" @click.stop>
         <h3 class="modal-title">신고하기</h3>
-        
+
         <div class="report-options">
           <div v-for="option in reportOptions" :key="option.value" class="report-option">
             <input type="radio" :id="option.value" name="reportReason" :value="option.value" v-model="selectedReportReason">
             <label :for="option.value">{{ option.label }}</label>
           </div>
         </div>
-        
+
         <textarea 
           id="reportDescription"
           name="reportDescription"
@@ -302,10 +305,58 @@
           placeholder="신고 사유를 자세히 설명해주세요..."
           v-model="reportDescription"
         ></textarea>
-        
+
         <div class="modal-buttons">
           <button class="modal-cancel-btn" @click="hideReportModal">취소</button>
           <button class="modal-submit-btn" @click="submitReport">신고하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 공유 모달 추가 -->
+    <div class="modal-overlay" :class="{ active: isShareModalVisible }" @click="hideShareModal">
+      <div class="modal-content share-modal" @click.stop>
+        <h3 class="modal-title">공유하기</h3>
+
+        <div class="share-options">
+          <button class="share-option-btn kakao" @click="shareToKakao">
+            <div class="share-icon kakao-icon">K</div>
+            <span>카카오톡</span>
+          </button>
+
+          <button class="share-option-btn link" @click="copyLink">
+            <div class="share-icon link-icon">🔗</div>
+            <span>링크 복사</span>
+          </button>
+        </div>
+
+        <button class="modal-cancel-btn" @click="hideShareModal">닫기</button>
+      </div>
+    </div>
+
+    <!-- 이미지 갤러리 슬라이드 모달 추가 -->
+    <div class="gallery-modal" :class="{ active: isGalleryVisible }" v-if="hotel && hotel.images && hotel.images.length > 0">
+      <div class="gallery-modal-content">
+        <button class="gallery-close-btn" @click="closeGallery">×</button>
+
+        <button class="gallery-nav-btn prev" @click="prevImage" v-if="currentImageIndex > 0">‹</button>
+
+        <div class="gallery-image-container">
+          <img :src="getImageUrl(hotel.images[currentImageIndex])" :alt="hotel.hotelName">
+          <div class="gallery-counter">{{ currentImageIndex + 1 }} / {{ hotel.images.length }}</div>
+        </div>
+
+        <button class="gallery-nav-btn next" @click="nextImage" v-if="currentImageIndex < hotel.images.length - 1">›</button>
+
+        <div class="gallery-thumbnails">
+          <div 
+            v-for="(image, index) in hotel.images" 
+            :key="index"
+            class="gallery-thumbnail"
+            :class="{ active: index === currentImageIndex }"
+            @click="goToImage(index)">
+            <img :src="getImageUrl(image)" :alt="`이미지 ${index + 1}`">
+          </div>
         </div>
       </div>
     </div>
@@ -412,7 +463,9 @@ export default {
       newsletterEmail: '',
       activeFilter: 'all',
       selectedReviewId: null,
-      
+      isShareModalVisible: false,
+      isGalleryVisible: false,
+      currentImageIndex: 0,
       hotel: null,
       reviews: [],
       reviewCardStats: {},
@@ -528,29 +581,40 @@ export default {
   
   methods: {
     // ===== 백엔드 API 호출 =====
-    
-    async loadHotelDetail(hotelId) {
-  try {
-    const response = await hotelAPI.getHotelDetail(hotelId);
-    
-    if (response.code === 200) {
-      this.hotel = response.data;
-      console.log('호텔 상세 정보:', this.hotel);
-      
-      // 각 객실의 이미지를 조회 (추가)
-      if (this.hotel.rooms && this.hotel.rooms.length > 0) {
-        await this.loadRoomImages();
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
       }
-      
-      this.$nextTick(() => {
-        this.initializeMap();
-      });
-    }
-  } catch (error) {
-    console.error('호텔 정보 로드 중 오류:', error);
-    alert('호텔 정보를 불러올 수 없습니다.');
-  }
-},
+    },
+    async loadHotelDetail(hotelId) {
+      try {
+        const response = await hotelAPI.getHotelDetail(hotelId);
+
+        if (response.code === 200) {
+          this.hotel = response.data;
+          console.log('호텔 상세 정보:', this.hotel);
+
+          // 각 객실의 이미지를 조회 (추가)
+          if (this.hotel.rooms && this.hotel.rooms.length > 0) {
+            await this.loadRoomImages();
+          }
+
+          this.$nextTick(() => {
+            this.initializeMap();
+          });
+        }
+      } catch (error) {
+        console.error('호텔 정보 로드 중 오류:', error);
+        alert('호텔 정보를 불러올 수 없습니다.');
+      }
+    },
 
     // 객실 이미지 로드 메서드 추가
     async loadRoomImages() {
@@ -636,21 +700,6 @@ export default {
       }
     },
     
-    async toggleWishlist() {
-      if (!this.isLoggedIn) {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-        return;
-      }
-      
-      try {
-        await hotelAPI.toggleWishlist(this.hotel.id);
-        this.hotel.wishlisted = !this.hotel.wishlisted;
-      } catch (error) {
-        console.error('찜하기 처리 중 오류:', error);
-        alert('찜하기 처리 중 오류가 발생했습니다.');
-      }
-    },
     
     // ===== 지도 관련 =====
     
@@ -946,6 +995,122 @@ export default {
       tomorrow.setDate(tomorrow.getDate() + 1);
       return tomorrow.toISOString().split('T')[0];
     
+    },
+    getImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg';
+      if (imagePath.startsWith('http')) return imagePath;
+      if (imagePath.startsWith('/images/')) return imagePath;
+      return `http://localhost:8089/uploads${imagePath}`;
+    },
+
+    // ===== 공유 기능 =====
+    async shareHotel() {
+      // 공유 옵션 모달 표시
+      this.isShareModalVisible = true;
+    },
+
+    async shareToKakao() {
+      if (!window.Kakao) {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+        return;
+      }
+
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY); // 카카오 개발자 센터에서 발급받은 키
+      }
+
+      window.Kakao.Share.sendDefault({
+        objectType: 'location',
+        address: this.hotel.address,
+        addressTitle: this.hotel.hotelName,
+        content: {
+          title: this.hotel.hotelName,
+          description: this.hotel.description,
+          imageUrl: this.getImageUrl(this.hotel.images[0]),
+          link: {
+            mobileWebUrl: window.location.href,
+            webUrl: window.location.href,
+          },
+        },
+        buttons: [
+          {
+            title: '자세히 보기',
+            link: {
+              mobileWebUrl: window.location.href,
+              webUrl: window.location.href,
+            },
+          },
+        ],
+      });
+
+      this.isShareModalVisible = false;
+    },
+
+    copyLink() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('링크가 복사되었습니다!');
+        this.isShareModalVisible = false;
+      }).catch(() => {
+        alert('링크 복사에 실패했습니다.');
+      });
+    },
+
+    hideShareModal() {
+      this.isShareModalVisible = false;
+    },
+
+    // ===== 사진 갤러리 슬라이드 =====
+    openGallery() {
+      if (!this.hotel || !this.hotel.images || this.hotel.images.length === 0) {
+        alert('표시할 이미지가 없습니다.');
+        return;
+      }
+      this.isGalleryVisible = true;
+      this.currentImageIndex = 0;
+    },
+
+    closeGallery() {
+      this.isGalleryVisible = false;
+    },
+
+    nextImage() {
+      if (this.currentImageIndex < this.hotel.images.length - 1) {
+        this.currentImageIndex++;
+      }
+    },
+
+    prevImage() {
+      if (this.currentImageIndex > 0) {
+        this.currentImageIndex--;
+      }
+    },
+
+    goToImage(index) {
+      this.currentImageIndex = index;
+    },
+
+    // ===== 찜하기 =====
+    async toggleWishlist() {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+
+      try {
+        await hotelAPI.toggleWishlist(this.hotel.id);
+        this.hotel.wishlisted = !this.hotel.wishlisted;
+
+        if (this.hotel.wishlisted) {
+          alert('찜 목록에 추가되었습니다.');
+        } else {
+          alert('찜 목록에서 제거되었습니다.');
+        }
+      } catch (error) {
+        console.error('찜하기 처리 중 오류:', error);
+        alert('찜하기 처리 중 오류가 발생했습니다.');
+      }
     }
   }
 }
@@ -1137,19 +1302,17 @@ nav {
 }
 /* Breadcrumb */
 .breadcrumb {
-    width: 244px;
+    width: 100%;
     height: 24px;
     gap: 8px;
-    background: #F8F9FA;
     margin-top: 135px;
     font-family: Montserrat;
     font-weight: 400;
     font-size: 14px;
     color: #666666;
     display: flex;
-    justify-content: center;
     align-items: center;
-    margin-left: 80px;
+    margin-left: 104px;
     margin-bottom: 30px;
 }     
 
@@ -1329,7 +1492,7 @@ nav {
     align-items: center;
     gap: 12px;
 }
-
+/* 찜하기 버튼 */ 
 .action-btn {
     background: none;
     border: 1px solid #8DD3BB;
@@ -1768,6 +1931,219 @@ nav {
 
 .amenity-item.hidden {
     display: none;
+}
+
+/* 찜하기 버튼 활성화 스타일 */
+.action-btn.wishlisted img {
+  filter: invert(47%) sepia(86%) saturate(2316%) hue-rotate(331deg) brightness(101%) contrast(101%);
+}
+/* 공유 모달 */
+.share-modal {
+  width: 400px;
+}
+
+.share-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+
+.share-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 140px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  color: #112211;
+}
+
+.share-option-btn:hover {
+  border-color: #8DD3BB;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.share-option-btn.kakao:hover {
+  border-color: #FEE500;
+  background: #FEE500;
+}
+
+.share-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.kakao-icon {
+  background: #FEE500;
+  color: #3C1E1E;
+}
+
+.link-icon {
+  background: #8DD3BB;
+  font-size: 32px;
+}
+
+/* 갤러리 슬라이드 모달 */
+.gallery-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: none;
+  z-index: 3000;
+}
+
+.gallery-modal.active {
+  display: flex;
+}
+
+.gallery-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.gallery-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 48px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  line-height: 1;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.gallery-image-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-image-container img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.gallery-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 48px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gallery-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.gallery-nav-btn.prev {
+  left: 40px;
+}
+
+.gallery-nav-btn.next {
+  right: 40px;
+}
+
+.gallery-thumbnails {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding: 20px;
+  overflow-x: auto;
+  max-width: 90vw;
+}
+
+.gallery-thumbnail {
+  width: 100px;
+  height: 70px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.gallery-thumbnail:hover {
+  border-color: rgba(141, 211, 187, 0.5);
+}
+
+.gallery-thumbnail.active {
+  border-color: #8DD3BB;
+}
+
+.gallery-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Reviews Section */
