@@ -1305,7 +1305,6 @@ nav {
     width: 100%;
     height: 24px;
     gap: 8px;
-    background: #F8F9FA;
     margin-top: 135px;
     font-family: Montserrat;
     font-weight: 400;

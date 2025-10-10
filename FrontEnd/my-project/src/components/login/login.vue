@@ -860,10 +860,6 @@ p {
   border-color: #ccc;
 }
 
-.social-btn svg {
-  width: 24px;
-  height: 24px;
-}
 
 /* 뒤로가기 링크 */
 .back-link {
