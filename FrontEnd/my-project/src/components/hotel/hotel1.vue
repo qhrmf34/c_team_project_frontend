@@ -93,62 +93,22 @@
         </div>
 
         <div class="destination-cards">
-          <div class="destination-card">
-            <img src="/images/hotel_img/melbourne.jpg" alt="Melbourne" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>멜버른</h3>
-                  <p>Amazing journey</p>
-                </div>
-                <div class="card-price">₩130,000</div>
+        <div v-for="city in featuredCities" :key="city.id" class="destination-card">
+          <img :src="getCityImageUrl(city.cityImagePath)" 
+               :alt="city.cityName" 
+               style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+          <div class="card-overlay">
+            <div class="card-content">
+              <div class="card-info">
+                <h3>{{ city.cityName }}</h3>
+                <p>{{ city.cityContent || 'Amazing journey' }}</p>
               </div>
-              <button class="book-btn">Book a Hotel</button>
+              <div class="card-price">{{ formatPrice(city.minPrice) }}</div>
             </div>
+            <button class="book-btn">Book a Hotel</button>
           </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/paris.jpg" alt="Paris" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>파리</h3>
-                  <p>A Paris Adventure</p>
-                </div>
-                <div class="card-price">₩150,000</div>
               </div>
-              <button class="book-btn">Book a Hotel</button>
             </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/london.jpg" alt="London" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>런던</h3>
-                  <p>London eye adventure</p>
-                </div>
-                <div class="card-price">₩130,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-
-          <div class="destination-card">
-            <img src="/images/hotel_img/colombia.jpg" alt="Colombia" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <div class="card-overlay">
-              <div class="card-content">
-                <div class="card-info">
-                  <h3>콜롬비아</h3>
-                  <p>Amazing streets</p>
-                </div>
-                <div class="card-price">₩150,000</div>
-              </div>
-              <button class="book-btn">Book a Hotel</button>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="travel-section">
@@ -269,7 +229,7 @@
 
 <script>
 // HotelOne.vue의 script 부분만 업데이트
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelOne',
@@ -287,7 +247,9 @@ export default {
       },
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      featuredCities: []
+
     }
   },
   
@@ -417,13 +379,38 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
+    },
+    async loadFeaturedCities() {
+    try {
+      const response = await hotelAPI.getFeaturedCities(4);
+      this.featuredCities = response.data || [];
+    } catch (error) {
+      console.error('추천 도시 로드 실패:', error);
+      this.featuredCities = [];
     }
+  },
+  
+  // 이미지 URL 생성
+  getCityImageUrl(imagePath) {
+    if (!imagePath) {
+      return '/images/hotel_img/melbourne.jpg'; // 기본 이미지
+    }
+    return adminAPI.getImageUrl(imagePath);
+  },
+  
+  // 가격 포맷팅
+  formatPrice(price) {
+    if (!price) return '₩0';
+    return '₩' + adminAPI.formatNumber(price);
+  }
   },
 
   
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+    this.loadFeaturedCities();
+
   },
   
   beforeUnmount() {
@@ -1209,5 +1196,315 @@ export default {
 
         .footer-column a:hover {
             opacity: 1;
+        }
+        /* 반응형 디자인 - 노트북 */
+        
+        /* 1366px - 1536px (작은 노트북) */
+        @media screen and (max-width: 1536px) {
+            .header {
+                padding: 21px 60px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1100px;
+            }
+
+            .main-content {
+                padding: 150px 60px 0;
+            }
+
+            .newsletter-section {
+                padding: 80px 60px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+            }
+
+            .destination-card {
+                width: 280px;
+                height: 400px;
+            }
+
+            .tour-images {
+                width: 600px;
+            }
+
+            .tour-image {
+                width: 290px;
+                height: 190px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.95);
+            }
+        }
+
+        /* 1200px - 1366px (중간 노트북) */
+        @media screen and (max-width: 1366px) {
+            .header {
+                padding: 21px 40px;
+            }
+
+            .hero-section {
+                padding: 80px 40px 120px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 1000px;
+                padding: 24px 20px;
+            }
+
+            .search-fields {
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 350px;
+            }
+
+            .date-field,
+            .guests-field {
+                width: 200px;
+            }
+
+            .main-content {
+                padding: 150px 40px 0;
+            }
+
+            .section-header {
+                margin-bottom: 60px;
+            }
+
+            .destination-cards {
+                gap: 10px;
+            }
+
+            .destination-card {
+                width: 260px;
+                height: 380px;
+            }
+
+            .more-travel {
+                gap: 20px;
+            }
+
+            .malaka-tour {
+                width: 480px;
+                height: 400px;
+                padding: 20px;
+            }
+
+            .tour-title {
+                font-size: 36px;
+            }
+
+            .tour-images {
+                width: 520px;
+            }
+
+            .image-row {
+                gap: 16px;
+            }
+
+            .tour-image {
+                width: 252px;
+                height: 180px;
+            }
+
+            .newsletter-section {
+                padding: 60px 40px;
+            }
+
+            .newsletter-content {
+                padding: 40px;
+            }
+
+            .newsletter-title {
+                font-size: 38px;
+                line-height: 48px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.85);
+            }
+
+            .footer-links {
+                gap: 40px;
+            }
+        }
+
+        /* 1024px - 1200px (작은 노트북 / 큰 태블릿) */
+        @media screen and (max-width: 1200px) {
+            .header {
+                padding: 16px 30px;
+                height: 75px;
+            }
+
+            nav {
+                max-width: 100%;
+            }
+
+            .nav-item {
+                font-size: 13px;
+            }
+
+            .hero-section {
+                height: 480px;
+                padding: 60px 30px 100px;
+            }
+
+            .hero-content {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .hero-title {
+                font-size: 38px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+                width: 100%;
+                max-width: 350px;
+            }
+
+            .search-form {
+                width: 90%;
+                max-width: 900px;
+                height: auto;
+                bottom: -100px;
+                padding: 20px;
+            }
+
+            .search-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .search-fields {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .destination-field {
+                min-width: 100%;
+            }
+
+            .date-field,
+            .guests-field {
+                width: calc(50% - 6px);
+            }
+
+            .main-content {
+                padding: 170px 30px 0;
+            }
+
+            .section-title {
+                font-size: 28px;
+                margin-top: 60px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+            }
+
+            .destination-cards {
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .destination-card {
+                width: 48%;
+                min-width: 240px;
+                height: 360px;
+            }
+
+            .more-travel {
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 180px;
+            }
+
+            .malaka-tour {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+                min-height: 350px;
+            }
+
+            .tour-title {
+                font-size: 32px;
+            }
+
+            .tour-images {
+                width: 100%;
+                max-width: 600px;
+            }
+
+            .image-row {
+                gap: 12px;
+            }
+
+            .tour-image {
+                width: calc(50% - 6px);
+                height: 160px;
+            }
+
+            .newsletter-section {
+                padding: 50px 30px;
+                min-height: 422px;
+            }
+
+            .newsletter-content {
+                padding: 32px;
+                min-height: 305px;
+            }
+
+            .newsletter-title {
+                font-size: 32px;
+                line-height: 42px;
+            }
+
+            .newsletter-form {
+                width: 100%;
+            }
+
+            .mailbox-container {
+                transform: scale(0.75);
+            }
+
+            .footer-links {
+                gap: 30px;
+            }
+        }
+
+        /* 768px - 1024px (태블릿) */
+        @media screen and (max-width: 1024px) {
+            .user-dropdown {
+                left: auto;
+                right: 20px;
+                width: 300px;
+            }
+
+            .destination-card {
+                width: 45%;
+                min-width: 220px;
+            }
+
+            .travel-section {
+                margin-bottom: 80px;
+            }
+
+            .tour-image {
+                height: 140px;
+            }
+
+            .mailbox-container {
+                transform: scale(0.7);
+            }
         }
 </style>

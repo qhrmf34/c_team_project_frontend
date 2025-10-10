@@ -278,6 +278,13 @@ export const hotelAPI = {
     })
     return response.data
   },
+  // 추천 도시 목록 조회
+  async getFeaturedCities(limit = 4) {
+    const response = await apiClient.get('/api/admin/cities/featured', {
+      params: { limit }
+    })
+    return response.data
+  },
    // 호텔 검색
   async searchHotels(params) {
     const response = await apiClient.get('/api/hotels', { params })
