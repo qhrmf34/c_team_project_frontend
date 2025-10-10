@@ -1020,9 +1020,7 @@ export default {
       }
 
       window.Kakao.Share.sendDefault({
-        objectType: 'location',
-        address: this.hotel.address,
-        addressTitle: this.hotel.hotelName,
+        objectType: 'feed',
         content: {
           title: this.hotel.hotelName,
           description: this.hotel.description,
