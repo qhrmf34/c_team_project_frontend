@@ -89,10 +89,11 @@
             <h2 class="section-title">여행에 빠지다</h2>
             <p class="section-subtitle">특가상품으로 진행하는 여행을 예약해보세요</p>
           </div>
-          <button class="see-all-btn travel-section-btn">See All</button>
+          <button class="see-all-btn travel-section-btn" @click="goToHotelSearch">See All</button>
         </div>
 
-        <div class="destination-cards">
+      <!-- 1. 도시 카드의 Book a Hotel 버튼에 클릭 이벤트 추가 -->
+      <div class="destination-cards">
         <div v-for="city in featuredCities" :key="city.id" class="destination-card">
           <img :src="getCityImageUrl(city.cityImagePath)" 
                :alt="city.cityName" 
@@ -105,11 +106,11 @@
               </div>
               <div class="card-price">{{ formatPrice(city.minPrice) }}</div>
             </div>
-            <button class="book-btn">Book a Hotel</button>
+            <button class="book-btn" @click="bookHotelByCity(city.cityName)">Book a Hotel</button>
           </div>
-              </div>
-            </div>
-      </section>
+        </div>
+      </div>
+    </section>
 
       <section class="travel-section">
         <div class="section-header">
@@ -295,296 +296,292 @@ export default {
     }
   },
   
-  methods: {
-    toggleDropdown() {
-      this.isDropdownActive = !this.isDropdownActive;
-    },
-    
-    subscribe() {
-      if (this.newsletter.email) {
-        alert('구독이 완료되었습니다!');
-        this.newsletter.email = '';
-      } else {
-        alert('이메일을 입력해주세요.');
-      }
-    },
-    
-    handleClickOutside(event) {
-      if (!this.$refs.userDropdown.contains(event.target) && 
-          !event.target.closest('.user-profile')) {
-        this.isDropdownActive = false;
-      }
-    },
-    
-    // 사용자 정보 로드
-    loadUserInfo() {
-      this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
-      if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
-      } else {
-        this.userInfo = null;
-      }
-    },
-    
-    // 로그아웃 처리 (개선된 버전)
-    async handleLogout() {
-      if (confirm('로그아웃하시겠습니까?')) {
-        try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
-          await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
+    methods: {
+        toggleDropdown() {
+          this.isDropdownActive = !this.isDropdownActive;
+        },
+
+        subscribe() {
+          if (this.newsletter.email) {
+            alert('구독이 완료되었습니다!');
+            this.newsletter.email = '';
+          } else {
+            alert('이메일을 입력해주세요.');
+          }
+        },
+
+        handleClickOutside(event) {
+          if (!this.$refs.userDropdown.contains(event.target) && 
+              !event.target.closest('.user-profile')) {
+            this.isDropdownActive = false;
+          }
+        },
+
+        loadUserInfo() {
+          this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+
+          if (this.isLoggedIn) {
+            this.userInfo = authUtils.getUserInfo();
+            console.log('사용자 정보:', this.userInfo);
+          } else {
+            this.userInfo = null;
+          }
+        },
+
+        async handleLogout() {
+          if (confirm('로그아웃하시겠습니까?')) {
+            try {
+              await authUtils.logout();
+              this.loadUserInfo();
+              alert('로그아웃되었습니다.');
+              this.$router.push('/login');
+            } catch (error) {
+              console.error('로그아웃 중 오류:', error);
+              authUtils.logout();
+              this.loadUserInfo();
+              alert('로그아웃되었습니다.');
+              this.$router.push('/login');
+            }
+          }
+        },
+
+        goToAccount() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelaccount');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        goToHotel() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelone');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        goToFavourites() {
+          if (this.isLoggedIn) {
+            this.$router.push('/hotelsix');
+          } else {
+            alert('로그인이 필요한 서비스입니다.');
+            this.$router.push('/login');
+          }
+        },
+
+        async loadFeaturedCities() {
+          try {
+            const response = await hotelAPI.getFeaturedCities(4);
+            this.featuredCities = response.data || [];
+          } catch (error) {
+            console.error('추천 도시 로드 실패:', error);
+            this.featuredCities = [];
+          }
+        },
+
+        getCityImageUrl(imagePath) {
+          if (!imagePath) {
+            return '/images/hotel_img/melbourne.jpg';
+          }
+          return adminAPI.getImageUrl(imagePath);
+        },
+
+        formatPrice(price) {
+          if (!price) return '₩0';
+          return '₩' + adminAPI.formatNumber(price);
+        },
+
+        bookHotelByCity(cityName) {
+          this.$router.push({
+            path: '/hoteltwo',
+            query: { 
+              destination: cityName,
+              checkIn: this.getToday(),
+              checkOut: this.getTomorrow()
+            }
+          });
+        },
+
+        goToHotelSearch() {
+          this.$router.push('/hoteltwo');
+        },
+
+        getToday() {
+          const today = new Date();
+          return today.toISOString().split('T')[0];
+        },
+
+        getTomorrow() {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return tomorrow.toISOString().split('T')[0];
+        }
+      },
+
+      mounted() {
+        document.addEventListener('click', this.handleClickOutside);
+        this.loadUserInfo();
+        this.loadFeaturedCities();
+      },
+
+      beforeUnmount() {
+        document.removeEventListener('click', this.handleClickOutside);
+      },
+
+      watch: {
+        '$route'() {
           this.loadUserInfo();
-          
-          alert('로그아웃되었습니다.');
-          this.$router.push('/login');
-        } catch (error) {
-          console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
-          authUtils.logout();
-          this.loadUserInfo();
-          
-          alert('로그아웃되었습니다.');
-          this.$router.push('/login');
         }
       }
-    },
-    
-    // 계정 페이지로 이동
-    goToAccount() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelaccount');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-    //호텔 페이지로 이동
-    goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-    //찜목록 페이지로 이동
-    goToFavourites() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelsix');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-    async loadFeaturedCities() {
-    try {
-      const response = await hotelAPI.getFeaturedCities(4);
-      this.featuredCities = response.data || [];
-    } catch (error) {
-      console.error('추천 도시 로드 실패:', error);
-      this.featuredCities = [];
     }
-  },
-  
-  // 이미지 URL 생성
-  getCityImageUrl(imagePath) {
-    if (!imagePath) {
-      return '/images/hotel_img/melbourne.jpg'; // 기본 이미지
-    }
-    return adminAPI.getImageUrl(imagePath);
-  },
-  
-  // 가격 포맷팅
-  formatPrice(price) {
-    if (!price) return '₩0';
-    return '₩' + adminAPI.formatNumber(price);
-  }
-  },
-
-  
-  mounted() {
-    document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
-    this.loadFeaturedCities();
-
-  },
-  
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside);
-  },
-  
-  // 라우터 변경 시에도 사용자 정보 다시 확인
-  watch: {
-    '$route'() {
-      this.loadUserInfo();
-    }
-  }
-}
 </script>
 
 <style scoped>
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 21px 104px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            height: 87px;
-            width: 100%;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1232px;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-item {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 14px;
-            line-height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #112211;
-            text-decoration: none;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: #D9D9D9;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .online-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #112211;
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: fixed;
-            top: 82px;
-            left: 64%;
-            width: 329px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 32px;
-            display: none;
-            z-index: 1001;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dropdown-avatar {
-            width: 64px;
-            height: 64px;
-            background: #D9D9D9;
-            border-radius: 50%;
-        }
-
-        .dropdown-info h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .dropdown-info p {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.75;
-        }
-
-        .dropdown-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-            padding-top: 24px;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #112211;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            padding: 4px 0;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            color: #7dd3c0;
-        }
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 21px 104px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 87px;
+    width: 100%;
+}
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1232px;
+    margin: 0 auto;
+}
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+.nav-item {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    line-height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #112211;
+    text-decoration: none;
+}
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+}
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    background: #D9D9D9;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    position: relative;
+}
+.online-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #112211;
+    border-radius: 50%;
+    bottom: 2px;
+    right: 2px;
+}
+/* User Dropdown */
+.user-dropdown {
+    position: fixed;
+    top: 82px;
+    left: 64%;
+    width: 329px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 32px;
+    display: none;
+    z-index: 1001;
+}
+.user-dropdown.active {
+    display: block;
+}
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.dropdown-avatar {
+    width: 64px;
+    height: 64px;
+    background: #D9D9D9;
+    border-radius: 50%;
+}
+.dropdown-info h3 {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    margin-bottom: 4px;
+}
+.dropdown-info p {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.75;
+}
+.dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+    padding-top: 24px;
+}
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #112211;
+    text-decoration: none;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 100%;
+    padding: 4px 0;
+    cursor: pointer;
+}
+.dropdown-item:hover {
+    color: #7dd3c0;
+}
 
 .hero-section {
     background: #000; /* 폴백 배경 */
