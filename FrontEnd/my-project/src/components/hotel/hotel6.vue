@@ -70,18 +70,18 @@
     <section class="favourites-section">
       <div class="favourites-title">Favourites</div>
       
-      <!-- Tabs -->
+      <!-- ✅ 수정: Tabs - 동적 개수 표시 -->
       <div class="favourites-tabs">
         <div class="select-tab-btn" :class="{ active: activeTab === 'flights' }" @click="switchTab('flights')">
           Flights
-          <span class="tab-count">2 marked</span>
+          <span class="tab-count">0 marked</span>
         </div>
 
         <div class="select-line"></div>
 
         <div class="select-tab-btn" :class="{ active: activeTab === 'places' }" @click="switchTab('places')">
           Places
-          <span class="tab-count">3 marked</span>
+          <span class="tab-count">{{ totalCount }} marked</span>
         </div>
       </div>
 
@@ -109,11 +109,9 @@
             </div>
 
             <!-- 찜한 호텔 목록 -->
-            <div v-else class="hotel-cards" :class="{ 'show-all': showingAll }">
-              <div v-for="(hotel, index) in hotels" 
-                   :key="hotel.id" 
-                   class="hotel-card"
-                   :class="{ 'hidden-hotels': index >= 3 }">
+            <div v-else class="hotel-cards">
+              <div v-for="hotel in hotels" :key="hotel.id" 
+                class="hotel-card">
                 <div class="hotel-image-container">
                   <img :src="getImageUrl(hotel.image)" :alt="hotel.title" class="hotel-image">
                   <div class="image-count">{{ hotel.imageCount }} images</div>
@@ -156,11 +154,14 @@
               </div>
             </div>
           
-            <button 
-              v-if="hotels.length > 3"
-              class="show-more-btn" 
-              @click="toggleShowMore">
-              {{ showingAll ? 'Show less results' : 'Show more results' }}
+            <!-- ✅ 수정: Show More / Show Less 버튼 -->
+            <button v-if="hasMoreHotels" class="show-more-btn" @click="loadMoreHotels"
+              :disabled="isLoading">
+              {{ isLoading ? 'Loading...' : `Show more results (${hotels.length}/${totalCount})` }}
+            </button>
+
+            <button v-else-if="hotels.length > pageSize" class="show-more-btn" @click="showLess">
+              Show less results
             </button>
           </section>
         </main>
@@ -257,15 +258,22 @@ export default {
       email: '',
       isLoading: false,
       hotels: [],
+      
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+
+      // 페이지네이션
+      currentOffset: 0,
+      pageSize: 3,
+      totalCount: 0
     }
   },
+  
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
-        // 로그인 상태라면 찜한 호텔 목록 로드
+    this.loadUserInfo();
+    
     if (this.isLoggedIn) {
       await this.loadWishlistHotels();
     }
@@ -275,24 +283,25 @@ export default {
     document.removeEventListener('click', this.handleClickOutside);
   },
   
-  // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
     '$route'() {
       this.loadUserInfo();
     }
   },
-    computed: {
-    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+  
+  computed: {
+    hasMoreHotels() {
+      return this.hotels.length < this.totalCount;
+    },
+
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -303,12 +312,9 @@ export default {
           }
         }
       }
-      
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -322,29 +328,29 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
+  
   methods: {
-    //결제내역이동
-    goToPaymentHistory() {
-      if (this.isLoggedIn) {
-        this.$router.push({
-          path: '/hotelaccount',
-          query: { tab: 'history' }
-        });
-        this.isDropdownActive = false; // 드롭다운 닫기
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
-    },
-        // ===== 찜한 호텔 목록 로드 =====
+    /**
+     * 처음 3개만 로드
+     */
     async loadWishlistHotels() {
       this.isLoading = true;
+      
       try {
-        const response = await hotelAPI.getWishlistHotels();
+        const params = {
+          offset: 0,
+          size: this.pageSize
+        };
+        
+        const response = await hotelAPI.getWishlistHotels(params);
         
         if (response.code === 200) {
-          this.hotels = response.data;
-          console.log('찜한 호텔 목록:', this.hotels);
+          const data = response.data;
+          
+          this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+          this.totalCount = data.totalCount;
+          this.currentOffset = this.pageSize;
+          
         }
       } catch (error) {
         console.error('찜한 호텔 목록 로드 중 오류:', error);
@@ -354,7 +360,126 @@ export default {
       }
     },
     
-    // ===== 찜하기 토글 =====
+    /**
+     * 더 많은 호텔 로드
+     */
+    async loadMoreHotels() {
+      if (this.isLoading || !this.hasMoreHotels) return;
+      
+      this.isLoading = true;
+      
+      try {
+        const params = {
+          offset: this.currentOffset,
+          size: this.pageSize
+        };
+        const response = await hotelAPI.getWishlistHotels(params);
+        
+        if (response.code === 200) {
+          const data = response.data;
+          
+          const newHotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+          this.hotels.push(...newHotels);
+          this.currentOffset += this.pageSize;
+        }
+      } catch (error) {
+        console.error('추가 로드 중 오류:', error);
+        alert('추가 로드 중 오류가 발생했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    /**
+     * ✅ 수정: Show less (처음으로 초기화)
+     */
+    async showLess() {
+      this.isLoading = true;
+      
+      try {
+        // 처음 3개만 다시 로드
+        await this.loadWishlistHotels();
+        
+        // 스크롤 올리기
+        this.$nextTick(() => {
+          const resultsSection = document.querySelector('.results-section');
+          if (resultsSection) {
+            resultsSection.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        });
+      } catch (error) {
+        console.error('Show less 중 오류:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
+    /**
+     * CartDto를 화면용 HotelSummaryDto로 변환
+     */
+    convertHotelData(cart) {
+      const hotel = cart.hotelDto;
+      
+      return {
+        id: hotel.id,
+        title: hotel.hotelName,
+        image: this.getFirstImage(),
+        imageCount: 0,
+        price: this.getMinPrice(),
+        location: hotel.cityId,
+        stars: hotel.hotelStar,
+        type: this.convertHotelType(hotel.hotelType),
+        hotelType: hotel.hotelType,
+        amenitiesCount: 0,
+        rating: hotel.hotelRating,
+        ratingText: this.getRatingText(hotel.hotelRating),
+        reviewCount: 0,
+        wishlisted: true,
+        cityName: hotel.cityId
+      };
+    },
+    
+    convertHotelType(type) {
+      const typeMap = {
+        'hotel': 'Hotel',
+        'motel': 'Motel',
+        'resort': 'Resort'
+      };
+      return typeMap[type] || type;
+    },
+    
+    getRatingText(rating) {
+      if (rating >= 4.5) return 'Excellent';
+      if (rating >= 4.0) return 'Very Good';
+      if (rating >= 3.5) return 'Good';
+      if (rating >= 3.0) return 'Fair';
+      return 'No Rating';
+    },
+    
+    getFirstImage() {
+      return '/images/hotel_img/hotel1.jpg';
+    },
+    
+    getMinPrice() {
+      return 100000;
+    },
+    
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false;
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+
     async toggleWishlist(hotel) {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
@@ -365,8 +490,8 @@ export default {
       try {
         await hotelAPI.toggleWishlist(hotel.id);
         
-        // 찜 목록에서 제거
         this.hotels = this.hotels.filter(h => h.id !== hotel.id);
+        this.totalCount -= 1;
         
         alert('찜 목록에서 제거되었습니다.');
       } catch (error) {
@@ -375,7 +500,6 @@ export default {
       }
     },
     
-    // ===== 호텔 상세 보기 =====
     viewPlace(hotel) {
       this.$router.push({
         path: '/hotelthree',
@@ -383,7 +507,6 @@ export default {
       });
     },
     
-    // ===== 이미지 URL =====
     getImageUrl(imagePath) {
       if (!imagePath) return '/images/hotel_img/hotel1.jpg';
       if (imagePath.startsWith('http')) return imagePath;
@@ -391,55 +514,39 @@ export default {
       return adminAPI.getImageUrl(imagePath);
     },
     
-    // ===== 가격 포맷 =====
     formatPrice(price) {
       if (!price) return '₩0';
       return '₩' + Math.floor(price).toLocaleString('ko-KR');
     },
     
-    // ===== 별점 생성 =====
     generateStars(starCount) {
       if (!starCount) return '';
       const fullStars = '★'.repeat(starCount);
       const emptyStars = '☆'.repeat(5 - starCount);
       return fullStars + emptyStars;
     },
+    
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
+    
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
     },
+    
     switchTab(tabName) {
-      this.activeTab = tabName
-    },
-    toggleShowMore() {
-      this.showingAll = !this.showingAll
-      
-      if (!this.showingAll) {
-        // Scroll to results section when showing less
-        this.$nextTick(() => {
-          const resultsSection = document.querySelector('.results-section')
-          if (resultsSection) {
-            resultsSection.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            })
-          }
-        })
-      }
+      this.activeTab = tabName;
     },
 
     subscribe() {
       if (this.email) {
-        console.log('Subscribed:', this.email)
-        this.email = ''
+        this.email = '';
       }
     },
-    // 사용자 정보 로드
+    
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -451,31 +558,23 @@ export default {
       }
     },
     
-    // 로그아웃 처리 (개선된 버전)
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
           console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
           authUtils.logout();
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         }
       }
     },
-    //호텔 페이지로 이동
+    
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -484,7 +583,7 @@ export default {
         this.$router.push('/login');
       }
     }, 
-    //찜목록 페이지로 이동
+    
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -492,8 +591,8 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    },       
-    // 계정 페이지로 이동
+    },
+    
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
@@ -501,7 +600,7 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    }    
+    }
   }
 }
 </script>

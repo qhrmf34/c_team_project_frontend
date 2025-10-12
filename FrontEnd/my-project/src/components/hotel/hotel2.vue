@@ -65,9 +65,14 @@
           <input type="date" v-model="searchData.checkOut">
         </div>
         <div class="form-field guests-field">
-          <label>Rooms & Guests</label>
+          <label>Guests</label>
           <select v-model="searchData.guests">
-            <option>1 room, 2 guests</option>
+            <option :value="1">1 guests</option>
+            <option :value="2">2 guests</option>
+            <option :value="3">3 guests</option>
+            <option :value="4">4 guests</option>
+            <option :value="5">5 guests</option>
+            <option :value="6">6 guests</option>
           </select>
         </div>
         <button class="search-btn" @click="search"><img src="/images/hotel_img/glass.jpg"/></button>
@@ -203,9 +208,8 @@
         </div>
 
         <div class="hotel-cards" :class="{ 'show-all': showingAll }">
-          <div v-for="(hotel, index) in hotels" :key="hotel.id" 
-               class="hotel-card" 
-               :class="{ 'hidden-hotels': index >= 3 }">
+          <div v-for="hotel in hotels" :key="hotel.id" 
+               class="hotel-card" >
             <div class="hotel-image-container">
               <img :src="hotel.image" :alt="hotel.title" class="hotel-image">
               <div class="image-count">{{ hotel.imageCount }} images</div>
@@ -254,9 +258,15 @@
           </div>
         </div>
 
-        <button class="show-more-btn" @click="toggleShowMore">
-          {{ showingAll ? 'Show less results' : 'Show more results' }}
-        </button>
+      <button v-if="hasMoreHotels" class="show-more-btn" @click="loadMoreHotels"
+        :disabled="isLoading">
+        {{ isLoading ? 'Loading...' : `Show more results (${hotels.length}/${totalCount})` }}
+      </button>
+
+      <button v-else-if="hotels.length > pageSize" class="show-more-btn" @click="search">
+        Show less results
+      </button>
+
       </section>
     </main>
 
@@ -348,9 +358,9 @@ export default {
       showingAll: false,
       searchData: {
         destination: '',
-        checkIn: '2024-12-12',
-        checkOut: '2024-12-14',
-        guests: '1 room, 2 guests'
+        checkIn: '',
+        checkOut: '',
+        guests: 2  // 기본값 2명
       },
       newsletter: {
         email: ''
@@ -376,18 +386,14 @@ export default {
       ],
 
       hotels: [],
-
       activeTab: 'hotels',
       sortBy: 'Recommended',
 
-      
-      
-      // 백엔드 연동용 변수들
       totalCount: 0,
-      currentPage: 0,
-      totalPages: 0,
-      pageSize: 10,
       isLoading: false,
+      
+      currentOffset: 0,   
+      pageSize: 3,
       
       // 사용자 정보
       userInfo: null,
@@ -399,6 +405,11 @@ export default {
     showingCount() {
       return this.showingAll ? this.hotels.length : Math.min(3, this.hotels.length);
     },
+
+     hasMoreHotels() {
+      return this.hotels.length < this.totalCount;
+    },
+
     priceTrackStyle() {
       const minPercent = ((this.priceRange.min - 50) / (1200 - 50)) * 100;
       const maxPercent = ((this.priceRange.max - 50) / (1200 - 50)) * 100;
@@ -442,7 +453,6 @@ export default {
   },
   
   methods: {
-    // ===== 기존 UI 메서드 =====
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
@@ -464,7 +474,12 @@ export default {
       console.log('View place:', hotel.title);
       this.$router.push({
         path: '/hotelthree',
-        query: { hotelId: hotel.id }
+        query: { 
+          hotelId: hotel.id,
+          checkIn: this.searchData.checkIn,
+          checkOut: this.searchData.checkOut,
+          guests: this.searchData.guests
+        }
       });
     },
 
@@ -474,7 +489,7 @@ export default {
         'motels': 'motel',
         'resorts': 'resort'
       };
-    return typeMap[tabName] || null;
+      return typeMap[tabName] || null;
     },
     
     toggleShowMore() {
@@ -508,7 +523,7 @@ export default {
       }
     },
     
-    // ===== 사용자 관련 (기존 유지) =====
+    // ===== 사용자 관련 =====
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -554,13 +569,14 @@ export default {
         this.$router.push('/login');
       }
     },
+    
     goToPaymentHistory() {
       if (this.isLoggedIn) {
         this.$router.push({
           path: '/hotelaccount',
           query: { tab: 'history' }
         });
-        this.isDropdownActive = false; // 드롭다운 닫기
+        this.isDropdownActive = false;
       } else {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
@@ -577,7 +593,6 @@ export default {
     },
     
     updateTabCounts(hotelTypeCounts) {
-      // {hotel: 3, motel: 1, resort: 2} 형태
       this.tabs.forEach(tab => {
         const type = this.convertHotelType(tab.name); 
         if (type && hotelTypeCounts[type] !== undefined) {
@@ -589,68 +604,106 @@ export default {
       console.log('업데이트된 탭:', this.tabs);
     },
     
+    // ===== 날짜 관련 메서드 =====
+    initializeDates() {
+      if (!this.searchData.checkIn) {
+        this.searchData.checkIn = this.getTodayDate();
+      }
+      if (!this.searchData.checkOut) {
+        this.searchData.checkOut = this.getTomorrowDate();
+      }
+    },
     
-    // 필터 옵션 로드
-  async loadFilterOptions() {
-  try {
-    console.log('필터 옵션 로드 시작...');
-    const response = await hotelAPI.getFilterOptions();
-    console.log('필터 API 응답:', response);
+    getTodayDate() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    },
     
-    if (response.code === 200) {
-      const filters = response.data;
-      console.log('필터 데이터:', filters);
+    getTomorrowDate() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    },
+    
+    validateDates() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
-      this.freebies = filters.freebies.map(item => ({
-        id: item.id,
-        label: item.freebiesName,
-        checked: false
-      }));
+      const checkIn = new Date(this.searchData.checkIn);
+      const checkOut = new Date(this.searchData.checkOut);
       
-      this.amenities = filters.amenities.map(item => ({
-        id: item.id,
-        label: item.amenitiesName,
-        checked: false
-      }));
-      
-      if (filters.priceRange) {
-        this.priceRange.min = Math.floor(filters.priceRange.min / 1000);
-        this.priceRange.max = Math.ceil(filters.priceRange.max / 1000);
+      if (checkIn < today) {
+        alert('체크인 날짜는 오늘 이후여야 합니다.');
+        this.searchData.checkIn = this.getTodayDate();
+        return false;
       }
       
-      // 호텔 타입별 카운트 업데이트 추가
-      if (filters.hotelTypeCounts) {
-        console.log('호텔 타입 카운트:', filters.hotelTypeCounts);
-        this.updateTabCounts(filters.hotelTypeCounts);
+      if (checkOut <= checkIn) {
+        alert('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다.');
+        this.searchData.checkOut = this.getTomorrowDate();
+        return false;
       }
-    }
-  } catch (error) {
-    console.error('필터 옵션 로드 중 오류:', error);
-  }
-},
+      
+      return true;
+    },
     
-    /**
-     * 호텔 검색 
-     * GET /api/hotels
-     */
-    async search(pageOrEvent = 0) {
+    calculateNights() {
+      const checkIn = new Date(this.searchData.checkIn);
+      const checkOut = new Date(this.searchData.checkOut);
+      const diffTime = Math.abs(checkOut - checkIn);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    },
+    
+    // ===== 필터 옵션 로드 =====
+    async loadFilterOptions() {
+      try {
+        const response = await hotelAPI.getFilterOptions();
+        
+        if (response.code === 200) {
+          const filters = response.data;
+          
+          this.freebies = filters.freebies.map(item => ({
+            id: item.id,
+            label: item.freebiesName,
+            checked: false
+          }));
+          
+          this.amenities = filters.amenities.map(item => ({
+            id: item.id,
+            label: item.amenitiesName,
+            checked: false
+          }));
+          
+          if (filters.priceRange) {
+            this.priceRange.min = Math.floor(filters.priceRange.min / 1000);
+            this.priceRange.max = Math.ceil(filters.priceRange.max / 1000);
+          }
+          
+          // 초기 로드 시에는 hotelTypeCounts를 사용하지 않음
+          // 검색 실행 시에만 업데이트됨
+        }
+      } catch (error) {
+        console.error('필터 옵션 로드 중 오류:', error);
+      }
+    },
+    
+    // ===== 호텔 검색 =====
+    async search() {
       console.log('검색 시작...');
-      this.isLoading = true;
-
-      let page = 0;
-      if (typeof pageOrEvent === 'number') {
-        page = pageOrEvent;
-      } else if (pageOrEvent && typeof pageOrEvent === 'object') {
-        page = this.currentPage || 0;
+      
+      if (!this.validateDates()) {
+        return;
       }
+      
+      this.isLoading = true;
 
       try {
         const params = {
           destination: this.searchData.destination || null,
           checkIn: this.searchData.checkIn || null,
           checkOut: this.searchData.checkOut || null,
-          guests: this.extractGuestsNumber(this.searchData.guests),
-          rooms: this.extractRoomsNumber(this.searchData.guests),
+          guests: this.searchData.guests,
           minPrice: this.priceRange.min * 1000,
           maxPrice: this.priceRange.max * 1000,
           rating: this.selectedRating,
@@ -658,8 +711,8 @@ export default {
           freebies: this.getSelectedFreebies(),
           amenities: this.getSelectedAmenities(),
           sortBy: this.convertSortBy(this.sortBy),
-          page: page,
-          size: this.pageSize
+          offset: 0,              
+          size: this.pageSize     
         };
 
         console.log('검색 파라미터:', params);
@@ -672,10 +725,9 @@ export default {
         
           this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
           this.totalCount = data.totalCount;
-          this.currentPage = data.currentPage;
-          this.totalPages = data.totalPages;
+          this.currentOffset = this.pageSize;
 
-          // 탭별 카운트 업데이트 (검색 조건에 따른 동적 카운트)
+          // 검색 결과 기반으로 탭 카운트 업데이트
           if (data.hotelTypeCounts) {
             console.log('호텔 타입 카운트:', data.hotelTypeCounts);
             this.updateTabCounts(data.hotelTypeCounts);
@@ -691,24 +743,59 @@ export default {
       } finally {
         this.isLoading = false;
       }
-    },  
-    /**
-     * 평점 선택 (수정됨)
-     */
+    },
+
+    async loadMoreHotels() {
+      if (this.isLoading || !this.hasMoreHotels) return;
+      
+      this.isLoading = true;
+
+      try {
+        const params = {
+          destination: this.searchData.destination || null,
+          checkIn: this.searchData.checkIn || null,
+          checkOut: this.searchData.checkOut || null,
+          guests: this.searchData.guests,
+          minPrice: this.priceRange.min * 1000,
+          maxPrice: this.priceRange.max * 1000,
+          rating: this.selectedRating,
+          hotelType: this.convertHotelType(this.activeTab),
+          freebies: this.getSelectedFreebies(),
+          amenities: this.getSelectedAmenities(),
+          sortBy: this.convertSortBy(this.sortBy),
+          offset: this.currentOffset,
+          size: this.pageSize
+        };
+      
+        const response = await hotelAPI.searchHotels(params);
+
+        if (response.code === 200) {
+          const data = response.data;
+        
+          const newHotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+          this.hotels.push(...newHotels);
+          this.currentOffset += this.pageSize;
+        }
+
+      } catch (error) {
+        console.error('추가 로드 중 오류:', error);
+        alert('추가 로드 중 오류가 발생했습니다.');
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
     selectRating(rating) {
       this.selectedRating = rating;
-      this.search(); // 백엔드 검색 호출
+      this.search();
     },
     
-    /**
-     * 탭 변경 (수정됨)
-     */
     setActiveTab(tabName) {
       this.activeTab = tabName;
-      this.search(); // 백엔드 검색 호출
+      this.search();
     },
     
-    // 찜하기
+    // ===== 찜하기 =====
     async toggleWishlist(hotelId) {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
@@ -717,21 +804,18 @@ export default {
       }
   
       const hotel = this.hotels.find(h => h.id === hotelId);
-        if (hotel) {
-          try {
-            await hotelAPI.toggleWishlist(hotelId);
-            hotel.wishlisted = !hotel.wishlisted;
-            console.log('찜하기 토글:', hotelId, hotel.wishlisted);
-          } catch (error) {
-            console.error('찜하기 처리 중 오류:', error);
-            alert('찜하기 처리 중 오류가 발생했습니다.');
-          }
+      if (hotel) {
+        try {
+          await hotelAPI.toggleWishlist(hotelId);
+          hotel.wishlisted = !hotel.wishlisted;
+        } catch (error) {
+          console.error('찜하기 처리 중 오류:', error);
+          alert('찜하기 처리 중 오류가 발생했습니다.');
         }
-      },
+      }
+    },
     
-    /**
-     * 백엔드 데이터를 화면용으로 변환
-     */
+    // ===== 유틸리티 메서드 =====
     convertHotelData(hotel) {
       return {
         id: hotel.id,
@@ -751,23 +835,18 @@ export default {
         cityName: hotel.cityName
       };
     },
-        resetFilters() {
-      // 페이지 리로드
+    
+    resetFilters() {
       this.$router.push('/hoteltwo').then(() => {
         window.location.reload();
       });
     },
-    /**
-     * 가격 포맷팅
-     */
+    
     formatPrice(price) {
       if (!price) return '₩0';
       return '₩' + Math.floor(price).toLocaleString('ko-KR');
     },
     
-    /**
-     * 별점을 별 문자로 변환
-     */
     generateStars(starCount) {
       if (!starCount) return '';
       const fullStars = '★'.repeat(starCount);
@@ -775,43 +854,18 @@ export default {
       return fullStars + emptyStars;
     },
     
-    /**
-     * 선택된 무료 서비스 ID 목록
-     */
     getSelectedFreebies() {
       return this.freebies
         .filter(f => f.checked)
         .map(f => f.id);
     },
     
-    /**
-     * 선택된 편의시설 ID 목록
-     */
     getSelectedAmenities() {
       return this.amenities
         .filter(a => a.checked)
         .map(a => a.id);
     },
     
-    /**
-     * 투숙객 수 추출
-     */
-    extractGuestsNumber(guestsStr) {
-      const match = guestsStr.match(/(\d+)\s+guests?/);
-      return match ? parseInt(match[1]) : 2;
-    },
-    
-    /**
-     * 객실 수 추출
-     */
-    extractRoomsNumber(guestsStr) {
-      const match = guestsStr.match(/(\d+)\s+rooms?/);
-      return match ? parseInt(match[1]) : 1;
-    },
-    
-    /**
-     * 정렬 기준 변환
-     */
     convertSortBy(sortBy) {
       const sortMap = {
         'Recommended': 'recommended',
@@ -821,38 +875,39 @@ export default {
       };
       return sortMap[sortBy] || 'recommended';
     },
-    /**
-     * 이미지 URL 생성
-     */
+    
     getImageUrl(imagePath) {
-      if (!imagePath) return '/images/hotel_img/hotel1.jpg'; // 기본 이미지
-      // 서버 업로드 이미지 (경로가 /hotel/ 또는 /room/ 등으로 시작)
-      if (imagePath.startsWith('/images/')) return imagePath; // 정적 이미지
-      return adminAPI.getImageUrl(imagePath); // 서버 업로드 이미지
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg';
+      if (imagePath.startsWith('/images/')) return imagePath;
+      return adminAPI.getImageUrl(imagePath);
     }
-
   },
-  
 
   async mounted() {
-  document.addEventListener('click', this.handleClickOutside);
-  this.loadUserInfo();
-  
-  // URL 쿼리 파라미터 읽기 (hotel3에서 전달된 값)
-  if (this.$route.query.destination) {
-    this.searchData.destination = this.$route.query.destination;
-  }
-  if (this.$route.query.checkIn) {
-    this.searchData.checkIn = this.$route.query.checkIn;
-  }
-  if (this.$route.query.checkOut) {
-    this.searchData.checkOut = this.$route.query.checkOut;
-  }
-  
-  // 필터 옵션 로드 후 검색 실행
-  await this.loadFilterOptions();
-  this.search();
-},
+    document.addEventListener('click', this.handleClickOutside);
+    this.loadUserInfo();
+    
+    // 날짜 초기화
+    this.initializeDates();
+    
+    // URL 쿼리 파라미터 읽기
+    if (this.$route.query.destination) {
+      this.searchData.destination = this.$route.query.destination;
+    }
+    if (this.$route.query.checkIn) {
+      this.searchData.checkIn = this.$route.query.checkIn;
+    }
+    if (this.$route.query.checkOut) {
+      this.searchData.checkOut = this.$route.query.checkOut;
+    }
+    if (this.$route.query.guests) {
+      this.searchData.guests = parseInt(this.$route.query.guests);
+    }
+    
+    // 필터 옵션 로드 후 검색 실행
+    await this.loadFilterOptions();
+    this.search();
+  },
   
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);

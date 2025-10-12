@@ -10,7 +10,7 @@ const apiClient = axios.create({
   }
 })
 
-// 요청 인터셉터 - JWT 토큰 자동 추가`
+// 요청 인터셉터 - JWT 토큰 자동 추가
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('jwt_token')
@@ -164,8 +164,9 @@ export const memberImageAPI = {
     return response.data
   }
 }
-//결제수단 API
-  export const paymentMethodAPI = {
+
+// 결제수단 API
+export const paymentMethodAPI = {
   // 결제수단 등록 (토스 빌링키 발급)
   async registerPaymentMethod(cardData) {
     const response = await apiClient.post('/api/payment-methods/register', cardData)
@@ -190,7 +191,7 @@ export const memberImageAPI = {
     return response.data
   },
 
-  // 카드 정보 유효성 검증 - 수정됨
+  // 카드 정보 유효성 검증
   validateCardInfo(cardInfo) {
     const errors = []
     
@@ -217,7 +218,7 @@ export const memberImageAPI = {
       }
     }
     
-    // 카드 비밀번호 검증 (2자리 숫자) - 파라미터명 변경
+    // 카드 비밀번호 검증 (2자리 숫자)
     if (!cardInfo.cardPassword || !/^\d{2}$/.test(cardInfo.cardPassword)) {
       errors.push('카드 비밀번호는 2자리 숫자여야 합니다')
     }
@@ -247,7 +248,7 @@ export const memberImageAPI = {
     return digitsOnly
   },
 
-  // 카드 타입에 따른 이미지 반환 - 새로 추가
+  // 카드 타입에 따른 이미지 반환
   getCardTypeImage(cardType) {
     const cardImages = {
       'VISA': '/images/hotel_account_img/visa.jpg',
@@ -259,7 +260,7 @@ export const memberImageAPI = {
     return cardImages[cardType] || '/images/hotel_account_img/hotel_account_visa.jpg';
   },
 
-  // 카드사명을 한국어로 변환 - 새로 추가
+  // 카드사명을 한국어로 변환
   getKoreanCardCompany(cardCompany) {
     if (!cardCompany) return '카드사';
     
@@ -274,7 +275,6 @@ export const memberImageAPI = {
       'NH': 'NH농협카드',
       'CITI': '씨티카드',
       'KBANK': '케이뱅크카드',
-      // 토스에서 반환하는 영어 카드사명들
       'KOOKMIN': 'KB국민카드',
       'SAMSUNG_CARD': '삼성카드',
       'HYUNDAI_CARD': '현대카드',
@@ -298,6 +298,8 @@ export const hotelAPI = {
     const response = await apiClient.get('/api/test/freebies')
     return response.data
   },
+  
+  // 객실 이미지 조회
   async getRoomImages(roomId) {
     const response = await apiClient.get(`/api/public/rooms/${roomId}/images`);
     return response.data;
@@ -316,6 +318,7 @@ export const hotelAPI = {
     })
     return response.data
   },
+  
   // 추천 도시 목록 조회
   async getFeaturedCities(limit = 4) {
     const response = await apiClient.get('/api/admin/cities/featured', {
@@ -323,7 +326,8 @@ export const hotelAPI = {
     })
     return response.data
   },
-   // 호텔 검색
+  
+  // 호텔 검색
   async searchHotels(params) {
     const response = await apiClient.get('/api/hotels', { params })
     return response.data
@@ -356,38 +360,140 @@ export const hotelAPI = {
     const response = await apiClient.get(`/api/reviews/hotel/${hotelId}/stats`);
     return response.data;
   },
+
+  // 호텔 평점 통계 조회 (평균 평점, 리뷰 개수)
+  async getHotelRatingStats(hotelId) {
+    const response = await apiClient.get(`/api/reviews/hotel/${hotelId}/rating-stats`);
+    return response.data;
+  },
   
-  // 리뷰 작성
+  
+  // 객실 재고 조회 (날짜별)
+  async getRoomAvailability(params) {
+    const response = await apiClient.get('/api/admin/rooms/availability', { params });
+    return response.data;
+  },
+
+  /**
+   * 객실 날짜별 가격 조회
+   * GET /api/admin/rooms/{roomId}/daily-prices?checkIn=2025-01-15&checkOut=2025-01-17
+   */
+  async getRoomDailyPrices(roomId, checkIn, checkOut) {
+    const response = await apiClient.get(`/api/admin/rooms/${roomId}/daily-prices`, {
+      params: { checkIn, checkOut }
+    });
+    return response.data;
+  },
+
+  /**
+   * 객실 상세 정보 조회 (Book Now용)
+   * GET /api/admin/rooms/{roomId}/detail
+   */
+  async getRoomDetail(roomId) {
+    const response = await apiClient.get(`/api/admin/rooms/${roomId}/detail`);
+    return response.data;
+  },
+
+  /**
+   * 리뷰 작성 가능 여부 체크
+   * GET /api/reviews/eligibility?hotelId=1
+   */
+  async checkReviewEligibility(hotelId) {
+    const response = await apiClient.get('/api/reviews/eligibility', {
+      params: { hotelId }
+    });
+    return response.data;
+  },
+
+  /**
+   * 내 리뷰 조회
+   * GET /api/reviews/my-review?hotelId=1
+   */
+  async getMyReview(hotelId) {
+    const response = await apiClient.get('/api/reviews/my-review', {
+      params: { hotelId }
+    });
+    return response.data;
+  },
+
+  /**
+   * 리뷰 작성
+   * POST /api/reviews
+   */
   async createReview(reviewData) {
     const response = await apiClient.post('/api/reviews', reviewData);
     return response.data;
   },
+
+  /**
+   * 리뷰 수정
+   * PUT /api/reviews/{reviewId}
+   */
+  async updateReview(reviewId, reviewData) {
+    const response = await apiClient.put(`/api/reviews/${reviewId}`, reviewData);
+    return response.data;
+  },
+
+  /**
+   * 리뷰 삭제
+   * DELETE /api/reviews/{reviewId}
+   */
+  async deleteReview(reviewId) {
+    const response = await apiClient.delete(`/api/reviews/${reviewId}`);
+    return response.data;
+  },
   
-  // 리뷰 신고
+  /**
+   * 리뷰 신고 (본인 리뷰 체크 포함)
+   * POST /api/reports
+   */
   async reportReview(reportData) {
     const response = await apiClient.post('/api/reports', reportData);
     return response.data;
   },
-  // 찜한 호텔 목록 조회
-  async getWishlistHotels() {
-    const response = await apiClient.get('/api/hotels/wishlist');
+  
+  // ========== 찜하기 관련 ==========
+  
+  // 찜한 호텔 목록 조회 (페이지네이션 지원)
+  async getWishlistHotels(params = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset);
+    }
+    if (params.size !== undefined) {
+      queryParams.append('size', params.size);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/carts?${queryString}` : '/api/carts';
+    
+    const response = await apiClient.get(url);
     return response.data;
   },
-  // 찜하기 토글 (중복 제거)
+  
+  // 전체 찜한 호텔 조회 (페이지네이션 없음)
+  async getAllWishlistHotels() {
+    const response = await apiClient.get('/api/carts/all');
+    return response.data;
+  },
+  
+  // 찜하기 토글
   async toggleWishlist(hotelId) {
     const response = await apiClient.post('/api/carts/toggle', { hotelId: hotelId });
     return response.data;
   },
+  
   // 찜 상태 확인 
   async checkWishlist(hotelId) {
     const response = await apiClient.get(`/api/carts/check/${hotelId}`);
     return response.data;
-}
+  }
 }
 
 // 관리자 API
 export const adminAPI = {
-  // 기본 CRUD 메서드 (getList가 검색 기능 통합)
+  // 기본 CRUD 메서드
   async getList(tableName, params = {}) {
     const response = await apiClient.get(`/api/admin/${tableName}`, { params })
     return response.data
@@ -413,11 +519,8 @@ export const adminAPI = {
     return response.data
   },
 
-  // searchByName 메서드 제거됨 (getList로 통합)
-
   // 파일 업로드 (폴더별)
   async uploadFile(formData, folder = 'general') {
-    // FormData에 folder 정보 추가
     if (folder !== 'general') {
       formData.append('folder', folder)
     }
@@ -449,7 +552,7 @@ export const adminAPI = {
     return this.uploadFile(formData, 'room')
   },
 
-  // 유틸리티 메서드 (기존과 동일)
+  // 유틸리티 메서드
   getImageUrl(imagePath) {
     if (!imagePath) return ''
     if (imagePath.startsWith('http')) return imagePath
@@ -498,6 +601,7 @@ export const adminAPI = {
     return true
   }
 }
+
 // 인증 관련 유틸리티
 export const authUtils = {
   // 토큰 저장
