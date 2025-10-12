@@ -616,29 +616,31 @@ export default {
     
     getTodayDate() {
       const today = new Date();
-      return today.toISOString().split('T')[0];
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     },
     
     getTomorrowDate() {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow.toISOString().split('T')[0];
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     },
     
     validateDates() {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = this.getTodayDate();
       
-      const checkIn = new Date(this.searchData.checkIn);
-      const checkOut = new Date(this.searchData.checkOut);
-      
-      if (checkIn < today) {
+      if (this.searchData.checkIn < today) {
         alert('체크인 날짜는 오늘 이후여야 합니다.');
         this.searchData.checkIn = this.getTodayDate();
         return false;
       }
       
-      if (checkOut <= checkIn) {
+      if (this.searchData.checkOut <= this.searchData.checkIn) {
         alert('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다.');
         this.searchData.checkOut = this.getTomorrowDate();
         return false;
