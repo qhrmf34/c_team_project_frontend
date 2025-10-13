@@ -55,28 +55,28 @@
     <div class="screen" :class="{ active: currentScreen === 1 }">
       <main class="main-content">
         <div class="breadcrumb">
-          <a href="#">Turkey</a>
+          <a href="#" @click="goToHotel">{{ hotelInfo?.countryName || 'Turkey' }}</a>
           <span>></span>
-          <a href="#">Istanbul</a>
+          <a href="#" @click="goToHotel">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
           <span>></span>
-          <span>해튼호텔</span>
+          <span>{{ hotelInfo?.hotelName || '호텔' }}</span>
         </div>
 
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
+              <h1 class="hotel-title">{{ roomInfo?.roomName || 'Superior room' }}</h1>
               <div class="hotel-location">
-                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
-                  <span class="hotel-locatin-hotel">해튼호텔</span>
-                  <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
+                  <span class="hotel-locatin-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
+                  <div class="hotel-location-hotelmap">{{ hotelInfo?.address || '주소' }}</div>
                 </span>
               </div>
             
               <div class="date-section">
                 <div class="date-item">
-                  <div class="date-label">Thursday, Dec 8</div>
+                  <div class="date-label">{{ formattedCheckIn }}</div>
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
@@ -85,7 +85,7 @@
                   <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
-                  <div class="date-label">Friday, Dec 9</div>
+                  <div class="date-label">{{ formattedCheckOut }}</div>
                   <div class="date-value">Check-Out</div>
                 </div>
               </div>
@@ -110,8 +110,8 @@
                 @click="selectPaymentMethod(1)"
               >
                 <span class="payment-method-text">
-                  부분 결제, 나머지 계산
-                  <div class="payment-method-content">부분결제 후 자동적으로 나머지 결제가 이루어집니다</div>
+                  쿠폰 사용
+                  <div class="payment-method-content">할인 쿠폰을 사용하여 결제</div>
                 </span>
                 <div class="payment-radio"></div>
               </div>
@@ -142,7 +142,7 @@
                 </button>
               </div>
 
-              <button class="email-login">
+              <button class="email-login" @click="$router.push('/login')">
                 <span><img src="/images/hotel_img/email.jpg" alt="email"></span>
                 Continue with email
               </button>
@@ -152,14 +152,15 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel"/>
                 <div class="summary-hotel-info">
-                  <div class="summary-title1">CVK Park Bosphorus...</div>
-                  <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
+                  <div class="summary-title1">{{ hotelInfo?.hotelName || '호텔' }}</div>
+                  <div class="summary-title2">{{ roomInfo?.roomName || '객실' }}</div>
                   
                   <div class="rating">
-                    <span class="rating-score">4.2</span>
-                    <span class="rating-text1">Very Good</span><span class="rating-text2"> 54 reviews</span>
+                    <span class="rating-score">{{ hotelInfo?.averageRating?.toFixed(1) || '0.0' }}</span>
+                    <span class="rating-text1">{{ getRatingText(hotelInfo?.averageRating) }}</span>
+                    <span class="rating-text2"> {{ hotelInfo?.reviewCount || 0 }} reviews</span>
                   </div>
                 </div>
               </div>
@@ -176,20 +177,12 @@
                 
                 <div class="price-breakdown">
                   <div class="price-item">
-                    <span class="price-label">Base Fare</span>
-                    <span class="price-value">₩240,000</span>
+                    <span class="price-label">Base Fare ({{ bookingInfo.nights }}박)</span>
+                    <span class="price-value">{{ formatPrice(baseFare) }}</span>
                   </div>
                   <div class="price-item">
                     <span class="price-label">Discount</span>
-                    <span class="price-value">₩0</span>
-                  </div>
-                  <div class="price-item">
-                    <span class="price-label">Taxes</span>
-                    <span class="price-value">₩24,000</span>
-                  </div>
-                  <div class="price-item">
-                    <span class="price-label">Service Fee</span>
-                    <span class="price-value">₩5,000</span>
+                    <span class="price-value">-{{ formatPrice(discount) }}</span>
                   </div>
                 </div>
                 <div class="hotel-beeline"></div>
@@ -197,7 +190,7 @@
                 <div class="total-price">
                   <div class="price-item">
                     <span class="price-label">Total</span>
-                    <span class="price-value">₩265,000</span>
+                    <span class="price-value">{{ formatPrice(totalPrice) }}</span>
                   </div>
                 </div>
               </div>
@@ -211,28 +204,28 @@
     <div class="screen" :class="{ active: currentScreen === 2 }">
       <main class="main-content">
         <div class="breadcrumb">
-          <a href="#">Turkey</a>
+          <a href="#" @click="goToHotel">{{ hotelInfo?.countryName || 'Turkey' }}</a>
           <span>></span>
-          <a href="#">Istanbul</a>
+          <a href="#" @click="goToHotel">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
           <span>></span>
-          <span>해튼호텔</span>
+          <span>{{ hotelInfo?.hotelName || '호텔' }}</span>
         </div>
 
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">Superior room - 1 더블베드 or 2 트윈 베드</h1>
+              <h1 class="hotel-title">{{ roomInfo?.roomName || 'Superior room' }}</h1>
               <div class="hotel-location">
-                <span><img src="/images/hotel_img/cvk.jpg" alt="cvk" /></span>
+                <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
-                  <span class="hotel-locatin-hotel">해튼호텔</span>
-                  <div class="hotel-location-hotelmap">Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</div>
+                  <span class="hotel-locatin-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
+                  <div class="hotel-location-hotelmap">{{ hotelInfo?.address || '주소' }}</div>
                 </span>
               </div>
             
               <div class="date-section">
                 <div class="date-item">
-                  <div class="date-label">Thursday, Dec 8</div>
+                  <div class="date-label">{{ formattedCheckIn }}</div>
                   <div class="date-value">Check-In</div>
                 </div>
                 <div class="hotel-icon">
@@ -241,7 +234,7 @@
                   <div><img src="/images/hotel_img/rightline.jpg" class="img2" alt="rightline"/></div>
                 </div>
                 <div class="date-item">
-                  <div class="date-label">Friday, Dec 9</div>
+                  <div class="date-label">{{ formattedCheckOut }}</div>
                   <div class="date-value">Check-Out</div>
                 </div>
               </div>
@@ -266,14 +259,40 @@
                 @click="selectPaymentMethod(1)"
               >
                 <span class="payment-method-text">
-                  부분 결제, 나머지 계산
-                  <div class="payment-method-content">부분결제 후 자동적으로 나머지 결제가 이루어집니다</div>
+                  쿠폰 사용
+                  <div class="payment-method-content">할인 쿠폰을 사용하여 결제</div>
                 </span>
                 <div class="payment-radio"></div>
               </div>
             </div>
             
+            <!-- 쿠폰 선택 섹션 (selectedPaymentMethod === 1일 때만 표시) -->
+            <div class="coupon-section" v-if="selectedPaymentMethod === 1">
+              <h3 class="section-title">사용 가능한 쿠폰</h3>
+              <div 
+                v-for="coupon in availableCoupons" 
+                :key="coupon.id"
+                class="coupon-item"
+                :class="{ selected: selectedCoupon?.id === coupon.id }"
+                @click="selectCoupon(coupon)"
+              >
+                <div class="coupon-info">
+                  <div class="coupon-name">{{ coupon.couponName }}</div>
+                  <div class="coupon-discount">{{ coupon.discount }}% 할인</div>
+                  <div class="coupon-expiry">만료일: {{ formatDate(coupon.lastDate) }}</div>
+                </div>
+                <div class="coupon-radio"></div>
+              </div>
+              
+              <div v-if="availableCoupons.length === 0" class="no-coupons">
+                사용 가능한 쿠폰이 없습니다.
+              </div>
+            </div>
+            
+            <!-- 카드 목록 -->
             <div class="card-list">
+              <h3 class="section-title">결제수단 선택</h3>
+              
               <!-- 저장된 카드들-->
               <div 
                 v-for="(card, index) in savedCards"
@@ -287,11 +306,10 @@
                     <img :src="getCardTypeImage(card.cardType)" :alt="card.cardType">
                   </div>
                   <span class="card-number">****{{ card.lastFour }}</span>
-                  <span class="card-date">{{ card.expiryDate }}</span>
+                  <span class="card-company">{{ paymentMethodAPI.getKoreanCardCompany(card.cardCompany) }}</span>
                 </div>
                 <div class="card-radio"></div>
               </div>
-
 
               <!-- 카드 추가 버튼 -->
               <div class="add-card-btn" @click="openAddCardModal">
@@ -300,7 +318,16 @@
               </div>
             </div>
 
-            <!-- Add Card Modal - 수정된 부분 -->
+            <!-- 결제 버튼 -->
+            <button 
+              class="payment-btn" 
+              @click="processPayment"
+              :disabled="isProcessingPayment || selectedCard === -1"
+            >
+              {{ isProcessingPayment ? '결제 처리 중...' : `${formatPrice(totalPrice)} 결제하기` }}
+            </button>
+
+            <!-- Add Card Modal -->
             <div class="modal" :class="{ active: modalActive }" @click="closeModalOnOverlay">
               <div class="modal-full">
                 <div class="modal-content">
@@ -398,14 +425,15 @@
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
-                <img src="/images/hotel_img/hotelflow4.jpg" alt="hotel"/>
+                <img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel"/>
                 <div class="summary-hotel-info">
-                  <div class="summary-title1">CVK Park Bosphorus...</div>
-                  <div class="summary-title2">Superior room - 1 더블베드 or 2 트윈 베드</div>
+                  <div class="summary-title1">{{ hotelInfo?.hotelName || '호텔' }}</div>
+                  <div class="summary-title2">{{ roomInfo?.roomName || '객실' }}</div>
                   
                   <div class="rating">
-                    <span class="rating-score">4.2</span>
-                    <span class="rating-text1">Very Good</span><span class="rating-text2"> 54 reviews</span>
+                    <span class="rating-score">{{ hotelInfo?.averageRating?.toFixed(1) || '0.0' }}</span>
+                    <span class="rating-text1">{{ getRatingText(hotelInfo?.averageRating) }}</span>
+                    <span class="rating-text2"> {{ hotelInfo?.reviewCount || 0 }} reviews</span>
                   </div>
                 </div>
               </div>
@@ -422,20 +450,20 @@
                 
                 <div class="price-breakdown">
                   <div class="price-item">
-                    <span class="price-label">Base Fare</span>
-                    <span class="price-value">₩240,000</span>
+                    <span class="price-label">Base Fare ({{ bookingInfo.nights }}박)</span>
+                    <span class="price-value">{{ formatPrice(baseFare) }}</span>
                   </div>
                   <div class="price-item">
                     <span class="price-label">Discount</span>
-                    <span class="price-value">₩0</span>
+                    <span class="price-value">-{{ formatPrice(discount) }}</span>
                   </div>
                   <div class="price-item">
                     <span class="price-label">Taxes</span>
-                    <span class="price-value">₩24,000</span>
+                    <span class="price-value">{{ formatPrice(tax) }}</span>
                   </div>
                   <div class="price-item">
                     <span class="price-label">Service Fee</span>
-                    <span class="price-value">₩5,000</span>
+                    <span class="price-value">{{ formatPrice(serviceFee) }}</span>
                   </div>
                 </div>
                 <div class="hotel-beeline"></div>
@@ -443,7 +471,7 @@
                 <div class="total-price">
                   <div class="price-item">
                     <span class="price-label">Total</span>
-                    <span class="price-value">₩265,000</span>
+                    <span class="price-value">{{ formatPrice(totalPrice) }}</span>
                   </div>
                 </div>
               </div>
@@ -452,7 +480,6 @@
         </div>
       </main>
     </div>
-
 
 
     <!-- Newsletter Section -->
@@ -534,10 +561,9 @@
   </div>
 </template>
 
-// HotelFour.vue - 수정된 script 부분
 
 <script>
-import { authUtils, paymentMethodAPI } from '@/utils/commonAxios'
+import { authUtils, paymentMethodAPI, memberCouponAPI, hotelAPI, paymentAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelFour',
@@ -545,19 +571,36 @@ export default {
     return {
       isDropdownActive: false,
       currentScreen: 1,
-      selectedPaymentMethod: -1,
+      selectedPaymentMethod: 0,
       selectedCard: -1,
+      selectedCoupon: null,
       modalActive: false,
       phoneNumber: '',
       email: '',
       
-      // 카드 폼 수정 (CVC → cardPassword)
+      // 예약 정보
+      bookingInfo: {
+        reservationId: null,  
+        roomId: null,
+        hotelId: null,
+        checkIn: null,
+        checkOut: null,
+        nights: 0,
+        basePrice: 0
+      },
+      
+      // 호텔 & 객실 정보
+      hotelInfo: null,
+      roomInfo: null,
+      dailyPrices: [],
+      
+      // 카드 폼
       cardForm: {
         cardNumber: '',
         expDate: '',
-        cardPassword: '', // CVC에서 cardPassword로 변경
+        cardPassword: '',
         cardName: '',
-        country: 'KR', // 기본값을 한국으로 변경
+        country: 'KR',
         saveInfo: false
       },
       
@@ -565,24 +608,33 @@ export default {
       userInfo: null,
       isLoggedIn: false,
       
-      // 결제수단 관련
+      // 결제수단 & 쿠폰
       isAddingCard: false,
-      savedCards: [] // 저장된 카드 목록
+      isProcessingPayment: false,
+      savedCards: [],
+      availableCoupons: [],
+      
+      // 가격 계산
+      baseFare: 0,
+      discount: 0,
+      tax: 0,
+      serviceFee: 5000
     }
   },
   
   computed: {
-    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    totalPrice() {
+      return this.baseFare - this.discount + this.tax + this.serviceFee;
+    },
+    
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -593,12 +645,9 @@ export default {
           }
         }
       }
-      
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -610,89 +659,232 @@ export default {
         return providerNames[this.userInfo.provider] || 'Online';
       }
       return this.isLoggedIn ? 'Online' : 'Offline';
+    },
+    
+    formattedCheckIn() {
+      if (!this.bookingInfo.checkIn) return '';
+      const date = new Date(this.bookingInfo.checkIn);
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    },
+    
+    formattedCheckOut() {
+      if (!this.bookingInfo.checkOut) return '';
+      const date = new Date(this.bookingInfo.checkOut);
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     }
   },
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo();
-    await this.loadSavedCards(); // 저장된 카드 목록 로드
+    
+    // URL 파라미터에서 예약 정보 가져오기
+    this.bookingInfo = {
+      reservationId: parseInt(this.$route.query.reservationId),
+      roomId: parseInt(this.$route.query.roomId),
+      hotelId: parseInt(this.$route.query.hotelId),
+      checkIn: this.$route.query.checkIn,
+      checkOut: this.$route.query.checkOut,
+      nights: parseInt(this.$route.query.nights),
+      basePrice: parseFloat(this.$route.query.totalPrice)
+    };
+    
+    // 로그인 여부에 따라 화면 설정
+    if (this.isLoggedIn) {
+      this.currentScreen = 2;
+      await this.loadBookingData();
+    } else {
+      this.currentScreen = 1;
+      // 로그인 안한 상태에서도 기본 정보는 로드
+      await this.loadBasicBookingData();
+    }
   },
   
   beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside)
+    document.removeEventListener('click', this.handleClickOutside);
   },
   
-  // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
     '$route'() {
       this.loadUserInfo();
+    },
+    
+    selectedCoupon(newCoupon) {
+      if (newCoupon) {
+        this.discount = Math.floor(this.baseFare * (newCoupon.discount / 100));
+      } else {
+        this.discount = 0;
+      }
     }
   },
   
   methods: {
-    goToPaymentHistory() {
-      if (this.isLoggedIn) {
-        this.$router.push({
-          path: '/hotelaccount',
-          query: { tab: 'history' }
+    // 기본 예약 데이터 로드 (로그인 안한 상태)
+    async loadBasicBookingData() {
+      try {
+        // 1. 호텔 정보 로드
+        const hotelResponse = await hotelAPI.getHotelDetail(this.bookingInfo.hotelId, {
+          checkIn: this.bookingInfo.checkIn,
+          checkOut: this.bookingInfo.checkOut
         });
-        this.isDropdownActive = false; // 드롭다운 닫기
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
+        if (hotelResponse.code === 200) {
+          this.hotelInfo = hotelResponse.data;
+        }
+        
+        // 2. 객실 상세 정보 로드
+        const roomResponse = await hotelAPI.getRoomDetail(this.bookingInfo.roomId);
+        if (roomResponse.code === 200) {
+          this.roomInfo = roomResponse.data;
+        }
+        
+        // 3. 날짜별 가격 로드
+        const pricesResponse = await hotelAPI.getRoomDailyPrices(
+          this.bookingInfo.roomId,
+          this.bookingInfo.checkIn,
+          this.bookingInfo.checkOut
+        );
+        if (pricesResponse.code === 200) {
+          this.dailyPrices = pricesResponse.data;
+          
+          // Base Fare 계산
+          this.baseFare = this.dailyPrices.reduce((sum, day) => sum + parseFloat(day.price), 0);
+          
+          // 세금 계산 (10%)
+          this.tax = Math.floor(this.baseFare * 0.1);
+        }
+        
+      } catch (error) {
+        console.error('예약 데이터 로드 실패:', error);
+        alert('예약 정보를 불러오는데 실패했습니다.');
       }
     },
-    showScreen(screenNumber) {
-      this.currentScreen = screenNumber
+    
+    // 전체 예약 데이터 로드 (로그인 상태)
+    async loadBookingData() {
+      try {
+        await this.loadBasicBookingData();
+        
+        // 4. 저장된 카드 로드
+        await this.loadSavedCards();
+        
+        // 5. 사용 가능한 쿠폰 로드
+        await this.loadAvailableCoupons();
+        
+      } catch (error) {
+        console.error('예약 데이터 로드 실패:', error);
+        alert('예약 정보를 불러오는데 실패했습니다.');
+      }
     },
+    
+    async loadSavedCards() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        const response = await paymentMethodAPI.getMyPaymentMethods();
+        if (response && response.data) {
+          this.savedCards = response.data.map(card => ({
+            id: card.id,
+            lastFour: card.cardLastFour || '****',
+            expiryDate: '**/**',
+            cardType: card.cardType || 'VISA',
+            cardCompany: card.cardCompany || 'Unknown'
+          }));
+        }
+      } catch (error) {
+        console.error('저장된 카드 로드 실패:', error);
+      }
+    },
+    
+    async loadAvailableCoupons() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        const response = await memberCouponAPI.getMyCoupons();
+        if (response && response.data) {
+          this.availableCoupons = response.data;
+        }
+      } catch (error) {
+        console.error('쿠폰 로드 실패:', error);
+      }
+    },
+    
     selectPaymentMethod(index) {
-      this.selectedPaymentMethod = index
-    },
-    selectCard(index) {
-      this.selectedCard = index
-    },
-    
-    // 카드 추가 모달 관련
-    openAddCardModal() {
-      this.modalActive = true;
-      this.resetCardForm();
-    },
-    
-    closeAddCardModal() {
-      this.modalActive = false;
-      this.resetCardForm();
-    },
-    
-    closeModalOnOverlay(event) {
-      if (event.target === event.currentTarget) {
-        this.closeAddCardModal()
+      this.selectedPaymentMethod = index;
+      if (index === 0) {
+        // 전체결제 선택 시 쿠폰 해제
+        this.selectedCoupon = null;
       }
     },
     
-    // 카드 폼 초기화
-    resetCardForm() {
-      this.cardForm = {
-        cardNumber: '',
-        expDate: '',
-        cardPassword: '', // CVC → cardPassword
-        cardName: '',
-        country: 'KR',
-        saveInfo: false
-      };
+    selectCard(index) {
+      this.selectedCard = index;
     },
     
-    // 카드 추가 - 실제 API 연동
+    selectCoupon(coupon) {
+      if (this.selectedCoupon?.id === coupon.id) {
+        // 이미 선택된 쿠폰을 다시 클릭하면 해제
+        this.selectedCoupon = null;
+      } else {
+        this.selectedCoupon = coupon;
+      }
+    },
+    
+    // 결제 처리
+  async processPayment() {
+    if (!this.isLoggedIn) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    
+    if (this.selectedCard === -1) {
+      alert('결제수단을 선택해주세요.');
+      return;
+    }
+    
+    if (confirm(`총 ${this.formatPrice(this.totalPrice)}를 결제하시겠습니까?`)) {
+      this.isProcessingPayment = true;
+      
+      try {
+        // 이미 예약이 생성되어 있으므로 바로 결제 처리
+        const paymentData = {
+          reservationsId: this.bookingInfo.reservationId,  // 기존 예약 ID 사용
+          paymentMethodId: this.savedCards[this.selectedCard].id,
+          couponId: this.selectedCoupon ? this.selectedCoupon.id : null,
+          paymentAmount: this.totalPrice,
+          paymentDate: new Date().toISOString(),
+          paymentStatus: 'paid',
+          refund: false
+        };
+        
+        const paymentResponse = await paymentAPI.processPayment(paymentData);
+        
+        if (paymentResponse.code === 200) {
+          alert('결제가 완료되었습니다!');
+          // 예약 확인 페이지로 이동
+          this.$router.push({
+            path: '/hotelaccount',
+            query: { tab: 'history' }
+          });
+        }
+        
+      } catch (error) {
+        console.error('결제 처리 실패:', error);
+        alert(error.response?.data?.message || '결제 처리 중 오류가 발생했습니다.');
+      } finally {
+        this.isProcessingPayment = false;
+      }
+    }
+  },
+    
+    // 카드 추가
     async addNewCard(event) {
       event.preventDefault();
       
-      // 로그인 체크
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
         return;
       }
       
-      // 유효성 검사
       if (!this.validateCardForm()) {
         return;
       }
@@ -700,20 +892,17 @@ export default {
       this.isAddingCard = true;
       
       try {
-        // 서버 API 형식에 맞게 데이터 변환
         const cardData = {
-          cardNumber: this.cardForm.cardNumber.replace(/\s/g, ''), // 공백 제거
+          cardNumber: this.cardForm.cardNumber.replace(/\s/g, ''),
           cardExpirationMonth: this.cardForm.expDate.split('/')[0],
           cardExpirationYear: this.cardForm.expDate.split('/')[1],
-          cardPassword: this.cardForm.cardPassword, // 카드 비밀번호 앞 2자리
+          cardPassword: this.cardForm.cardPassword,
           customerName: this.cardForm.cardName
         };
         
-        // 결제수단 등록 API 호출
         const response = await paymentMethodAPI.registerPaymentMethod(cardData);
         
         if (response && response.data) {
-          // 성공 시 저장된 카드 목록에 추가
           this.savedCards.push({
             id: response.data.id,
             lastFour: cardData.cardNumber.slice(-4),
@@ -728,26 +917,59 @@ export default {
         
       } catch (error) {
         console.error('카드 등록 실패:', error);
-        
-        let errorMessage = '카드 등록에 실패했습니다.';
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        alert(errorMessage);
+        alert(error.response?.data?.message || '카드 등록에 실패했습니다.');
       } finally {
         this.isAddingCard = false;
       }
     },
     
-    // 카드 유효성 검사
+    showScreen(screenNumber) {
+      if (screenNumber === 2 && !this.isLoggedIn) {
+        alert('로그인이 필요합니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      if (screenNumber === 2) {
+        this.loadBookingData();
+      }
+      
+      this.currentScreen = screenNumber;
+    },
+    
+    // 유틸리티 메서드들
+    formatPrice(price) {
+      if (!price) return '₩0';
+      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+    },
+    
+    getImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/hotelflow4.jpg';
+      if (imagePath.startsWith('http')) return imagePath;
+      if (imagePath.startsWith('/images/')) return imagePath;
+      return adminAPI.getImageUrl(imagePath);
+    },
+    
+    getRatingText(rating) {
+      if (!rating) return 'No Rating';
+      if (rating >= 4.5) return 'Excellent';
+      if (rating >= 4.0) return 'Very Good';
+      if (rating >= 3.5) return 'Good';
+      if (rating >= 3.0) return 'Average';
+      return 'Fair';
+    },
+    
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ko-KR');
+    },
+    
     validateCardForm() {
       const validation = paymentMethodAPI.validateCardInfo({
         cardNumber: this.cardForm.cardNumber,
         expiry: this.cardForm.expDate,
-        cardPassword: this.cardForm.cardPassword, // CVC → cardPassword
+        cardPassword: this.cardForm.cardPassword,
         name: this.cardForm.cardName
       });
 
@@ -759,7 +981,6 @@ export default {
       return true;
     },
     
-    // 포맷팅 메서드들
     formatCardNumber() {
       this.cardForm.cardNumber = paymentMethodAPI.formatCardNumber(this.cardForm.cardNumber);
     },
@@ -768,52 +989,57 @@ export default {
       this.cardForm.expDate = paymentMethodAPI.formatExpiryDate(this.cardForm.expDate);
     },
     
-    // 카드 비밀번호 포맷팅 (2자리 숫자만)
     formatCardPassword() {
       this.cardForm.cardPassword = this.cardForm.cardPassword.replace(/\D/g, '').substring(0, 2);
     },
     
-    // 카드 타입 결정
     determineCardType(cardNumber) {
       if (cardNumber.startsWith('4')) return 'VISA';
       if (cardNumber.startsWith('5')) return 'MasterCard';
       if (cardNumber.startsWith('3')) return 'AMEX';
+      if (cardNumber.startsWith('35')) return 'JCB';
+      if (cardNumber.startsWith('30')) return 'DinersClub';
       return 'CARD';
     },
     
-    // 카드 타입별 이미지 반환
     getCardTypeImage(cardType) {
       return paymentMethodAPI.getCardTypeImage(cardType);
     },
     
-    // 저장된 카드 목록 로드
-    async loadSavedCards() {
-      if (!this.isLoggedIn) return;
-      
-      try {
-        const response = await paymentMethodAPI.getMyPaymentMethods();
-        if (response && response.data) {
-          this.savedCards = response.data.map(card => ({
-            id: card.id,
-            lastFour: card.cardLastFour || '****',
-            expiryDate: '**/**', // 보안상 숨김
-            cardType: card.cardType || 'VISA',
-            cardCompany: card.cardCompany || 'Unknown'
-          }));
-        }
-      } catch (error) {
-        console.error('저장된 카드 로드 실패:', error);
-        // 에러가 있어도 기본 카드는 표시하도록 빈 배열 유지
+    openAddCardModal() {
+      this.modalActive = true;
+      this.resetCardForm();
+    },
+    
+    closeAddCardModal() {
+      this.modalActive = false;
+      this.resetCardForm();
+    },
+    
+    closeModalOnOverlay(event) {
+      if (event.target === event.currentTarget) {
+        this.closeAddCardModal();
       }
     },
     
-    // 기존 메서드들
+    resetCardForm() {
+      this.cardForm = {
+        cardNumber: '',
+        expDate: '',
+        cardPassword: '',
+        cardName: '',
+        country: 'KR',
+        saveInfo: false
+      };
+    },
+    
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
     
     handleClickOutside(event) {
-      if (!this.$refs.userDropdown.contains(event.target) && 
+      if (this.$refs.userDropdown && 
+          !this.$refs.userDropdown.contains(event.target) && 
           !event.target.closest('.user-profile')) {
         this.isDropdownActive = false;
       }
@@ -821,24 +1047,21 @@ export default {
     
     subscribe() {
       if (this.email) {
-        console.log('Subscribed:', this.email)
-        this.email = ''
+        console.log('Subscribed:', this.email);
+        this.email = '';
       }
     },
     
-    // 사용자 정보 로드
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
       if (this.isLoggedIn) {
         this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
       } else {
         this.userInfo = null;
       }
     },
     
-    // 로그아웃 처리
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
@@ -847,7 +1070,6 @@ export default {
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
-          console.error('로그아웃 중 오류:', error);
           authUtils.logout();
           this.loadUserInfo();
           alert('로그아웃되었습니다.');
@@ -856,7 +1078,6 @@ export default {
       }
     },
     
-    // 페이지 이동 메서드들
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -882,1411 +1103,1568 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    }    
+    },
+    
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false;
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    }
   }
 }
 </script>
 
 <style scoped>
         
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 21px 104px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            height: 87px;
-            width: 100%;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1232px;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-item {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #112211;
-            text-decoration: none;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: #D9D9D9;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .online-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #112211;
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: fixed;
-            top: 82px;
-            left: 64%;
-            width: 329px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 32px;
-            display: none;
-            z-index: 1001;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dropdown-avatar {
-            width: 64px;
-            height: 64px;
-            background: #D9D9D9;
-            border-radius: 50%;
-        }
-
-        .dropdown-info h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .dropdown-info p {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.75;
-        }
-
-        .dropdown-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-            padding-top: 24px;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #112211;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            padding: 4px 0;
-        }
-        
-        /* Main Content */
-        .main-content {
-            margin-top: 87px;
-            padding: 40px 104px 60px;
-            max-width: 1440px;
-            margin: 87px auto 0;
-            flex: 1;
-        }
-
-        /* Breadcrumb */
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 32px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-        }
-
-        .breadcrumb a {
-            color: #FF6B6B;
-            text-decoration: none;
-        }
-
-        .breadcrumb span {
-            color: #666666;
-        }
-
-        /* Hotel Info Section */
-        .booking-container {
-            display: flex;
-            width: 1280px;
-            height: 1040px;
-            top: 181px;
-            left: 80px;
-            gap: 40px;
-            angle: 0 deg;
-            opacity: 1;
-            margin-bottom: 140px;
-        }
-
-        .left-section {
-            flex: 1;
-            width: 790px;
-            height: 1040px;
-        }
-
-        .hotel-info {
-            width: 790px;
-            height: 305px;
-            border-radius: 12px;
-            gap: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 32px 24px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px 0px #1122110D;
-            margin-bottom: 40px;
-        }
-
-        .hotel-title {
-            width: 742px;
-            height: 33px;
-            justify-content: space-between;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Noto Sans;
-            font-weight: 700;
-            font-style: Bold;
-            font-size: 24px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 20px;
-        }
-
-        .hotel-location {
-            width: 742px;
-            height: 95px;
-            border-radius: 8px;
-            gap: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            border: 0.5px solid #8DD3BB;
-            padding: 16px 32px;
-            gap: 4px;
-            margin-bottom: 30px;
-            display: flex;
-        }
-
-        .hotel-location img{
-            width: 63px;
-            height: 63px;
-            border-radius: 12px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-        
-        .hotel-location-map{
-            width: 372px;
-            height: 50px;
-            gap: 8px;
-            angle: 0 deg;
-            opacity: 1;
-            padding-top: 5px;
-        }
-        
-        .hotel-location-hotel{
-            font-family: ABeeZee;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-        
-        .hotel-location-hotelmap{
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        /* Date Selection */
-        .date-section {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 742px;
-            height: 49px;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .date-item {
-            display: flex;
-            flex-direction: column;
-            align-items: left;
-        }
-
-        .date-label {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .date-value {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #666666;
-        }
-
-        .hotel-icon{
-            width: 168px;
-            height: 100%;
-            gap: 24px;
-            angle: 90 deg;
-            opacity: 1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1px;
-        }
-
-        .hotel-icon .img1{
-            width: 42px;
-            height: 45px;
-            top: 1.5px;
-            left: 3px;
-            angle: -0 deg;
-            opacity: 1;
-        }
-        
-        .hotel-icon .img2{
-            width: 36px;
-            height: 5px;
-        }
-
-        /* Payment Section */
-        .payment-section {
-            width: 790px;
-            height: 217px;
-            gap: 16px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 16px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 18px;
-            color: #112211;
-            margin-bottom: 24px;
-        }
-
-        /* Payment Method Section */
-        .payment-method {
-            width: 758px;
-            height: 80px;
-            border-radius: 12px;
-            justify-content: space-between;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .payment-method:hover{
-            background: #8DD3BB;
-        }
-        
-        .payment-method.selected {
-            background: #8DD3BB;
-        }
-        
-        .payment-method.selected .payment-radio {
-            border: 2px solid #FFFFFF;
-        }
-        
-        .payment-method.selected .payment-radio::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: #FFFFFF;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .payment-radio {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #112211;
-            border-radius: 50%;
-            position: relative;
-            background: transparent;
-        }
-
-        .payment-method-text {
-            font-family: Noto Sans;
-            font-weight: 700;
-            font-style: Bold;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211; 
-        }
-        
-        .payment-method-content{
-            padding-top: 5px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-
-        /* Login Form */
-        .login-section{
-            width: 790px;
-            height: 438px;
-            border-radius: 12px;
-            gap: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 24px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px 0px #1122110D;
-        }
-
-        .phone-input {
-            width: 742px;
-            height: 56px;
-            border-radius: 4px;
-            gap: 10px;
-            angle: 0 deg;
-            opacity: 1;
-            border: 1px solid #79747E;           
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            margin-bottom: 15px;
-            padding-left: 15px;
-        }
-
-        .input-note {
-            width: 742px;
-            height: 17px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #666666;
-            margin-bottom: 15px;
-        }
-
-        .continue-btn {
-            border: none;
-            width: 742px;
-            height: 48px;
-            border-radius: 4px;
-            gap: 4px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 8px 16px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            background: #8DD3BB;
-            color: #112211;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-
-        .divider {
-            width: 742px;
-            height: 20px;
-            gap: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;   
-            margin-bottom: 15px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-        
-        .continue-beeline{
-            width: 337px;
-            height: 0px;
-            angle: 0 deg;
-            opacity: 0.25;
-            border-width: 1px;
-            border: 1px solid #112211
-        }
-
-        /* Social Login Buttons */
-        .social-login {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .social-btn {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #8DD3BB;
-            border-radius: 4px;
-            background: #FFFFFF;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .social-btn img{
-            width: 24px;
-            height: 24px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-
-        .email-login {
-            width: 742px;
-            height: 56px;
-            gap: 16px;
-            angle: 0 deg;
-            opacity: 1;
-            border: 1px solid #8DD3BB;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            background-color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .email-login img{
-            width: 21px;
-            height: 16.5px;
-            top: 3.75px;
-            left: 1.5px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-
-        /* Card List */
-        .card-list {
-            width: 790px;
-            min-height: 316.8339538574219px;
-            border-radius: 12px;
-            gap: 16px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 16px;
-            box-shadow: 0px 4px 16px 0px #1122110D;
-        }
-
-        .saved-card {
-            width: 758px;
-            height: 80px;
-            background: #FFFFFF;
-            border: 2px solid #8DD3BB;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .saved-card.selected {
-            background: #8DD3BB;
-            border: 2px solid #8DD3BB;
-        }
-        
-        .saved-card.selected .card-radio {
-            border: 2px solid #FFFFFF;
-        }
-        
-        .saved-card.selected .card-radio::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: #FFFFFF;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .card-radio {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #112211;
-            border-radius: 50%;
-            position: relative;
-            background: transparent;
-        }
-
-        .card-info {
-            width: 164px;
-            height: 32px;
-            gap: 32px;
-            angle: 0 deg;
-            opacity: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .card-icon img{
-            width: 32px;
-            height: 20.09600067138672px;
-            angle: 0 deg;
-            opacity: 1;
-            top: 5.95px;
-        }
-
-        .card-number {
-            width: 53px;
-            height: 20px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Acme;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            padding-left: 16px;
-        }
-        
-        .card-date{
-            width: 39px;
-            height: 17px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .add-card-btn {
-            width: 758px;
-            height: 188.83395385742188px;
-            border-radius: 15px;
-            gap: 10px;
-            angle: 0 deg;
-            opacity: 1;
-            border-width: 2px;
-            border-style: dashed;
-            dashes: 8, 8;
-            border-color:  #8DD3BB;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 8px;
-            color: #8DD3BB;
-            background-color: white;
-        }
-        
-        .plus-btn{
-            width: 48px;
-            height: 48px;
-            angle: 0 deg;
-            opacity: 1;
-            border: 2px solid rgba(141, 211, 187, 1);
-            border-radius: 50%;
-            angle: 0 deg;
-            opacity: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 30px;
-            padding-bottom: 7px;
-        }
-        
-        .add-card{
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            vertical-align: middle;
-            color: rgba(17, 34, 17, 1);
-        }
-
-        /* Right Section - Booking Summary */
-        .right-section {
-            width: 450px;
-            height: 1040px;
-        }
-
-        .booking-summary {
-            background: #FFFFFF;
-            width: 100%;
-            height: 469.5px;
-            border-radius: 12px;
-            gap: 16px;
-            angle: 0 deg;
-            opacity: 1;
-            padding: 24px;
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 120px;
-        }
-
-        .hotel-beeline{
-            width: 402px;
-            height: 0.5px;
-            angle: 0 deg;
-            opacity: 0.25;
-            background: #112211;
-        }
-
-        .hotel-image{
-            width: 100%;
-            height: 120px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            display: flex;
-            margin-bottom: 20px;
-        }
-
-        .hotel-image img{
-            width: 121px;
-            height: 120px;
-            border-radius: 12px;
-            angle: 0 deg;
-            opacity: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .summary-hotel-info {
-            margin-bottom: 16px;
-            margin-left: 12px;
-        }
-
-        .summary-title1{
-            width: 257px;
-            height: 20px;
-            angle: 0 deg;
-            opacity: 0.75;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-        
-        .summary-title2{
-            width: 257px;
-            height: 48px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .rating {
-            width: 257px;
-            height: 32px;
-            gap: 8px;
-            angle: 0 deg;
-            opacity: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .rating-score {
-            width: 40px;
-            height: 32px;
-            gap: 10px;
-            angle: 0 deg;
-            opacity: 1;
-            background: white;
-            border: 1px solid #8DD3BB;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .rating-text1 {
-            font-family: Montserrat;
-            font-weight: 700;
-            font-style: Bold;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-        
-        .rating-text2 {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-left: -4px;
-        }
-
-        .golobe-protection {
-            width: 296px;
-            height: 20px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        /* Price Details */
-        .price-details {
-            width: 402px;
-            height: 164px;
-            gap: 16px;
-            angle: 0 deg;
-            opacity: 1;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .price-title{
-            width: 50%;
-            height: 20px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Acme;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .price-breakdown {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 16px 0;
-        }
-
-        .price-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .price-label {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-
-        .price-value {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-
-        .total-price {
-            width: 402px;
-            height: 20px;
-            justify-content: space-between;
-            angle: 0 deg;
-            opacity: 1;
-            margin-top: 20px;
-        }
-
-        .total-price .price-label {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .total-price .price-value {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        /* Newsletter Section */
-        .newsletter-section {
-            background: rgba(141, 211, 187, 1);
-            padding: 80px 104px;
-            position: relative;
-            height: 422px;
-            display: flex;
-            flex-direction: column;
-            margin-top: 60px;
-            z-index: 0;
-            margin-bottom: -513px;
-        }
-
-        .newsletter-content {
-            background: rgba(205, 234, 225, 1);
-            border-radius: 20px;
-            padding: 48px;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 1232px;
-            height: 305px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-            margin-bottom: 40px;
-        }
-
-        .newsletter-left {
-            flex: 1;
-            max-width: 500px;
-        }
-
-        .newsletter-title {
-            font-family: 'Noto Sans', sans-serif;
-            font-weight: 900;
-            font-size: 44px;
-            line-height: 54px;
-            color: #112211;
-            margin-bottom: 24px;
-        }
-
-        .newsletter-info {
-            margin-bottom: 24px;
-        }
-
-        .newsletter-brand {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 20px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.8;
-            margin-bottom: 8px;
-        }
-
-        .newsletter-desc {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.7;
-        }
-
-        .newsletter-form {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .newsletter-input {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            height: 56px;
-        }
-
-        .subscribe-btn {
-            padding: 16px 24px;
-            background: #112211;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            cursor: pointer;
-            height: 56px;
-        }
-
-        /* Mailbox Design */
-        .mailbox-container {
-            position: relative;
-            width: 400px;
-            height: 305px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .mailbox-back {
-            position: absolute;
-            width: 208px;
-            height: 191px;
-            top: 47px;
-            left: 0px;
-            background: rgba(101, 181, 153, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 5;
-        }
-
-        .mailbox-base {
-            position: absolute;
-            width: 187px;
-            height: 179px;
-            top: 59px;
-            left: 10px;
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            background: rgba(84, 104, 105, 1);
-            z-index: 10;
-        }
-
-        .mailbox-front {
-            position: absolute;
-            width: 291px;
-            height: 191px;
-            top: 47px;
-            left: 71px;
-            background: rgba(17, 34, 17, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 4;
-        }
-
-        .mailbox-flag {
-            position: absolute;
-            width: 169px;
-            height: 40px;
-            top: 154px;
-            left: 231px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
-
-        .mailbox-flag2 {
-            position: absolute;
-            width: 39px;
-            height: 77px;
-            top: 154px;
-            left: 361px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
-
-        .mailbox-pole {
-            position: absolute;
-            width: 47px;
-            height: 188px;
-            top: 117px;
-            left: 194px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
-
-        .mailbox-stand-base {
-            position: absolute;
-            width: 85px;
-            height: 57px;
-            top: 212px;
-            left: 156px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
-
-        .mailbox-stand-front {
-            position: absolute;
-            width: 85px;
-            height: 188px;
-            top: 117px;
-            left: 156px;
-            background: rgba(223, 173, 146, 1);
-            z-index: 2;
-        }
-
-        /* Footer Content */
-        .footer-content {
-            max-width: 1232px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
-            z-index: 1;
-            gap: 64px;
-            padding-bottom: 40px;
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 60px;
-        }
-
-        .footer-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .footer-column h4 {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 8px;
-        }
-
-        .footer-column a {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            text-decoration: none;
-            opacity: 0.7;
-        }
-
-        .footer-column a:hover {
-            opacity: 1;
-        }
-
-        /* Modal Base */
-        .modal {
-          display: none;
-          position: fixed;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 2000;
-        }
-        
-        .modal.active {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* Modal Box */
-        .modal-full {
-          width: 640px;
-          height: 686.2418823242188px;
-          border-radius: 12px;
-          background: #fff;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .modal-content {
-          width: 512px;
-          height: 590px;
-          display: flex;
-          flex-direction: column;
-          max-height: 80vh;
-          overflow-y: auto;
-        }
-
-        /* Header */
-        .modal-header {
-          display: flex;
-          justify-content: flex-end;
-        }
-        
-        .close-btn {
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: #666;
-        }
-
-        /* Title */
-        .modal-title {
-          font-family: Noto Sans, sans-serif;
-          font-weight: 700;
-          font-size: 32px;
-          margin: 16px 0 24px;
-          color: #112211;
-        }
-
-        /* Form */
-        .form-group {
-          margin-bottom: 20px;
-          position: relative;
-        }
-        
-        .form-label {
-          position: absolute;
-          top: -8px;
-          left: 12px;
-          background: #FFFFFF;
-          padding: 0 4px;
-          font-family: Montserrat, sans-serif;
-          font-weight: 500;
-          font-size: 14px;
-          color: #112211;
-          z-index: 1;
-        }
-        
-        .form-input {
-          width: 100%;
-          padding: 12px 16px;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          font-family: Montserrat, sans-serif;
-          font-size: 14px;
-          box-sizing: border-box;
-        }
-        
-        .form-row {
-          display: flex;
-          gap: 16px;
-        }
-        
-        .form-row .form-group {
-          flex: 1;
-        }
-
-        /* Card Number + VISA */
-        .card-input-wrapper {
-          position: relative;
-        }
-        
-        .card-input-wrapper input {
-          padding-right: 50px;
-          height: 56px;
-        }
-        
-        .card-logo {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          height: 20px;
-        }
-
-        /* Checkbox */
-        .checkbox-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-family: Montserrat, sans-serif;
-          font-size: 14px;
-          color: #112211;
-          margin-bottom: 20px;
-          padding-left: 0;
-        }
-        
-        .checkbox-group label {
-          position: static;
-          background: none;
-          padding: 0;
-        }
-
-        /* Button */
-        .save-card-btn {
-          width: 100%;
-          height: 48px;
-          padding: 8px 16px;
-          gap: 4px;
-          background: #8dd3bb;
-          border: none;
-          border-radius: 4px;
-          font-family: Montserrat, sans-serif;
-          font-weight: 600;
-          font-size: 16px;
-          color: #112211;
-          cursor: pointer;
-          font-family: Montserrat;
-          font-weight: 600;
-          font-style: SemiBold;
-          font-size: 14px;
-          leading-trim: NONE;
-          line-height: 100%;
-          letter-spacing: 0%;
-
-        }
+    /* Header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 21px 104px;
+        background: #FFFFFF;
+        box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        height: 87px;
+        width: 100%;
+    }
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 1232px;
+        margin: 0 auto;
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .nav-item {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #112211;
+        text-decoration: none;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 100%;
+        color: #112211;
+    }
+
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        background: #D9D9D9;
+        border: 1px solid #000000;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .online-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #112211;
+        border-radius: 50%;
+        bottom: 2px;
+        right: 2px;
+    }
+
+    /* User Dropdown */
+    .user-dropdown {
+        position: fixed;
+        top: 82px;
+        left: 64%;
+        width: 329px;
+        background: #FFFFFF;
+        border-radius: 12px;
+        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 32px;
+        display: none;
+        z-index: 1001;
+    }
+
+    .user-dropdown.active {
+        display: block;
+    }
+
+    .dropdown-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .dropdown-avatar {
+        width: 64px;
+        height: 64px;
+        background: #D9D9D9;
+        border-radius: 50%;
+    }
+
+    .dropdown-info h3 {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 100%;
+        color: #112211;
+        margin-bottom: 4px;
+    }
+
+    .dropdown-info p {
+        font-family: Montserrat;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 100%;
+        color: #112211;
+        opacity: 0.75;
+    }
+
+    .dropdown-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+        padding-top: 24px;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #112211;
+        text-decoration: none;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 100%;
+        padding: 4px 0;
+    }
+    
+    /* Main Content */
+    .main-content {
+        margin-top: 87px;
+        padding: 40px 104px 60px;
+        max-width: 1440px;
+        margin: 87px auto 0;
+        flex: 1;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+        font-family: Montserrat;
+        font-weight: 400;
+        font-size: 14px;
+    }
+
+    .breadcrumb a {
+        color: #FF6B6B;
+        text-decoration: none;
+    }
+
+    .breadcrumb span {
+        color: #666666;
+    }
+
+    /* Hotel Info Section */
+    .booking-container {
+        display: flex;
+        width: 1280px;
+        height: 1040px;
+        top: 181px;
+        left: 80px;
+        gap: 40px;
+        angle: 0 deg;
+        opacity: 1;
+        margin-bottom: 140px;
+    }
+
+    .left-section {
+        flex: 1;
+        width: 790px;
+        height: 1040px;
+    }
+
+    .hotel-info {
+        width: 790px;
+        height: 305px;
+        border-radius: 12px;
+        gap: 24px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 32px 24px;
+        background: #FFFFFF;
+        box-shadow: 0px 4px 16px 0px #1122110D;
+        margin-bottom: 40px;
+    }
+
+    .hotel-title {
+        width: 742px;
+        height: 33px;
+        justify-content: space-between;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Noto Sans;
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 24px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        margin-bottom: 20px;
+    }
+
+    .hotel-location {
+        width: 742px;
+        height: 95px;
+        border-radius: 8px;
+        gap: 24px;
+        angle: 0 deg;
+        opacity: 1;
+        border: 0.5px solid #8DD3BB;
+        padding: 16px 32px;
+        gap: 4px;
+        margin-bottom: 30px;
+        display: flex;
+    }
+
+    .hotel-location img{
+        width: 63px;
+        height: 63px;
+        border-radius: 12px;
+        angle: 0 deg;
+        opacity: 1;
+    }
+    
+    .hotel-location-map{
+        width: 372px;
+        height: 50px;
+        gap: 8px;
+        angle: 0 deg;
+        opacity: 1;
+        padding-top: 5px;
+    }
+    
+    .hotel-location-hotel{
+        font-family: ABeeZee;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 20px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+    
+    .hotel-location-hotelmap{
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 14px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    /* Date Selection */
+    .date-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 742px;
+        height: 49px;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .date-item {
+        display: flex;
+        flex-direction: column;
+        align-items: left;
+    }
+
+    .date-label {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-style: SemiBold;
+        font-size: 20px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        margin-bottom: 4px;
+    }
+
+    .date-value {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 14px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #666666;
+    }
+
+    .hotel-icon{
+        width: 168px;
+        height: 100%;
+        gap: 24px;
+        angle: 90 deg;
+        opacity: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1px;
+    }
+
+    .hotel-icon .img1{
+        width: 42px;
+        height: 45px;
+        top: 1.5px;
+        left: 3px;
+        angle: -0 deg;
+        opacity: 1;
+    }
+    
+    .hotel-icon .img2{
+        width: 36px;
+        height: 5px;
+    }
+
+    /* Payment Section */
+    .payment-section {
+        width: 790px;
+        height: 217px;
+        gap: 16px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 16px;
+        background: #FFFFFF;
+        border-radius: 12px;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 18px;
+        color: #112211;
+        margin-bottom: 24px;
+    }
+
+    /* Payment Method Section */
+    .payment-method {
+        width: 758px;
+        height: 80px;
+        border-radius: 12px;
+        justify-content: space-between;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .payment-method:hover{
+        background: #8DD3BB;
+    }
+    
+    .payment-method.selected {
+        background: #8DD3BB;
+    }
+    
+    .payment-method.selected .payment-radio {
+        border: 2px solid #FFFFFF;
+    }
+    
+    .payment-method.selected .payment-radio::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .payment-radio {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #112211;
+        border-radius: 50%;
+        position: relative;
+        background: transparent;
+    }
+
+    .payment-method-text {
+        font-family: Noto Sans;
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211; 
+    }
+    
+    .payment-method-content{
+        padding-top: 5px;
+        font-family: Montserrat;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 14px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+    }
+
+    /* Login Form */
+    .login-section{
+        width: 790px;
+        height: 438px;
+        border-radius: 12px;
+        gap: 24px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 24px;
+        background: #FFFFFF;
+        box-shadow: 0px 4px 16px 0px #1122110D;
+    }
+
+    .phone-input {
+        width: 742px;
+        height: 56px;
+        border-radius: 4px;
+        gap: 10px;
+        angle: 0 deg;
+        opacity: 1;
+        border: 1px solid #79747E;           
+        font-family: Montserrat;
+        font-weight: 400;
+        font-size: 14px;
+        margin-bottom: 15px;
+        padding-left: 15px;
+    }
+
+    .input-note {
+        width: 742px;
+        height: 17px;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Montserrat;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 14px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #666666;
+        margin-bottom: 15px;
+    }
+
+    .continue-btn {
+        border: none;
+        width: 742px;
+        height: 48px;
+        border-radius: 4px;
+        gap: 4px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 8px 16px;
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 14px;
+        background: #8DD3BB;
+        color: #112211;
+        cursor: pointer;
+        margin-bottom: 15px;
+    }
+
+    .divider {
+        width: 742px;
+        height: 20px;
+        gap: 24px;
+        angle: 0 deg;
+        opacity: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;   
+        margin-bottom: 15px;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+    
+    .continue-beeline{
+        width: 337px;
+        height: 0px;
+        angle: 0 deg;
+        opacity: 0.25;
+        border-width: 1px;
+        border: 1px solid #112211
+    }
+
+    /* Social Login Buttons */
+    .social-login {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .social-btn {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #8DD3BB;
+        border-radius: 4px;
+        background: #FFFFFF;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .social-btn img{
+        width: 24px;
+        height: 24px;
+        angle: 0 deg;
+        opacity: 1;
+    }
+
+    .email-login {
+        width: 742px;
+        height: 56px;
+        gap: 16px;
+        angle: 0 deg;
+        opacity: 1;
+        border: 1px solid #8DD3BB;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .email-login img{
+        width: 21px;
+        height: 16.5px;
+        top: 3.75px;
+        left: 1.5px;
+        angle: 0 deg;
+        opacity: 1;
+    }
+
+    /* Card List */
+    .card-list {
+        width: 790px;
+        min-height: 316.8339538574219px;
+        border-radius: 12px;
+        gap: 16px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 16px;
+        box-shadow: 0px 4px 16px 0px #1122110D;
+    }
+
+    .saved-card {
+        width: 758px;
+        height: 80px;
+        background: #FFFFFF;
+        border: 2px solid #8DD3BB;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .saved-card.selected {
+        background: #8DD3BB;
+        border: 2px solid #8DD3BB;
+    }
+    
+    .saved-card.selected .card-radio {
+        border: 2px solid #FFFFFF;
+    }
+    
+    .saved-card.selected .card-radio::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .card-radio {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #112211;
+        border-radius: 50%;
+        position: relative;
+        background: transparent;
+    }
+
+    .card-info {
+        width: 164px;
+        height: 32px;
+        gap: 32px;
+        angle: 0 deg;
+        opacity: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-icon img{
+        width: 32px;
+        height: 20.09600067138672px;
+        angle: 0 deg;
+        opacity: 1;
+        top: 5.95px;
+    }
+
+    .card-number {
+        width: 53px;
+        height: 20px;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Acme;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        padding-left: 16px;
+    }
+    
+    .card-date{
+        width: 39px;
+        height: 17px;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Montserrat;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 14px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    .add-card-btn {
+        width: 758px;
+        height: 188.83395385742188px;
+        border-radius: 15px;
+        gap: 10px;
+        angle: 0 deg;
+        opacity: 1;
+        border-width: 2px;
+        border-style: dashed;
+        dashes: 8, 8;
+        border-color:  #8DD3BB;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+        color: #8DD3BB;
+        background-color: white;
+    }
+    
+    .plus-btn{
+        width: 48px;
+        height: 48px;
+        angle: 0 deg;
+        opacity: 1;
+        border: 2px solid rgba(141, 211, 187, 1);
+        border-radius: 50%;
+        angle: 0 deg;
+        opacity: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-size: 30px;
+        padding-bottom: 7px;
+    }
+    
+    .add-card{
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 12px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        vertical-align: middle;
+        color: rgba(17, 34, 17, 1);
+    }
+
+    /* Right Section - Booking Summary */
+    .right-section {
+        width: 450px;
+        height: 1040px;
+    }
+
+    .booking-summary {
+        background: #FFFFFF;
+        width: 100%;
+        height: 469.5px;
+        border-radius: 12px;
+        gap: 16px;
+        angle: 0 deg;
+        opacity: 1;
+        padding: 24px;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 120px;
+    }
+
+    .hotel-beeline{
+        width: 402px;
+        height: 0.5px;
+        angle: 0 deg;
+        opacity: 0.25;
+        background: #112211;
+    }
+
+    .hotel-image{
+        width: 100%;
+        height: 120px;
+        font-family: Montserrat;
+        font-weight: 600;
+        font-style: SemiBold;
+        font-size: 20px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        display: flex;
+        margin-bottom: 20px;
+    }
+
+    .hotel-image img{
+        width: 121px;
+        height: 120px;
+        border-radius: 12px;
+        angle: 0 deg;
+        opacity: 1;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-hotel-info {
+        margin-bottom: 16px;
+        margin-left: 12px;
+    }
+
+    .summary-title1{
+        width: 257px;
+        height: 20px;
+        angle: 0 deg;
+        opacity: 0.75;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        margin-bottom: 4px;
+    }
+    
+    .summary-title2{
+        width: 257px;
+        height: 48px;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Montserrat;
+        font-weight: 600;
+        font-style: SemiBold;
+        font-size: 20px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    .rating {
+        width: 257px;
+        height: 32px;
+        gap: 8px;
+        angle: 0 deg;
+        opacity: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rating-score {
+        width: 40px;
+        height: 32px;
+        gap: 10px;
+        angle: 0 deg;
+        opacity: 1;
+        background: white;
+        border: 1px solid #8DD3BB;
+        border-radius: 4px;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 12px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .rating-text1 {
+        font-family: Montserrat;
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 12px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+    }
+    
+    .rating-text2 {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 12px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        margin-left: -4px;
+    }
+
+    .golobe-protection {
+        width: 296px;
+        height: 20px;
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Price Details */
+    .price-details {
+        width: 402px;
+        height: 164px;
+        gap: 16px;
+        angle: 0 deg;
+        opacity: 1;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .price-title{
+        width: 50%;
+        height: 20px;
+        angle: 0 deg;
+        opacity: 1;
+        font-family: Acme;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    .price-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px 0;
+    }
+
+    .price-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .price-label {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+    }
+
+    .price-value {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-style: SemiBold;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #112211;
+    }
+
+    .total-price {
+        width: 402px;
+        height: 20px;
+        justify-content: space-between;
+        angle: 0 deg;
+        opacity: 1;
+        margin-top: 20px;
+    }
+
+    .total-price .price-label {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    .total-price .price-value {
+        font-family: Montserrat;
+        font-weight: 600;
+        font-style: SemiBold;
+        font-size: 16px;
+        leading-trim: NONE;
+        line-height: 100%;
+        letter-spacing: 0%;
+    }
+
+    /* Newsletter Section */
+    .newsletter-section {
+        background: rgba(141, 211, 187, 1);
+        padding: 80px 104px;
+        position: relative;
+        height: 422px;
+        display: flex;
+        flex-direction: column;
+        margin-top: 60px;
+        z-index: 0;
+        margin-bottom: -513px;
+    }
+
+    .newsletter-content {
+        background: rgba(205, 234, 225, 1);
+        border-radius: 20px;
+        padding: 48px;
+        box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 1232px;
+        height: 305px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+        margin-bottom: 40px;
+    }
+
+    .newsletter-left {
+        flex: 1;
+        max-width: 500px;
+    }
+
+    .newsletter-title {
+        font-family: 'Noto Sans', sans-serif;
+        font-weight: 900;
+        font-size: 44px;
+        line-height: 54px;
+        color: #112211;
+        margin-bottom: 24px;
+    }
+
+    .newsletter-info {
+        margin-bottom: 24px;
+    }
+
+    .newsletter-brand {
+        font-family: Acme;
+        font-weight: 400;
+        font-size: 20px;
+        line-height: 100%;
+        color: #112211;
+        opacity: 0.8;
+        margin-bottom: 8px;
+    }
+
+    .newsletter-desc {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 100%;
+        color: #112211;
+        opacity: 0.7;
+    }
+
+    .newsletter-form {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        padding: 16px;
+        border: none;
+        border-radius: 4px;
+        font-family: Montserrat;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 100%;
+        height: 56px;
+    }
+
+    .subscribe-btn {
+        padding: 16px 24px;
+        background: #112211;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 4px;
+        font-family: Montserrat;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 100%;
+        cursor: pointer;
+        height: 56px;
+    }
+
+    /* Mailbox Design */
+    .mailbox-container {
+        position: relative;
+        width: 400px;
+        height: 305px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .mailbox-back {
+        position: absolute;
+        width: 208px;
+        height: 191px;
+        top: 47px;
+        left: 0px;
+        background: rgba(101, 181, 153, 1);
+        border-top-left-radius: 70px; 
+        border-top-right-radius: 70px; 
+        z-index: 5;
+    }
+
+    .mailbox-base {
+        position: absolute;
+        width: 187px;
+        height: 179px;
+        top: 59px;
+        left: 10px;
+        border-top-left-radius: 70px; 
+        border-top-right-radius: 70px; 
+        background: rgba(84, 104, 105, 1);
+        z-index: 10;
+    }
+
+    .mailbox-front {
+        position: absolute;
+        width: 291px;
+        height: 191px;
+        top: 47px;
+        left: 71px;
+        background: rgba(17, 34, 17, 1);
+        border-top-left-radius: 70px; 
+        border-top-right-radius: 70px; 
+        z-index: 4;
+    }
+
+    .mailbox-flag {
+        position: absolute;
+        width: 169px;
+        height: 40px;
+        top: 154px;
+        left: 231px;
+        background: rgba(255, 134, 130, 1);
+        z-index: 6;
+    }
+
+    .mailbox-flag2 {
+        position: absolute;
+        width: 39px;
+        height: 77px;
+        top: 154px;
+        left: 361px;
+        background: rgba(255, 134, 130, 1);
+        z-index: 6;
+    }
+
+    .mailbox-pole {
+        position: absolute;
+        width: 47px;
+        height: 188px;
+        top: 117px;
+        left: 194px;
+        background: rgba(164, 128, 109, 1);
+        z-index: 3;
+    }
+
+    .mailbox-stand-base {
+        position: absolute;
+        width: 85px;
+        height: 57px;
+        top: 212px;
+        left: 156px;
+        background: rgba(164, 128, 109, 1);
+        z-index: 3;
+    }
+
+    .mailbox-stand-front {
+        position: absolute;
+        width: 85px;
+        height: 188px;
+        top: 117px;
+        left: 156px;
+        background: rgba(223, 173, 146, 1);
+        z-index: 2;
+    }
+
+    /* Footer Content */
+    .footer-content {
+        max-width: 1232px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        z-index: 1;
+        gap: 64px;
+        padding-bottom: 40px;
+    }
+
+    .social-icons {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .footer-links {
+        display: flex;
+        gap: 60px;
+    }
+
+    .footer-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .footer-column h4 {
+        font-family: Acme;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 100%;
+        color: #112211;
+        margin-bottom: 8px;
+    }
+
+    .footer-column a {
+        font-family: Montserrat;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 100%;
+        color: #112211;
+        text-decoration: none;
+        opacity: 0.7;
+    }
+
+    .footer-column a:hover {
+        opacity: 1;
+    }
+
+    /* Modal Base */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+    }
+    
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Modal Box */
+    .modal-full {
+      width: 640px;
+      height: 686.2418823242188px;
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      width: 512px;
+      height: 590px;
+      display: flex;
+      flex-direction: column;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* Header */
+    .modal-header {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    /* Title */
+    .modal-title {
+      font-family: Noto Sans, sans-serif;
+      font-weight: 700;
+      font-size: 32px;
+      margin: 16px 0 24px;
+      color: #112211;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .form-label {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      background: #FFFFFF;
+      padding: 0 4px;
+      font-family: Montserrat, sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #112211;
+      z-index: 1;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: Montserrat, sans-serif;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    /* Card Number + VISA */
+    .card-input-wrapper {
+      position: relative;
+    }
+    
+    .card-input-wrapper input {
+      padding-right: 50px;
+      height: 56px;
+    }
+    
+    .card-logo {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 20px;
+    }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: Montserrat, sans-serif;
+      font-size: 14px;
+      color: #112211;
+      margin-bottom: 20px;
+      padding-left: 0;
+    }
+    
+    .checkbox-group label {
+      position: static;
+      background: none;
+      padding: 0;
+    }
+
+    /* Button */
+    .save-card-btn {
+      width: 100%;
+      height: 48px;
+      padding: 8px 16px;
+      gap: 4px;
+      background: #8dd3bb;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat, sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: #112211;
+      cursor: pointer;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+    }
+    /* 쿠폰 섹션 */
+    .coupon-section {
+      width: 790px;
+      min-height: 200px;
+      border-radius: 12px;
+      gap: 16px;
+      padding: 24px;
+      background: #FFFFFF;
+      box-shadow: 0px 4px 16px 0px #1122110D;
+      margin-bottom: 40px;
+    }
+
+    .coupon-item {
+      width: 742px;
+      min-height: 100px;
+      background: #FFFFFF;
+      border: 2px solid #8DD3BB;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .coupon-item:hover {
+      background: #F0F9F6;
+    }
+
+    .coupon-item.selected {
+      background: #8DD3BB;
+      border: 2px solid #8DD3BB;
+    }
+
+    .coupon-item.selected .coupon-radio {
+      border: 2px solid #FFFFFF;
+    }
+
+    .coupon-item.selected .coupon-radio::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .coupon-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .coupon-name {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 18px;
+      color: #112211;
+    }
+
+    .coupon-discount {
+      font-family: Montserrat;
+      font-weight: 700;
+      font-size: 24px;
+      color: #FF6B6B;
+    }
+
+    .coupon-expiry {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    .coupon-radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #112211;
+      border-radius: 50%;
+      position: relative;
+      background: transparent;
+    }
+
+    .no-coupons {
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 16px;
+      color: #666666;
+    }
+
+    /* 카드 섹션 제목 */
+    .card-list .section-title {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 18px;
+      color: #112211;
+      margin-bottom: 16px;
+    }
+
+    /* 카드 회사명 추가 */
+    .card-company {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      color: #666666;
+      margin-left: 8px;
+    }
+
+    /* 결제 버튼 */
+    .payment-btn {
+      width: 790px;
+      height: 56px;
+      border-radius: 8px;
+      background: #8DD3BB;
+      border: none;
+      font-family: Montserrat;
+      font-weight: 700;
+      font-size: 18px;
+      color: #112211;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .payment-btn:hover:not(:disabled) {
+      background: #7BC4AD;
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.4);
+    }
+
+    .payment-btn:disabled {
+      background: #CCCCCC;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
 
 
         /* Screen transitions */

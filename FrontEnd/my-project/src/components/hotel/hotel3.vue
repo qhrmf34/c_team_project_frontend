@@ -451,7 +451,7 @@
 </template>
 
 <script>
-import { authUtils, hotelAPI } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, paymentAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelThree',
@@ -482,7 +482,7 @@ export default {
       reviewEligibility: null,
       isEditMode: false,
       editingReviewId: null,
-      
+      guests: 2,  
       reviewCardOptions: [
         { value: 'NearPark', label: 'Near park' },
         { value: 'NearNightLife', label: 'Near nightlife' },
@@ -649,28 +649,90 @@ export default {
       }
     },
     
-    bookRoom(room) {
+    async bookRoom(room) {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
         return;
       }
       
-      this.$router.push({
-        path: '/payment',
-        query: {
-          roomId: room.roomId,
-          hotelId: room.hotelId,
-          checkIn: room.checkIn,
-          checkOut: room.checkOut,
-          totalPrice: room.totalPrice,
-          nights: room.nights,
-          roomName: room.roomName,
-          bedType: room.bedType
+      console.log('=== 예약 시작 ===');
+      console.log('room 객체:', room);
+      
+      try {
+        // 1. 예약 생성
+        const reservationData = {
+          roomId: Number(room.roomId),
+          checkInDate: this.checkIn,
+          checkOutDate: this.checkOut,
+          guestsCount: Number(this.guests) || 2,
+          basePayment: String(room.totalPrice),
+          reservationsStatus: false
+        };
+        
+        console.log('=== 전송할 예약 데이터 ===');
+        console.log(JSON.stringify(reservationData, null, 2));
+        
+        const reservationResponse = await paymentAPI.createReservation(reservationData);
+        
+        console.log('=== 예약 응답 ===');
+        console.log(reservationResponse);
+        
+        if (reservationResponse.code !== 200) {
+          throw new Error(reservationResponse.message || '예약 생성 실패');
         }
-      });
+        
+        const reservationId = reservationResponse.data.id;
+        
+        console.log('=== 예약 ID ===', reservationId);
+        console.log('=== 페이지 이동 준비 ===');
+        
+        // 2. 결제 페이지로 이동
+        await this.$router.push({
+          path: '/hotelfour',
+          query: {
+            reservationId: reservationId,
+            roomId: room.roomId,
+            hotelId: this.hotel.id,
+            checkIn: this.checkIn,
+            checkOut: this.checkOut,
+            totalPrice: room.totalPrice,
+            nights: room.nights
+          }
+        });
+        
+        console.log('=== 페이지 이동 완료 ===');
+        
+      } catch (error) {
+        console.error('=== 예약 생성 실패 ===');
+        console.error('error:', error);
+        console.error('error.response?.data:', error.response?.data);
+        
+        let errorMessage = '예약 생성에 실패했습니다.';
+        
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          
+          // 중복 예약 에러 처리
+          if (error.response.status === 409) {
+            errorMessage = errorData.message || '이미 해당 날짜에 예약이 존재합니다.';
+          }
+          // 유효성 검증 에러
+          else if (errorData.errors) {
+            const errors = Object.entries(errorData.errors)
+              .map(([field, msg]) => `${field}: ${msg}`)
+              .join('\n');
+            errorMessage = `입력 오류:\n${errors}`;
+          }
+          // 일반 에러
+          else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+        
+        alert(errorMessage);
+      }
     },
-    
     async showReviewForm() {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
