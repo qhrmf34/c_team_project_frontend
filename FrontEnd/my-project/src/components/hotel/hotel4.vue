@@ -306,7 +306,6 @@
                     <img :src="getCardTypeImage(card.cardType)" :alt="card.cardType">
                   </div>
                   <span class="card-number">****{{ card.lastFour }}</span>
-                  <span class="card-company">{{ paymentMethodAPI.getKoreanCardCompany(card.cardCompany) }}</span>
                 </div>
                 <div class="card-radio"></div>
               </div>
@@ -787,7 +786,6 @@ export default {
             lastFour: card.cardLastFour || '****',
             expiryDate: '**/**',
             cardType: card.cardType || 'VISA',
-            cardCompany: card.cardCompany || 'Unknown'
           }));
         }
       } catch (error) {
@@ -817,8 +815,18 @@ export default {
     },
     
     selectCard(index) {
-      this.selectedCard = index;
-    },
+  console.log('🔘 Card clicked:', {
+    index,
+    card: this.savedCards[index],
+    currentSelectedCard: this.selectedCard
+  });
+  
+  // ✅ Vue의 반응성을 위해 명시적으로 업데이트
+  this.selectedCard = index;
+  
+
+  
+  console.log('✅ Card selection updated:', this.selectedCard);    },
     
     selectCoupon(coupon) {
       if (this.selectedCoupon?.id === coupon.id) {
@@ -830,51 +838,104 @@ export default {
     },
     
     // 결제 처리
-  async processPayment() {
-    if (!this.isLoggedIn) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
+async processPayment() {
+  console.log('=== Payment Process Start ===');
+  console.log('1. isLoggedIn:', this.isLoggedIn);
+  console.log('2. selectedCard:', this.selectedCard);
+  console.log('3. savedCards:', this.savedCards);
+  console.log('4. savedCards length:', this.savedCards.length);
+  
+  if (!this.isLoggedIn) {
+    alert('로그인이 필요합니다.');
+    return;
+  }
+  
+  if (this.selectedCard === -1) {
+    alert('결제수단을 선택해주세요.');
+    return;
+  }
+  
+  // ✅ 배열 범위 체크 추가
+  if (this.selectedCard >= this.savedCards.length) {
+    console.error('❌ Invalid selectedCard index:', this.selectedCard);
+    alert('선택한 결제수단이 올바르지 않습니다.');
+    return;
+  }
+  
+  // ✅ 직접 변수에 할당
+  const selectedPaymentMethod = this.savedCards[this.selectedCard];
+  console.log('5. selectedPaymentMethod:', selectedPaymentMethod);
+  console.log('6. selectedPaymentMethod.id:', selectedPaymentMethod?.id);
+  
+  if (!selectedPaymentMethod) {
+    console.error('❌ selectedPaymentMethod is null or undefined');
+    alert('선택한 결제수단을 찾을 수 없습니다.');
+    return;
+  }
+  
+  if (!selectedPaymentMethod.id) {
+    console.error('❌ selectedPaymentMethod.id is null or undefined');
+    console.error('Full object:', JSON.stringify(selectedPaymentMethod, null, 2));
+    alert('선택한 결제수단의 ID가 없습니다.');
+    return;
+  }
+  
+  console.log('7. bookingInfo:', this.bookingInfo);
+  console.log('8. reservationId:', this.bookingInfo.reservationId);
+  
+  if (!this.bookingInfo.reservationId) {
+    alert('예약 정보가 없습니다.');
+    return;
+  }
+  
+  if (confirm(`총 ${this.formatPrice(this.totalPrice)}를 결제하시겠습니까?`)) {
+    this.isProcessingPayment = true;
     
-    if (this.selectedCard === -1) {
-      alert('결제수단을 선택해주세요.');
-      return;
-    }
-    
-    if (confirm(`총 ${this.formatPrice(this.totalPrice)}를 결제하시겠습니까?`)) {
-      this.isProcessingPayment = true;
+    try {
+      // ✅ paymentData 객체를 명시적으로 생성
+      const paymentData = {
+        reservationsId: Number(this.bookingInfo.reservationId),
+        paymentMethodId: Number(selectedPaymentMethod.id),
+        couponId: this.selectedCoupon ? Number(this.selectedCoupon.id) : null,
+        paymentAmount: Number(this.totalPrice),
+        paymentDate: new Date().toISOString(),
+        paymentStatus: 'paid',
+        refund: false
+      };
       
-      try {
-        // 이미 예약이 생성되어 있으므로 바로 결제 처리
-        const paymentData = {
-          reservationsId: this.bookingInfo.reservationId,  // 기존 예약 ID 사용
-          paymentMethodId: this.savedCards[this.selectedCard].id,
-          couponId: this.selectedCoupon ? this.selectedCoupon.id : null,
-          paymentAmount: this.totalPrice,
-          paymentDate: new Date().toISOString(),
-          paymentStatus: 'paid',
-          refund: false
-        };
-        
-        const paymentResponse = await paymentAPI.processPayment(paymentData);
-        
-        if (paymentResponse.code === 200) {
-          alert('결제가 완료되었습니다!');
-          // 예약 확인 페이지로 이동
-          this.$router.push({
-            path: '/hotelaccount',
-            query: { tab: 'history' }
-          });
-        }
-        
-      } catch (error) {
-        console.error('결제 처리 실패:', error);
-        alert(error.response?.data?.message || '결제 처리 중 오류가 발생했습니다.');
-      } finally {
-        this.isProcessingPayment = false;
+      console.log('9. ✅ Final paymentData:', paymentData);
+      console.log('10. paymentData JSON:', JSON.stringify(paymentData, null, 2));
+      
+      // ✅ null 체크
+      if (!paymentData.paymentMethodId) {
+        console.error('❌ paymentMethodId is still null!');
+        console.error('selectedPaymentMethod:', selectedPaymentMethod);
+        alert('결제수단 ID를 가져올 수 없습니다.');
+        return;
       }
+      
+      const paymentResponse = await paymentAPI.processPayment(paymentData);
+      
+      console.log('11. ✅ Payment response:', paymentResponse);
+      
+      if (paymentResponse.code === 200) {
+        alert('결제가 완료되었습니다!');
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+      }
+      
+    } catch (error) {
+      console.error('❌ 결제 처리 실패:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error data:', error.response?.data);
+      alert(error.response?.data?.message || '결제 처리 중 오류가 발생했습니다.');
+    } finally {
+      this.isProcessingPayment = false;
     }
-  },
+  }
+},
     
     // 카드 추가
     async addNewCard(event) {
@@ -908,7 +969,6 @@ export default {
             lastFour: cardData.cardNumber.slice(-4),
             expiryDate: this.cardForm.expDate,
             cardType: this.determineCardType(cardData.cardNumber),
-            cardCompany: response.data.cardCompany || 'Unknown'
           });
           
           this.closeAddCardModal();
@@ -1308,7 +1368,7 @@ export default {
     .booking-container {
         display: flex;
         width: 1280px;
-        height: 1040px;
+        height: auto;
         top: 181px;
         left: 80px;
         gap: 40px;
@@ -1320,7 +1380,7 @@ export default {
     .left-section {
         flex: 1;
         width: 790px;
-        height: 1040px;
+        height: auto;
     }
 
     .hotel-info {
@@ -1939,7 +1999,7 @@ export default {
         line-height: 100%;
         letter-spacing: 0%;
         color: #112211;
-        margin-bottom: 4px;
+        margin-bottom: 10px;
     }
     
     .summary-title2{
@@ -2628,14 +2688,6 @@ export default {
       margin-bottom: 16px;
     }
 
-    /* 카드 회사명 추가 */
-    .card-company {
-      font-family: Montserrat;
-      font-weight: 500;
-      font-size: 14px;
-      color: #666666;
-      margin-left: 8px;
-    }
 
     /* 결제 버튼 */
     .payment-btn {
