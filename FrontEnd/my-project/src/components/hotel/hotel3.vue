@@ -1262,10 +1262,8 @@ async loadMyReview() {
       }
 
       window.Kakao.Share.sendDefault({
-        objectType: 'location',
-        address: this.hotel.address,
-        addressTitle: this.hotel.hotelName,
-        content: {
+          objectType: 'feed',
+          content: {
           title: this.hotel.hotelName,
           description: this.hotel.description,
           imageUrl: this.getImageUrl(this.hotel.images[0]),

@@ -490,6 +490,20 @@ export const hotelAPI = {
     return response.data;
   }
 }
+// 회원 쿠폰 API
+export const memberCouponAPI = {
+  // 구독 쿠폰 지급
+  async subscribeAndReceiveCoupons() {
+    const response = await apiClient.post('/api/member-coupons/subscribe')
+    return response.data
+  },
+
+  // 내 쿠폰 목록 조회
+  async getMyCoupons() {
+    const response = await apiClient.get('/api/member-coupons/my')
+    return response.data
+  }
+}
 
 // 관리자 API
 export const adminAPI = {
