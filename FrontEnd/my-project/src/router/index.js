@@ -12,6 +12,8 @@ import HotelMaster from '../components/hotelmaster.vue'
 import HotelTest from '../components/hotel/hoteltest.vue'
 import AuthCallback from '../components/login/AuthCallback.vue'
 import HotelAdmin from '../components/admin/admin.vue'
+import PaymentSuccess from '../components/hotel/PaymentSuccess.vue'
+import PaymentFail from '../components/hotel/PaymentFail.vue'
 
 const routes = [
   { 
@@ -91,6 +93,16 @@ const routes = [
     name: 'HotelAdmin',
     component: HotelAdmin, 
     meta: { title: '관리자 페이지' }
+  },
+    {
+    path: '/payment/success',
+    name: 'PaymentSuccess',
+    component: PaymentSuccess
+  },
+  {
+    path: '/payment/fail',
+    name: 'PaymentFail',
+    component: PaymentFail
   }
 ]
 

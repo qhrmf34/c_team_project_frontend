@@ -299,6 +299,14 @@ export const paymentAPI = {
     const response = await apiClient.post('/api/payments/process', paymentData);
     return response.data;
   },
+    /**
+   * 결제위젯 승인
+   */
+  async confirmPayment(confirmData) {
+    console.log('결제 승인 요청:', confirmData);
+    const response = await apiClient.post('/api/payments/confirm', confirmData);
+    return response.data;
+  },
   /**
    * 예약 생성
    */
