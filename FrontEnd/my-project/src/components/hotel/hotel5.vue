@@ -1,6 +1,5 @@
 <template>
   <div class="hotel-ticket-container">
-    <!-- Header -->
     <header class="header">
       <nav>
         <div class="nav-left">
@@ -26,6 +25,7 @@
       </nav>
     </header>
 
+    <!-- Dropdown - 기존과 동일 -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
@@ -38,9 +38,9 @@
         <a href="#" class="dropdown-item" @click="goToAccount">
           <img src="/images/hotel_img/account.jpg">계정
         </a>
-      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-        <img src="/images/hotel_img/card.jpg">결제내역
-      </a>
+        <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+          <img src="/images/hotel_img/card.jpg">결제내역
+        </a>
         <a href="#" class="dropdown-item">
           <img src="/images/hotel_img/setting.jpg">설정
         </a>
@@ -51,161 +51,180 @@
       </div>
     </div>
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-      <a href="#" style="color: rgba(255, 134, 130, 1);">Turkey</a> > 
-      <a href="#" style="color: rgba(255, 134, 130, 1);">Istanbul</a> > 
-      <span>해튼호텔</span>
+    <!-- ✅ Loading -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>티켓을 불러오는 중...</p>
     </div>
 
-    <div class="main-content">
-      <!-- Hotel Header -->
-      <div class="hotel-header">
-        <div class="hotel-info">
-          <h1 class="hotel-title">해튼호텔</h1>
-          <div class="hotel-location-line">
-            <span><img src="/images/hotel_img/map.jpg" alt="map"></span>
-            <span>Gümüşsuyu Mah. İnönü Cad. No:8, Istanbul 34437</span>
-          </div>
-        </div>
-    
-        <div class="hotel-actions">
-          <div class="hotel-price">
-            <div class="price-amount">₩240,000<span class="price-unit">/night</span></div>
-          </div>
-          <div class="hotel-buttons">
-            <button class="action-btn">
-              <img src="/images/hotel_img/share.jpg" alt="share">
-            </button>
-            <button class="action-btn-download" @click="downloadTicket">Download</button>
-          </div>
-        </div>
+    <!-- ✅ Error -->
+    <div v-else-if="error" class="error-container">
+      <p class="error-message">{{ error }}</p>
+      <button @click="$router.push('/hotelaccount')" class="btn-back">예약 내역으로</button>
+    </div>
+
+    <!-- ✅ Ticket Content -->
+    <div v-else-if="ticket">
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="#" style="color: rgba(255, 134, 130, 1);">{{ ticket.countryName }}</a> > 
+        <a href="#" style="color: rgba(255, 134, 130, 1);">{{ ticket.cityName }}</a> > 
+        <span>{{ ticket.hotelName }}</span>
       </div>
 
-      <!-- Ticket -->
-      <div class="ticket-container">
-        <div class="ticket" ref="ticketElement">
-          <!-- 좌측 날짜 -->
-          <div class="ticket-left">
-            <div class="ticket-left-updown">
-              <div class="left-label">
-                Thur, Dec 8
-              </div>
-              <div class="left-check">
-                Check-In
-              </div>
-            </div>
-            <div>
-              <img src="/images/hotel_account_img/travel.jpg" class="left-image" alt="travel"/>
-            </div>
-            <div class="ticket-left-updown">
-              <div class="left-label">
-                Fri, Dec 9
-              </div>
-              <div class="left-check">
-                Check-Out
-              </div>
+      <div class="main-content">
+        <!-- Hotel Header -->
+        <div class="hotel-header">
+          <div class="hotel-info">
+            <h1 class="hotel-title">{{ ticket.hotelName }}</h1>
+            <div class="hotel-location-line">
+              <span><img src="/images/hotel_img/map.jpg" alt="map"></span>
+              <span>{{ ticket.address }}</span>
             </div>
           </div>
-
-          <!-- 중앙 -->
-          <div class="ticket-center">
-            <div class="top-bar">
-              <div class="guest">
-                <img src="" alt="">
-                <span>James Doe</span>
-              </div>
-              <div class="center-bedroom">Superior room - 1 double bed or 2 twin beds</div>
+      
+          <div class="hotel-actions">
+            <div class="hotel-price">
+              <div class="price-amount">{{ formatPrice(ticket.paymentAmount) }}<span class="price-unit">/total</span></div>
             </div>
-
-            <div class="info-grid">
-              <div class="info-item">
-                <div>
-                  <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-                </div>
-                <div class="info-item-content">
-                  <div class="info-check">
-                    체크인
-                  </div>          
-                   <div class="info-item-time">
-                    12:00pm
-                  </div>
-                </div>
-              </div>
-
-              <div class="info-item">
-                <div>
-                  <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-                </div>
-                <div class="info-item-content">
-                  <div class="info-check">
-                    체크아웃
-                  </div>  
-                   <div class="info-item-time">
-                    11:30pm
-                  </div>
-                </div>
-              </div>
-
-              <div class="info-item">
-                <div>
-                  <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
-                </div>
-                <div class="info-item-content">
-                  <div class="info-check">
-                    방번호
-                  </div>   
-                   <div class="info-item-time">
-                    12:00pm
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="ticket-number">
-              <div class="ticket-air">EK <div class="ticket-num">ABC12345</div></div>
-              <div class="barcode"><img src="/images/hotel_account_img/barcode.jpg" alt="barcode"/></div>
-            </div>
-          </div>
-          
-          <!-- 오른쪽 CVK 카드 -->
-          <div class="ticket-right">
-            <div>
-              <img src="/images/hotel_img/cvk.jpg" alt="cvk"/>
+            <div class="hotel-buttons">
+              <button class="action-btn" @click="shareTicket">
+                <img src="/images/hotel_img/share.jpg" alt="share">
+              </button>
+              <button class="action-btn-download" @click="downloadTicket">Download</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Terms and Conditions Section -->
-      <div class="terms-section">
-        <h2 class="terms-title">Terms and Conditions</h2>
+        <!-- Ticket -->
+        <div class="ticket-container">
+          <div class="ticket" ref="ticketElement">
+            <!-- 좌측 날짜 -->
+            <div class="ticket-left">
+              <div class="ticket-left-updown">
+                <div class="left-label">{{ formatDate(ticket.checkInDate) }}</div>
+                <div class="left-check">Check-In</div>
+              </div>
+              <div class="left-image">
+                <img src="/images/hotel_account_img/travel.jpg"  alt="travel"/>
+              </div>
+              <div class="ticket-left-updown">
+                <div class="left-label">{{ formatDate(ticket.checkOutDate) }}</div>
+                <div class="left-check">Check-Out</div>
+              </div>
+            </div>
+
+            <!-- 중앙 -->
+            <div class="ticket-center">
+              <div class="top-bar">
+                <div class="guest">
+                  <img :src="getImageUrl(ticket.profileImage)" alt="profile">
+                  <span>{{ ticket.memberName }}</span>
+                </div>
+                <div class="center-bedroom">{{ ticket.roomName }} - {{ ticket.bedInfo }}</div>
+              </div>
+
+              <div class="info-grid">
+                <div class="info-item">
+                  <div>
+                    <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+                  </div>
+                  <div class="info-item-content">
+                    <div class="info-check">체크인</div>          
+                    <div class="info-item-time">12:00pm</div>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div>
+                    <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+                  </div>
+                  <div class="info-item-content">
+                    <div class="info-check">체크아웃</div>  
+                    <div class="info-item-time">11:30am</div>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div>
+                    <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
+                  </div>
+                  <div class="info-item-content">
+                    <div class="info-check">방번호</div>   
+                    <div class="info-item-time">{{ ticket.roomNumber }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ticket-number">
+                <div class="ticket-air">
+                  TKT 
+                  <div class="ticket-num">{{ ticket.barcode }}</div>
+                </div>
+                <div class="barcode">
+                  <svg class="barcode-svg"></svg>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 오른쪽 호텔 이미지 -->
+            <div class="ticket-right">
+              <div>
+                <img :src="getImageUrl(ticket.hotelImage)" alt="hotel"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ 환불 버튼 섹션 추가 -->
+        <div class="refund-section" v-if="!ticket.refund">
+          <button class="refund-btn" @click="requestRefund">
+            <img src="/images/hotel_img/refund.jpg" alt="refund" v-if="false">
+            환불 요청
+          </button>
+          <p class="refund-notice">
+            * 환불 시 예약이 취소되며, 티켓은 사용할 수 없게 됩니다.
+          </p>
+        </div>
         
-        <div class="terms-payment">
-          <h3 class="section-title">Payments</h3>
+        <div class="refund-section" v-else>
+          <div class="refunded-notice">
+            ⚠️ 이 티켓은 환불 처리되었습니다.
+          </div>
+        </div>
+
+        <!-- Terms and Conditions Section -->
+        <div class="terms-section">
+          <h2 class="terms-title">Terms and Conditions</h2>
+          
+          <div class="terms-payment">
+            <h3 class="section-title">Payments</h3>
           <ul class="terms-list">
             <li>If you are purchasing your ticket using a debit or credit card via the Website, we will process these payments via the automated secure common payment gateway which will be subject to fraud screening purposes.</li>
             <li>If you do not supply the correct card billing address and/or cardholder information, your booking will not be confirmed and the overall cost may increase. We reserve the right to cancel your booking if payment is declined for any reason or if you have supplied incorrect card information. If we become aware of, or is notified of, any fraud or illegal activity associated with the payment for the booking, the booking will be cancelled and you will be charged a cancellation fee along with any other costs arising from such cancellation, without prejudice to any action that may be taken against us.</li>
             <li>Golobe may require the card holder to provide additional payment verification upon request by either submitting an online form or visiting the nearest Golobe office, or at the airport at the time of check-in. Golobe reserves the right to deny boarding or to collect a guarantee payment (in cash or from another credit card) if the card originally used for the purchase cannot be presented by the cardholder at check-in or when collecting the tickets, or in the event that the credit card on which the original payment was made has been withheld or disputed by the card issuing bank. Credit card details are held in a secured environment and transferred through an internationally accepted system.</li>
           </ul>
-        </div>
-        <div class="contact-info">
-          <h4 class="contact-title">Contact Us</h4>
-          <div class="contact-details">
-            If you have any questions about our Website or our Terms of Use, please contact:
-            Golobe Group QCSC<br>
-            Golobe Tower<br>
-            P.O. Box: 22550<br>
-            Doha, State of Qatar<br>
-            Further contact details can be found at <a href="#" class="contact-link"><u>golobe.com/help</u></a>
+          </div>
+          
+          <div class="contact-info">
+            <h4 class="contact-title">Contact Us</h4>
+            <div class="contact-details">
+              If you have any questions about our Website or our Terms of Use, please contact:
+              Golobe Group QCSC<br>
+              Golobe Tower<br>
+              P.O. Box: 22550<br>
+              Doha, State of Qatar<br>
+              Further contact details can be found at <a href="#" class="contact-link"><u>golobe.com/help</u></a>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Newsletter Section -->
+    <!-- Newsletter Section - 기존과 동일 -->
     <section class="newsletter-section">
-            </section>
+          </section>
+
       <div class="newsletter-content">
         <div class="newsletter-left">
           <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
@@ -281,7 +300,8 @@
 </template>
 
 <script>
-import { authUtils } from '@/utils/commonAxios'
+import { authUtils, ticketAPI, paymentAPI, adminAPI } from '@/utils/commonAxios'
+import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'HotelFive',
@@ -289,38 +309,43 @@ export default {
     return {
       isDropdownActive: false,
       email: '',
-      // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      
+      // ✅ 티켓 데이터
+      ticket: null,
+      isLoading: true,
+      error: null
     }
   },
-  mounted() {
+  
+  async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo(); // 컴포넌트 마운트 시 사용자 정보 로드
+    this.loadUserInfo();
+    
+    // ✅ 티켓 로드
+    await this.loadTicket();
   },
   
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
   
-  // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
     '$route'() {
       this.loadUserInfo();
     }
   },
-    computed: {
-    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+  
+  computed: {
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -331,12 +356,9 @@ export default {
           }
         }
       }
-      
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -350,40 +372,166 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
+  
   methods: {
-    //결제내역이동
-    goToPaymentHistory() {
-      if (this.isLoggedIn) {
-        this.$router.push({
-          path: '/hotelaccount',
-          query: { tab: 'history' }
-        });
-        this.isDropdownActive = false; // 드롭다운 닫기
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
+    // 티켓 로드
+    async loadTicket() {
+      try {
+        this.isLoading = true;
+
+        const paymentId = this.$route.query.paymentId;
+        if (!paymentId) {
+          throw new Error('결제 정보가 없습니다.');
+        }
+
+        const response = await ticketAPI.getTicketByPaymentId(paymentId);
+
+        if (response.code === 200) {
+          this.ticket = response.data;
+
+          // 바코드 생성 - DOM 렌더링 완전히 대기
+          await this.$nextTick();
+          setTimeout(() => {
+            this.generateBarcode();
+          }, 100);
+        } else {
+          this.error = response.message || '티켓을 불러올 수 없습니다.';
+        }
+
+      } catch (error) {
+        console.error('티켓 로드 실패:', error);
+        this.error = error.response?.data?.message || error.message || '티켓을 불러오는데 실패했습니다.';
+      } finally {
+        this.isLoading = false;
       }
     },
-    toggleDropdown() {
-      this.isDropdownActive = !this.isDropdownActive;
-    },
-    handleClickOutside(event) {
-      if (!this.$refs.userDropdown.contains(event.target) && 
-          !event.target.closest('.user-profile')) {
-        this.isDropdownActive = false;
+    
+
+    // 바코드 생성
+    generateBarcode() {
+      if (!this.ticket || !this.ticket.barcode) {
+        console.log('티켓 또는 바코드 정보 없음:', this.ticket);
+        return;
+      }
+
+      try {
+        const barcodeElement = document.querySelector('.barcode-svg');
+        console.log('바코드 요소:', barcodeElement);
+        console.log('바코드 데이터:', this.ticket.barcode);
+
+        if (barcodeElement) {
+          JsBarcode(barcodeElement, this.ticket.barcode, {
+            format: 'CODE128',
+            width: 2,
+            height: 60,
+            displayValue: false,
+            margin: 0
+          });
+          console.log('바코드 생성 완료');
+        } else {
+          console.error('바코드 SVG 요소를 찾을 수 없습니다');
+        }
+      } catch (error) {
+        console.error('바코드 생성 실패:', error);
       }
     },
-    subscribe() {
-      if (this.email) {
-        console.log('Subscribed:', this.email)
-        this.email = ''
+    // ✅ 날짜 포맷
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+    },
+    
+    // ✅ 이미지 URL
+    getImageUrl(imagePath) {
+      if (!imagePath) return '/images/hotel_img/default.jpg';
+      if (imagePath.startsWith('http')) return imagePath;
+      if (imagePath.startsWith('/images/')) return imagePath;
+      return adminAPI.getImageUrl(imagePath);
+    },
+    
+    // ✅ 가격 포맷
+    formatPrice(price) {
+      if (!price) return '₩0';
+      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+    },
+    
+    // ✅ 카카오톡 공유
+    async shareTicket() {
+      if (!window.Kakao) {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+        return;
+      }
+
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY);
+      }
+
+      const ticketUrl = `${window.location.origin}/hotelfive?paymentId=${this.$route.query.paymentId}`;
+
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: `${this.ticket.hotelName} 예약 티켓`,
+          description: `${this.ticket.roomName}\n체크인: ${this.formatDate(this.ticket.checkInDate)}`,
+          imageUrl: this.getImageUrl(this.ticket.hotelImage),
+          link: {
+            mobileWebUrl: ticketUrl,
+            webUrl: ticketUrl,
+          },
+        },
+        buttons: [
+          {
+            title: '티켓 보기',
+            link: {
+              mobileWebUrl: ticketUrl,
+              webUrl: ticketUrl,
+            },
+          },
+        ],
+      });
+    },
+    
+    // ✅ 환불 요청
+    async requestRefund() {
+      if (this.ticket.refund) {
+        alert('이미 환불된 티켓입니다.');
+        return;
+      }
+      
+      if (!confirm('정말 환불하시겠습니까?\n환불 후에는 예약이 취소됩니다.')) {
+        return;
+      }
+      
+      const cancelReason = prompt('환불 사유를 입력해주세요', '고객 요청');
+      if (!cancelReason) return;
+      
+      try {
+        const response = await paymentAPI.refundPayment(
+          this.ticket.paymentId, 
+          cancelReason
+        );
+        
+        if (response.code === 200) {
+          alert('환불이 완료되었습니다!');
+          this.$router.push({
+            path: '/hotelaccount',
+            query: { tab: 'history' }
+          });
+        }
+      } catch (error) {
+        console.error('환불 실패:', error);
+        alert(error.response?.data?.message || '환불 처리 중 오류가 발생했습니다.');
       }
     },
+    
     async downloadTicket() {
       try {
         const ticketElement = this.$refs.ticketElement
         
-        // html2canvas 동적 로드
         if (!window.html2canvas) {
           const script = document.createElement('script')
           script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
@@ -393,10 +541,11 @@ export default {
           this.captureTicket(ticketElement)
         }
       } catch (error) {
-        console.error('티켓 다운로드 중 오류가 발생했습니다:', error)
-        alert('티켓 다운로드에 실패했습니다. 다시 시도해주세요.')
+        console.error('티켓 다운로드 중 오류:', error)
+        alert('티켓 다운로드에 실패했습니다.')
       }
     },
+    
     captureTicket(ticketElement) {
       window.html2canvas(ticketElement, {
         backgroundColor: null,
@@ -407,52 +556,55 @@ export default {
         const link = document.createElement('a')
         link.download = `hotel-ticket-${new Date().getTime()}.png`
         link.href = canvas.toDataURL()
-        
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-      }).catch(err => {
-        console.error('티켓 다운로드 중 오류가 발생했습니다:', err)
-        alert('티켓 다운로드에 실패했습니다. 다시 시도해주세요.')
       })
     },
-        // 사용자 정보 로드
+    
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
       if (this.isLoggedIn) {
         this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
       } else {
         this.userInfo = null;
       }
     },
     
-    // 로그아웃 처리 (개선된 버전)
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
-          
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         } catch (error) {
-          console.error('로그아웃 중 오류:', error);
-          
-          // 서버 오류가 발생해도 로컬 정보는 삭제
           authUtils.logout();
           this.loadUserInfo();
-          
           alert('로그아웃되었습니다.');
           this.$router.push('/login');
         }
       }
     },
-    //호텔 페이지로 이동
+    
+    toggleDropdown() {
+      this.isDropdownActive = !this.isDropdownActive;
+    },
+    
+    handleClickOutside(event) {
+      if (!this.$refs.userDropdown.contains(event.target) && 
+          !event.target.closest('.user-profile')) {
+        this.isDropdownActive = false;
+      }
+    },
+    
+    subscribe() {
+      if (this.email) {
+        console.log('Subscribed:', this.email)
+        this.email = ''
+      }
+    },
+    
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -460,8 +612,8 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    }, 
-    //찜목록 페이지로 이동
+    },
+    
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -469,11 +621,24 @@ export default {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
       }
-    },       
-    // 계정 페이지로 이동
+    },
+    
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    
+    goToPaymentHistory() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'history' }
+        });
+        this.isDropdownActive = false;
       } else {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
@@ -640,7 +805,7 @@ export default {
 
         /* Breadcrumb */
         .breadcrumb {
-            width: 244px;
+            width: 100%;
             height: 24px;
             gap: 8px;
             background: #F8F9FA;
@@ -650,9 +815,8 @@ export default {
             font-size: 14px;
             color: #666666;
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin-left: 80px;
+            margin-left: 104px;
             margin-bottom: 30px;
         }     
 
@@ -856,13 +1020,13 @@ export default {
             font-family: Montserrat;
             font-weight: 600;
             font-style: SemiBold;
-            font-size: 32px;
+            font-size: 30px;
             leading-trim: NONE;
             line-height: 100%;
             letter-spacing: 0%;
         }
         .left-check{
-            width: 55px;
+            width: 70px;
             height: 15px;
             angle: 0 deg;
             opacity: 0.6;
@@ -873,11 +1037,11 @@ export default {
             leading-trim: NONE;
             line-height: 100%;
             letter-spacing: 0%;
-            text-align: right;
+            text-align: left;
         }
 
         .left-image{
-            width: 36px;
+            width: 60px;
             height: 92px;
             angle: -0 deg;
             opacity: 1;
@@ -886,6 +1050,10 @@ export default {
             padding-left: 20px;
             margin-top: 10px;
             margin-bottom: 10px;
+        }
+        .left-image img{
+          width: 36px;
+          height: 100%;
         }
 
         /* 중앙 메인 구역 */
@@ -1510,4 +1678,136 @@ export default {
 .footer-column a:hover {
   opacity: 1;
 }
+/* ✅ Loading & Error 스타일 */
+.loading-container, .error-container {
+  max-width: 600px;
+  margin: 200px auto;
+  text-align: center;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8DD3BB;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.btn-back {
+  padding: 12px 32px;
+  background: #8DD3BB;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+}
+
+.btn-back:hover {
+  background: #7bc4ad;
+}
+
+/* ✅ 환불 섹션 스타일 */
+.refund-section {
+  margin: 40px auto;
+  max-width: 1231px;
+  text-align: center;
+  padding: 30px;
+  background: #fff5f5;
+  border-radius: 12px;
+  border: 1px solid #ffcccc;
+}
+
+.refund-btn {
+  width: 200px;
+  height: 56px;
+  background: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+}
+
+.refund-btn:hover {
+  background: #e04848;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+}
+
+.refund-btn:active {
+  transform: translateY(0);
+}
+
+.refund-notice {
+  margin-top: 15px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}
+
+.refunded-notice {
+  padding: 20px;
+  background: #ffe0e0;
+  border: 2px solid #ff5252;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #d32f2f;
+}
+
+/* 바코드 SVG 스타일 */
+.barcode-svg {
+  width: 100%;
+  height: auto;
+  margin: 0px 20px 20px 0px;
+}
+
+/* 프로필 이미지 스타일 개선 */
+.guest img {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+/*호텔 이미지 스타일 */
+.ticket-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0 12px 12px 0;
+}
+
 </style>

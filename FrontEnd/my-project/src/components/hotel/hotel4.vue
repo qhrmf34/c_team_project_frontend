@@ -988,11 +988,11 @@ export default {
           reservationId: this.bookingInfo.reservationId
         });
 
-        // ✅ 토스 결제위젯으로 결제 요청
+        //토스 결제위젯으로 결제 요청
         await this.tossWidgets.requestPayment({
           orderId: orderId,
           orderName: '호텔 예약 결제',
-          // ✅ paymentMethodId는 제거 (우리 DB ID가 아니라 토스가 결제수단 처리)
+          // paymentMethodId는 제거 (우리 DB ID가 아니라 토스가 결제수단 처리)
           successUrl: `${window.location.origin}/payment/success?reservationId=${this.bookingInfo.reservationId}&couponId=${this.selectedCoupon?.id || ''}`,
           failUrl: `${window.location.origin}/payment/fail`,
           customerEmail: this.userInfo.email || 'customer@example.com',

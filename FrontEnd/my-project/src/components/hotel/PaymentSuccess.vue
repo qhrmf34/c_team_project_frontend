@@ -45,56 +45,61 @@ export default {
   },
   
   methods: {
-    async confirmPayment() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paymentKey = urlParams.get('paymentKey');
-        const orderId = urlParams.get('orderId');
-        const amount = urlParams.get('amount');
-        const reservationId = urlParams.get('reservationId');
-        const couponId = urlParams.get('couponId');
-        
-        console.log('✅ 결제 승인 요청 시작');
-        console.log('파라미터:', {
-          paymentKey,
-          orderId,
-          amount,
-          reservationId,
-          couponId
+// PaymentSuccess.vue의 confirmPayment 메서드 수정
+
+async confirmPayment() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentKey = urlParams.get('paymentKey');
+    const orderId = urlParams.get('orderId');
+    const amount = urlParams.get('amount');
+    const reservationId = urlParams.get('reservationId');
+    const couponId = urlParams.get('couponId');
+    
+    console.log('✅ 결제 승인 요청 시작');
+    
+    if (!paymentKey || !orderId || !amount) {
+      throw new Error('결제 정보가 올바르지 않습니다.');
+    }
+    
+    const response = await paymentAPI.confirmPayment({
+      paymentKey,
+      orderId,
+      amount: Number(amount),
+      reservationId: Number(reservationId),
+      paymentMethodId: null,
+      couponId: couponId && couponId !== '' ? Number(couponId) : null
+    });
+    
+    console.log('✅ 결제 승인 응답:', response);
+    
+    if (response.code === 200) {
+      // ✅ HotelFive로 리다이렉트 (paymentId 전달)
+      const paymentId = response.data.id;
+      console.log('✅✅ 결제 완료! 티켓 화면으로 이동 - paymentId:', paymentId);
+      
+      // 3초 후 티켓 화면으로 이동
+      this.isSuccess = true;
+      this.orderId = orderId;
+      this.amount = Number(amount);
+      
+      setTimeout(() => {
+        this.$router.push({
+          path: '/hotelfive',
+          query: { paymentId: paymentId }
         });
-        
-        if (!paymentKey || !orderId || !amount) {
-          throw new Error('결제 정보가 올바르지 않습니다.');
-        }
-        
-        // ✅ paymentMethodId 제거
-        const response = await paymentAPI.confirmPayment({
-          paymentKey,
-          orderId,
-          amount: Number(amount),
-          reservationId: Number(reservationId),
-          paymentMethodId: null,  // ✅ null로 전달
-          couponId: couponId && couponId !== '' ? Number(couponId) : null
-        });
-        
-        console.log('✅ 결제 승인 응답:', response);
-        
-        if (response.code === 200) {
-          this.isSuccess = true;
-          this.orderId = orderId;
-          this.amount = Number(amount);
-          console.log('✅✅ 결제 완료!');
-        } else {
-          this.errorMessage = response.message || '결제 확인에 실패했습니다.';
-        }
-        
-      } catch (error) {
-        console.error('❌ 결제 승인 실패:', error);
-        this.errorMessage = error.response?.data?.message || error.message || '결제 확인 중 오류가 발생했습니다.';
-      } finally {
-        this.isProcessing = false;
-      }
-    },
+      }, 3000);
+    } else {
+      this.errorMessage = response.message || '결제 확인에 실패했습니다.';
+    }
+    
+  } catch (error) {
+    console.error('❌ 결제 승인 실패:', error);
+    this.errorMessage = error.response?.data?.message || error.message || '결제 확인 중 오류가 발생했습니다.';
+  } finally {
+    this.isProcessing = false;
+  }
+},
     
     formatPrice(price) {
       if (!price) return '₩0';

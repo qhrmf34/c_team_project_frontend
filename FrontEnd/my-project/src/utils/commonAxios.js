@@ -300,6 +300,33 @@ export const paymentAPI = {
     return response.data;
   },
     /**
+   * ✅ 전액 환불
+   */
+  async refundPayment(paymentId, cancelReason) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund`, {
+      cancelReason
+    });
+    return response.data;
+  },
+    /**
+   * ✅ 부분 환불
+   */
+  async refundPaymentPartial(paymentId, refundAmount, cancelReason) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund-partial`, {
+      refundAmount,
+      cancelReason
+    });
+    return response.data;
+  },
+  
+  /**
+   * ✅ 내 결제 내역 조회
+   */
+  async getMyPayments() {
+    const response = await apiClient.get('/api/payments/my');
+    return response.data;
+  },
+    /**
    * 결제위젯 승인
    */
   async confirmPayment(confirmData) {
@@ -561,7 +588,16 @@ export const memberCouponAPI = {
     return response.data
   }
 }
-
+// 티켓 API 
+export const ticketAPI = {
+  /**
+   * 결제 ID로 티켓 조회
+   */
+  async getTicketByPaymentId(paymentId) {
+    const response = await apiClient.get(`/api/tickets/payment/${paymentId}`);
+    return response.data;
+  }
+}
 // 관리자 API
 export const adminAPI = {
   // 기본 CRUD 메서드
