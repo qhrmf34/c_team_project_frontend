@@ -290,7 +290,86 @@ export const paymentMethodAPI = {
     return companyNames[cardCompany.toUpperCase()] || cardCompany;
   }
 }
-
+// 결제 API 추가
+export const paymentAPI = {
+  /**
+   * 결제 처리
+   */
+  async processPayment(paymentData) {
+    const response = await apiClient.post('/api/payments/process', paymentData);
+    return response.data;
+  },
+    /**
+   * ✅ 전액 환불
+   */
+  async refundPayment(paymentId, cancelReason) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund`, {
+      cancelReason
+    });
+    return response.data;
+  },
+    /**
+   * ✅ 부분 환불
+   */
+  async refundPaymentPartial(paymentId, refundAmount, cancelReason) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund-partial`, {
+      refundAmount,
+      cancelReason
+    });
+    return response.data;
+  },
+  
+  /**
+   * ✅ 내 결제 내역 조회
+   */
+  async getMyPayments() {
+    const response = await apiClient.get('/api/payments/my');
+    return response.data;
+  },
+    /**
+   * 결제위젯 승인
+   */
+  async confirmPayment(confirmData) {
+    console.log('결제 승인 요청:', confirmData);
+    const response = await apiClient.post('/api/payments/confirm', confirmData);
+    return response.data;
+  },
+  /**
+   * 예약 생성
+   */
+  async createReservation(reservationData) {
+    console.log('=== paymentAPI.createReservation 호출 ===');
+    console.log('전송 데이터 (stringify):', JSON.stringify(reservationData, null, 2));
+    console.log('전송 데이터 (원본):', reservationData);
+    
+    // 각 필드 타입 확인
+    console.log('타입 체크:');
+    for (const [key, value] of Object.entries(reservationData)) {
+      console.log(`  ${key}: ${value} (${typeof value})`);
+    }
+    
+    try {
+      const response = await apiClient.post('/api/reservations', reservationData);
+      console.log('응답 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('=== API 호출 실패 ===');
+      
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+        console.error('Headers:', error.response.headers);
+        
+        // 백엔드 에러 메시지 파싱
+        if (error.response.data) {
+          console.error('상세 에러:', JSON.stringify(error.response.data, null, 2));
+        }
+      }
+      
+      throw error;
+    }
+  }
+}
 // 호텔 API
 export const hotelAPI = {
   // 무료시설 조회
@@ -326,7 +405,23 @@ export const hotelAPI = {
     })
     return response.data
   },
+    /**
+   * 객실 날짜별 가격 상세 조회
+   */
+  async getRoomDailyPrices(roomId, checkIn, checkOut) {
+    const response = await apiClient.get(`/api/admin/rooms/${roomId}/daily-prices`, {
+      params: { checkIn, checkOut }
+    });
+    return response.data;
+  },
   
+  /**
+   * 객실 상세 정보 조회
+   */
+  async getRoomDetail(roomId) {
+    const response = await apiClient.get(`/api/admin/rooms/${roomId}/detail`);
+    return response.data;
+  },
   // 호텔 검색
   async searchHotels(params) {
     const response = await apiClient.get('/api/hotels', { params })
@@ -374,25 +469,7 @@ export const hotelAPI = {
     return response.data;
   },
 
-  /**
-   * 객실 날짜별 가격 조회
-   * GET /api/admin/rooms/{roomId}/daily-prices?checkIn=2025-01-15&checkOut=2025-01-17
-   */
-  async getRoomDailyPrices(roomId, checkIn, checkOut) {
-    const response = await apiClient.get(`/api/admin/rooms/${roomId}/daily-prices`, {
-      params: { checkIn, checkOut }
-    });
-    return response.data;
-  },
 
-  /**
-   * 객실 상세 정보 조회 (Book Now용)
-   * GET /api/admin/rooms/{roomId}/detail
-   */
-  async getRoomDetail(roomId) {
-    const response = await apiClient.get(`/api/admin/rooms/${roomId}/detail`);
-    return response.data;
-  },
 
   /**
    * 리뷰 작성 가능 여부 체크
@@ -490,7 +567,37 @@ export const hotelAPI = {
     return response.data;
   }
 }
+// 회원 쿠폰 API
+export const memberCouponAPI = {
+  // 구독 쿠폰 지급
+  async subscribeAndReceiveCoupons() {
+    const response = await apiClient.post('/api/member-coupons/subscribe')
+    return response.data
+  },
 
+  // 내 쿠폰 목록 조회
+  async getMyCoupons() {
+    const response = await apiClient.get('/api/member-coupons/my')
+    return response.data
+  },
+
+  
+  // 쿠폰 사용
+  async useCoupon(couponId) {
+    const response = await apiClient.post(`/api/member-coupons/${couponId}/use`)
+    return response.data
+  }
+}
+// 티켓 API 
+export const ticketAPI = {
+  /**
+   * 결제 ID로 티켓 조회
+   */
+  async getTicketByPaymentId(paymentId) {
+    const response = await apiClient.get(`/api/tickets/payment/${paymentId}`);
+    return response.data;
+  }
+}
 // 관리자 API
 export const adminAPI = {
   // 기본 CRUD 메서드
