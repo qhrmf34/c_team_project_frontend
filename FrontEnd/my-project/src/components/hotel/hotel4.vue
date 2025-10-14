@@ -464,14 +464,7 @@
                     <span class="price-label">Discount</span>
                     <span class="price-value">-{{ formatPrice(discount) }}</span>
                   </div>
-                  <div class="price-item">
-                    <span class="price-label">Taxes</span>
-                    <span class="price-value">{{ formatPrice(tax) }}</span>
-                  </div>
-                  <div class="price-item">
-                    <span class="price-label">Service Fee</span>
-                    <span class="price-value">{{ formatPrice(serviceFee) }}</span>
-                  </div>
+
                 </div>
                 <div class="hotel-beeline"></div>
 
@@ -627,8 +620,7 @@ export default {
       // 가격 계산
       baseFare: 0,
       discount: 0,
-      tax: 0,
-      serviceFee: 5000
+
     }
   },
   
@@ -867,8 +859,7 @@ export default {
           // Base Fare 계산
           this.baseFare = this.dailyPrices.reduce((sum, day) => sum + parseFloat(day.price), 0);
           
-          // 세금 계산 (10%)
-          this.tax = Math.floor(this.baseFare * 0.1);
+
         }
         
       } catch (error) {
