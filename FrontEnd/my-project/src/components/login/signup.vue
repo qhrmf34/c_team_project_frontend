@@ -139,7 +139,15 @@
                 <label for="confirm-password">Confirm Password</label>
               </div>
             </div>
-            
+
+              <!-- Cloudflare Turnstile 위젯 -->
+              <div class="turnstile-wrapper">
+                <div 
+                  ref="turnstileWidget"
+                  class="cf-turnstile"
+                ></div>
+              </div>
+
             <!-- Options and Button Section -->
             <div class="form-options">
               <div class="checkbox-group">
@@ -336,7 +344,9 @@ export default {
       currentSlideIndex: 0,
       isLoading: false,
       isPaymentLoading: false, // 결제수단 추가용 별도 로딩
-      
+      turnstileWidgetId: null, 
+      turnstileToken: null,
+      turnstileSiteKey: '', 
       showPassword: {
         signup: false,
         confirm: false
@@ -365,12 +375,105 @@ export default {
   },
   
   mounted() {
-    setInterval(() => {
+      // Turnstile 스크립트 로드 - 약간의 지연 후 실행
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.loadTurnstileScript();
+        }, 100);
+      });
+        setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
     }, 5000);
   },
-  
+    beforeUnmount() {
+      // Turnstile 위젯 제거
+      if (window.turnstile && this.turnstileWidgetId !== null) {
+        try {
+          window.turnstile.remove(this.turnstileWidgetId);
+        } catch (error) {
+          console.error('Turnstile 위젯 제거 실패:', error);
+        }
+      }
+      
+      // 컴포넌트 제거 시 전역 콜백 정리
+      if (window.onTurnstileSuccess) {
+        delete window.onTurnstileSuccess;
+      }
+      if (window.onTurnstileError) {
+        delete window.onTurnstileError;
+      }
+    },
   methods: {
+      loadTurnstileScript() {
+        // 이미 스크립트가 로드되어 있는지 확인
+        if (window.turnstile) {
+          this.initTurnstile();
+          return;
+        }
+      
+        // 스크립트가 이미 DOM에 있는지 확인
+        const existingScript = document.querySelector('script[src*="turnstile"]');
+        if (existingScript) {
+          existingScript.addEventListener('load', () => {
+            this.initTurnstile();
+          });
+          return;
+        }
+      
+        // 새로운 스크립트 태그 생성 및 로드
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        script.async = true;
+        script.defer = true;
+
+        script.onload = () => {
+          console.log('Turnstile 스크립트 로드 완료');
+          this.initTurnstile();
+        };
+
+        script.onerror = () => {
+          console.error('Turnstile 스크립트 로드 실패');
+          alert('로봇 검증 시스템을 불러오는데 실패했습니다. 페이지를 새로고침해주세요.');
+        };
+
+        document.head.appendChild(script);
+      },
+      initTurnstile() {
+      // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
+        if (this.turnstileWidgetId) {
+            console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
+            return;
+        }
+      // Turnstile 콜백을 전역으로 등록
+      window.onTurnstileSuccess = (token) => {
+        this.turnstileToken = token;
+        console.log('Turnstile 검증 성공');
+      };
+
+      window.onTurnstileError = (error) => {
+        this.turnstileToken = null;
+        console.error('Turnstile 검증 실패:', error);
+        alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
+      };
+
+      // Turnstile 위젯 렌더링
+      this.$nextTick(() => {
+        if (window.turnstile && this.$refs.turnstileWidget) {
+          try {
+            this.turnstileSiteKey=String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
+            this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
+              sitekey: this.turnstileSiteKey,
+              theme: 'light',
+              callback: window.onTurnstileSuccess,
+              'error-callback': window.onTurnstileError
+            });
+            console.log('Turnstile 위젯 렌더링 완료');
+          } catch (error) {
+            console.error('Turnstile 위젯 렌더링 실패:', error);
+          }
+        }
+      });
+    },
     showScreen(screenName) {
       this.currentScreen = screenName;
       this.currentSlideIndex = 0;
@@ -389,7 +492,12 @@ export default {
         alert('약관에 동의해주세요.');
         return;
       }
-      
+
+      if (!this.turnstileToken) {
+        alert('로봇 검증을 완료해주세요.');
+        return;
+      }
+
       if (this.signupForm.password !== this.signupForm.confirmPassword) {
         alert('비밀번호가 일치하지 않습니다.');
         return;
@@ -416,7 +524,8 @@ export default {
           phoneNumber: this.signupForm.phoneNumber,
           password: this.signupForm.password,
           confirmPassword: this.signupForm.confirmPassword,
-          agreement: this.signupForm.agreement
+          agreement: this.signupForm.agreement,
+          turnstileToken: this.turnstileToken
         });
         
         if (result.data && result.data.token) {
@@ -436,11 +545,18 @@ export default {
       } catch (error) {
         console.error('회원가입 실패:', error);
         alert(error.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
+        this.resetTurnstile();
+
       } finally {
         this.isLoading = false;
       }
     },
-    
+    resetTurnstile() {
+      this.turnstileToken = null;
+      if (window.turnstile && this.$refs.turnstileWidget) {
+        window.turnstile.reset(this.$refs.turnstileWidget);
+      }
+    },
     // 결제수단 추가 메서드 - 실제 API 연동
     async submitPaymentMethod() {
       // 유효성 검사 강화
@@ -1081,5 +1197,10 @@ export default {
   display: flex;
   height: 100vh;
   width: 100%;
+}
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
 }
 </style>

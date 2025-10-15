@@ -41,7 +41,14 @@
                 </div>
                 <label for="password">Password</label>
               </div>
-              
+              <!-- Cloudflare Turnstile 위젯 -->
+              <div class="turnstile-wrapper">
+                <div 
+                  ref="turnstileWidget"
+                  class="cf-turnstile"
+                ></div>
+              </div>
+
               <div class="options">
                 <div class="remember-forgot">
                   <span class="remember-me">
@@ -237,7 +244,10 @@ export default {
       currentScreen: 'login',
       currentSlideIndex: 0,
       isLoading: false,
-      
+      turnstileWidgetId: null, 
+      turnstileToken: null,
+      turnstileSiteKey: '', 
+
       showPassword: {
         login: false,
         create: false,
@@ -266,21 +276,120 @@ export default {
   },
   
   mounted() {
-    this.handleSocialLoginResult();
+      this.handleSocialLoginResult();
+      
+      // Turnstile 스크립트 로드 - 약간의 지연 후 실행
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.loadTurnstileScript();
+        }, 100);
+      });
     
-    // 슬라이더 자동 전환
-    setInterval(() => {
-      this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
-    }, 5000);
-  },
+      // 슬라이더 자동 전환
+      setInterval(() => {
+        this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
+      }, 5000);
+    },
+    
+    beforeUnmount() {
+      // Turnstile 위젯 제거
+      if (window.turnstile && this.turnstileWidgetId !== null) {
+        try {
+          window.turnstile.remove(this.turnstileWidgetId);
+        } catch (error) {
+          console.error('Turnstile 위젯 제거 실패:', error);
+        }
+      }
+      
+      // 컴포넌트 제거 시 전역 콜백 정리
+      if (window.onTurnstileSuccess) {
+        delete window.onTurnstileSuccess;
+      }
+      if (window.onTurnstileError) {
+        delete window.onTurnstileError;
+      }
+    },
   
   methods: {
+      loadTurnstileScript() {
+        // 이미 스크립트가 로드되어 있는지 확인
+        if (window.turnstile) {
+          this.initTurnstile();
+          return;
+        }
+      
+        // 스크립트가 이미 DOM에 있는지 확인
+        const existingScript = document.querySelector('script[src*="turnstile"]');
+        if (existingScript) {
+          existingScript.addEventListener('load', () => {
+            this.initTurnstile();
+          });
+          return;
+        }
+      
+        // 새로운 스크립트 태그 생성 및 로드
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        script.async = true;
+        script.defer = true;
+
+        script.onload = () => {
+          console.log('Turnstile 스크립트 로드 완료');
+          this.initTurnstile();
+        };
+
+        script.onerror = () => {
+          console.error('Turnstile 스크립트 로드 실패');
+          alert('로봇 검증 시스템을 불러오는데 실패했습니다. 페이지를 새로고침해주세요.');
+        };
+
+        document.head.appendChild(script);
+      },
+      initTurnstile() {
+      // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
+        if (this.turnstileWidgetId) {
+            console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
+            return;
+        }
+      // Turnstile 콜백을 전역으로 등록
+      window.onTurnstileSuccess = (token) => {
+        this.turnstileToken = token;
+        console.log('Turnstile 검증 성공');
+      };
+
+      window.onTurnstileError = (error) => {
+        this.turnstileToken = null;
+        console.error('Turnstile 검증 실패:', error);
+        alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
+      };
+
+      // Turnstile 위젯 렌더링
+      this.$nextTick(() => {
+        if (window.turnstile && this.$refs.turnstileWidget) {
+          try {
+            this.turnstileSiteKey=String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
+            this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
+              sitekey: this.turnstileSiteKey,
+              theme: 'light',
+              callback: window.onTurnstileSuccess,
+              'error-callback': window.onTurnstileError
+            });
+            console.log('Turnstile 위젯 렌더링 완료');
+          } catch (error) {
+            console.error('Turnstile 위젯 렌더링 실패:', error);
+          }
+        }
+      });
+    },
     async handleLogin() {
       if (!this.loginForm.email || !this.loginForm.password) {
         alert('이메일과 비밀번호를 입력해주세요.');
         return;
       }
-      
+      if (!this.turnstileToken) {
+        alert('로봇 검증을 완료해주세요.');
+        return;
+      }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.loginForm.email)) {
         alert('올바른 이메일 형식을 입력해주세요.');
@@ -292,7 +401,8 @@ export default {
       try {
         const result = await memberAPI.login({
           email: this.loginForm.email,
-          password: this.loginForm.password
+          password: this.loginForm.password,
+          turnstileToken: this.turnstileToken
         });
         
         if (result.data && result.data.token) {
@@ -312,11 +422,25 @@ export default {
       } catch (error) {
         console.error('로그인 실패:', error);
         alert(error.response?.data?.message || '로그인에 실패했습니다.');
+        this.resetTurnstile();
+
       } finally {
         this.isLoading = false;
       }
     },
-
+    resetTurnstile() {
+        this.turnstileToken = null;
+        if (window.turnstile && this.$refs.turnstileWidget) {
+          try {
+            window.turnstile.reset(this.$refs.turnstileWidget);
+          } catch (error) {
+            console.error('Turnstile 리셋 실패:', error);
+            // 리셋 실패 시 위젯 재렌더링 시도
+            this.initTurnstile();
+          }
+        }
+      },
+    
     async submitForgotPassword() {
       if (!this.forgotPasswordForm.email) {
         alert('이메일을 입력해주세요.');
@@ -860,7 +984,6 @@ p {
   border-color: #ccc;
 }
 
-
 /* 뒤로가기 링크 */
 .back-link {
   text-decoration: none;
@@ -876,7 +999,11 @@ p {
 .back-link:hover {
   color: #7dd3c0;
 }
-
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
   .slider-container {
