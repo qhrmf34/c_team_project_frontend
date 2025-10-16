@@ -558,6 +558,38 @@
           </div>
         </div>
       </div>
+      <!-- 쿠폰 지급 모달 -->
+      <div v-if="showCouponModal" class="coupon-modal-overlay" @click="closeCouponModal">
+        <div class="coupon-modal" @click.stop>
+          <div class="coupon-modal-header">
+            <h2>🎉 쿠폰이 지급되었습니다!</h2>
+            <button class="modal-close-btn" @click="closeCouponModal">✕</button>
+          </div>
+
+          <div class="coupon-modal-content">
+            <p class="coupon-count">총 {{ receivedCoupons.length }}개의 쿠폰을 받았습니다</p>
+
+            <div class="coupon-list">
+              <div v-for="coupon in receivedCoupons" :key="coupon.id" class="coupon-item">
+                <div class="coupon-badge">
+                  <span class="discount">{{ formatCouponDiscount(coupon.discount) }}</span>
+                  <span class="discount-label">할인</span>
+                </div>
+
+                <div class="coupon-info">
+                  <h3>{{ coupon.couponName }}</h3>
+                  <p class="coupon-expiry">유효기간: ~ {{ formatCouponDate(coupon.lastDate) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="coupon-modal-footer">
+              <button class="btn-close" @click="closeCouponModal">닫기</button>
+          </div>
+        </div>
+      </div>
+
   </div>
 </template>
 
@@ -577,6 +609,9 @@ export default {
       modalActive: false,
       phoneNumber: '',
       email: '',
+      newsletter: {
+        email: ''
+      },
       
       // 예약 정보
       bookingInfo: {
@@ -613,6 +648,8 @@ export default {
       isProcessingPayment: false,
       savedCards: [],
       availableCoupons: [],
+      showCouponModal: false,
+      receivedCoupons: [],
 
       tossWidgets: null,
       isWidgetReady: false,
@@ -1172,13 +1209,52 @@ export default {
       }
     },
     
-    subscribe() {
-      if (this.email) {
-        console.log('Subscribed:', this.email);
-        this.email = '';
+    async subscribe() {
+      // 로그인 확인
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
+      }
+
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.newsletter.email = '' // 이메일 입력창 초기화
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
       }
     },
-    
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -2784,14 +2860,250 @@ export default {
       opacity: 0.6;
     }
 
+    /* 쿠폰 모달 스타일 */
+    .coupon-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .coupon-modal {
+      background: white;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .coupon-modal-header {
+      padding: 32px 32px 24px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .coupon-modal-header h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 24px;
+      color: #112211;
+      margin: 0;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      color: #112211;
+    }
+
+    .coupon-modal-content {
+      padding: 24px 32px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .coupon-count {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .coupon-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .coupon-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, #8DD3BB 0%, #7CC5AE 100%);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .coupon-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(141, 211, 187, 0.4);
+    }
+
+    .coupon-badge {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 80px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .discount {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: #8DD3BB;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .discount-label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .coupon-info {
+      flex: 1;
+    }
+
+    .coupon-info h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: white;
+      margin: 0 0 8px 0;
+    }
+
+    .coupon-expiry {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+    }
+
+    .coupon-modal-footer {
+      padding: 24px 32px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-use-coupon,
+    .btn-close {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-use-coupon {
+      background: #8DD3BB;
+      color: #112211;
+    }
+
+    .btn-use-coupon:hover {
+      background: #7CC5AE;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+    }
+
+    .btn-close {
+      background: white;
+      color: #112211;
+      border: 2px solid #e0e0e0;
+    }
+
+    .btn-close:hover {
+      border-color: #8DD3BB;
+      color: #8DD3BB;
+    }
+
+    /* 반응형 */
+    @media screen and (max-width: 768px) {
+      .coupon-modal {
+        width: 95%;
+        max-height: 90vh;
+      }
+    
+      .coupon-modal-header {
+        padding: 24px 20px 16px;
+      }
+    
+      .coupon-modal-header h2 {
+        font-size: 20px;
+      }
+    
+      .coupon-modal-content {
+        padding: 16px 20px;
+      }
+    
+      .coupon-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px;
+      }
+    
+      .coupon-badge {
+        align-self: flex-start;
+      }
+    
+      .coupon-modal-footer {
+        flex-direction: column;
+        padding: 16px 20px;
+      }
+    }
 
 
-        /* Screen transitions */
-        .screen {
-            display: none;
-        }
+    /* Screen transitions */
+    .screen {
+        display: none;
+    }
 
-        .screen.active {
-            display: block;
-        }
+    .screen.active {
+        display: block;
+    }
 </style>
