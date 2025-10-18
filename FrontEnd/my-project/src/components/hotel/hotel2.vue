@@ -91,30 +91,32 @@
             </span>
           </div>
           <div class="filter-content" :class="{ collapsed: filters.price.collapsed }">
-            <div class="price-slider-container">
-              <div class="price-range-slider">
-                <div class="price-range-track" :style="priceTrackStyle"></div>
-                <input 
-                  type="range" 
-                  min="50" 
-                  max="1200" 
-                  v-model="priceRange.min" 
-                  class="price-range-input"
-                  @input="updatePriceSlider">
-                <input 
-                  type="range" 
-                  min="50" 
-                  max="1200" 
-                  v-model="priceRange.max" 
-                  class="price-range-input"
-                  @input="updatePriceSlider">
-              </div>
-              <div class="price-values">
-                <span>${{ priceRange.min }}</span>
-                <span>${{ priceRange.max }}</span>
-              </div>
-            </div>
-          </div>
+  <div class="price-slider-container">
+    <div class="price-range-slider">
+      <div class="price-range-track" :style="priceTrackStyle"></div>
+      <input 
+        type="range" 
+        :min="priceRange.dynamicMin" 
+        :max="priceRange.dynamicMax" 
+        step="50"
+        v-model.number="priceRange.min" 
+        class="price-range-input"
+        @input="updatePriceSlider">
+      <input 
+        type="range" 
+        :min="priceRange.dynamicMin" 
+        :max="priceRange.dynamicMax" 
+        step="50"
+        v-model.number="priceRange.max" 
+        class="price-range-input"
+        @input="updatePriceSlider">
+    </div>
+    <div class="price-values">
+      <span>₩{{ formatPriceDisplay(priceRange.min) }}</span>
+      <span>₩{{ formatPriceDisplay(priceRange.max) }}</span>
+    </div>
+  </div>
+</div>
         </div>
 
         <div class="filter-group">
@@ -209,10 +211,12 @@
 
         <div class="hotel-cards" :class="{ 'show-all': showingAll }">
           <div v-for="hotel in hotels" :key="hotel.id" 
-               class="hotel-card" >
+               class="hotel-card"
+               :class="{ 'sold-out': !hotel.available }">
             <div class="hotel-image-container">
               <img :src="hotel.image" :alt="hotel.title" class="hotel-image">
               <div class="image-count">{{ hotel.imageCount }} images</div>
+              <div v-if="!hotel.available" class="sold-out-badge">예약 마감</div> 
             </div>
             <div class="hotel-content">
               <div class="top-section">
@@ -251,7 +255,12 @@
                     :style="{ color: hotel.wishlisted ? '#FF6B6B' : '#000000' }">
                     {{ hotel.wishlisted ? '♥' : '♡' }}
                   </button>
-                  <button class="view-place-btn" @click="viewPlace(hotel)">View Place</button>
+                  <button 
+                    class="view-place-btn"
+                    :class="{ 'sold-out-btn': !hotel.available }"  
+                    @click="viewPlace(hotel)">
+                    {{ hotel.available ? 'View Place' : '예약 마감' }}  
+                  </button>
                 </div>
               </div>
             </div>
@@ -350,6 +359,7 @@
 
 <script>
 import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 export default {
   name: 'HotelTwo',
   data() {
@@ -397,7 +407,8 @@ export default {
       
       // 사용자 정보
       userInfo: null,
-      isLoggedIn: false
+      isLoggedIn: false,
+      debouncedSearch: null
     }
   },
   
@@ -411,33 +422,22 @@ export default {
     },
 
     priceTrackStyle() {
-      const minPercent = ((this.priceRange.min - 50) / (1200 - 50)) * 100;
-      const maxPercent = ((this.priceRange.max - 50) / (1200 - 50)) * 100;
-      return {
-        left: minPercent + '%',
-        width: (maxPercent - minPercent) + '%'
-      };
-    },
+  const range = this.priceRange.dynamicMax - this.priceRange.dynamicMin;
+  const minPercent = ((this.priceRange.min - this.priceRange.dynamicMin) / range) * 100;
+  const maxPercent = ((this.priceRange.max - this.priceRange.dynamicMin) / range) * 100;
+  return {
+    left: minPercent + '%',
+    width: (maxPercent - minPercent) + '%'
+  };
+},
+
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        const { provider, firstName, lastName, email } = this.userInfo;
-        
-        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
-          return firstName || email?.split('@')[0] || 'Social User';
-        }
-        
-        if (provider === 'local') {
-          if (firstName && lastName) {
-            return `${firstName} ${lastName}`;
-          } else if (firstName) {
-            return firstName;
-          } else if (email) {
-            return email.split('@')[0];
-          }
-        }
+        return formatMemberName(this.userInfo);
       }
       return 'Guest';
     },
+
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -451,8 +451,24 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     }
   },
+
+  created() {
+    this.debouncedSearch = this.debounce(this.search, 500);
+  },
   
   methods: {
+    debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    },
+
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
@@ -478,7 +494,8 @@ export default {
           hotelId: hotel.id,
           checkIn: this.searchData.checkIn,
           checkOut: this.searchData.checkOut,
-          guests: this.searchData.guests
+          guests: this.searchData.guests,
+          available: hotel.available
         }
       });
     },
@@ -659,46 +676,59 @@ export default {
     
     // ===== 필터 옵션 로드 =====
     async loadFilterOptions() {
-      try {
-        const response = await hotelAPI.getFilterOptions();
+  try {
+    const response = await hotelAPI.getFilterOptions();
+    
+    if (response.code === 200) {
+      const filters = response.data;
+      
+      this.freebies = filters.freebies.map(item => ({
+        id: item.id,
+        label: item.freebiesName,
+        checked: false
+      }));
+      
+      this.amenities = filters.amenities.map(item => ({
+        id: item.id,
+        label: item.amenitiesName,
+        checked: false
+      }));
+      
+      if (filters.priceRange) {
+        // 최고가에 20% 여유 추가 (천원 단위)
+        const maxPrice = Math.ceil(filters.priceRange.max * 1.2 / 1000);
         
-        if (response.code === 200) {
-          const filters = response.data;
-          
-          this.freebies = filters.freebies.map(item => ({
-            id: item.id,
-            label: item.freebiesName,
-            checked: false
-          }));
-          
-          this.amenities = filters.amenities.map(item => ({
-            id: item.id,
-            label: item.amenitiesName,
-            checked: false
-          }));
-          
-          if (filters.priceRange) {
-            this.priceRange.min = Math.floor(filters.priceRange.min / 1000);
-            this.priceRange.max = Math.ceil(filters.priceRange.max / 1000);
-          }
-          
-          // 초기 로드 시에는 hotelTypeCounts를 사용하지 않음
-          // 검색 실행 시에만 업데이트됨
-        }
-      } catch (error) {
-        console.error('필터 옵션 로드 중 오류:', error);
+        // 최소 2000까지는 보장 (너무 낮은 가격 방지)
+        const finalMax = Math.max(maxPrice, 2000);
+        
+        this.priceRange = {
+          min: 0,                    
+          max: finalMax,
+          dynamicMin: 0,             
+          dynamicMax: finalMax
+        };
+        
+        console.log('가격 범위 설정:', {
+          min: 0,
+          max: finalMax,
+          original: filters.priceRange.max
+        });
       }
-    },
+    }
+  } catch (error) {
+    console.error('필터 옵션 로드 중 오류:', error);
+  }
+},
     
     // ===== 호텔 검색 =====
     async search() {
+    if (this.isLoading) return;
+
       console.log('검색 시작...');
       
       if (!this.validateDates()) {
         return;
       }
-      
-      this.isLoading = true;
 
       try {
         const params = {
@@ -834,7 +864,8 @@ export default {
         ratingText: hotel.ratingText || 'No Rating',
         reviewCount: hotel.reviewCount || 0,
         wishlisted: hotel.wishlisted || false,
-        cityName: hotel.cityName
+        cityName: hotel.cityName,
+        available: hotel.available !== undefined ? hotel.available : true
       };
     },
     
@@ -882,7 +913,12 @@ export default {
       if (!imagePath) return '/images/hotel_img/hotel1.jpg';
       if (imagePath.startsWith('/images/')) return imagePath;
       return adminAPI.getImageUrl(imagePath);
-    }
+    },
+
+    formatPriceDisplay(price) {
+      if (price === 0) return '0';
+      return (price * 1000).toLocaleString('ko-KR');
+    },
   },
 
   async mounted() {
@@ -918,6 +954,49 @@ export default {
   watch: {
     '$route'() {
       this.loadUserInfo();
+    },
+     'searchData.destination'() {
+      this.debouncedSearch();
+    },
+    'searchData.checkIn'() {
+      if (this.validateDates()) {
+        this.debouncedSearch();
+      }
+    },
+    'searchData.checkOut'() {
+      if (this.validateDates()) {
+        this.debouncedSearch();
+      }
+    },
+    'searchData.guests'() {
+      this.search();
+    },
+    
+    // 가격 슬라이더 - debounce 적용
+    'priceRange.min'() {
+      this.debouncedSearch();
+    },
+    'priceRange.max'() {
+      this.debouncedSearch();
+    },
+    
+    // 정렬
+    'sortBy'() {
+      this.search();
+    },
+    
+    // Freebies와 Amenities
+    freebies: {
+      handler() {
+        this.search();
+      },
+      deep: true
+    },
+    amenities: {
+      handler() {
+        this.search();
+      },
+      deep: true
     }
   }
 }
@@ -2126,5 +2205,43 @@ export default {
 
         .show-all .hidden-hotels {
             display: flex;
+        }
+                .image-count {
+            position: absolute;
+            width: 72px;
+            height: 32px;
+            top: 10px;
+            left: 220px;
+            background: rgba(255, 255, 255, 0.5);
+            color: black;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-family: Montserrat;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 12px;
+            leading-trim: NONE;
+            line-height: 100%;
+            letter-spacing: 0%;
+            gap: 10px;
+            display: flex;          
+            align-items: center;   
+            justify-content: center; 
+        }
+
+        .sold-out-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #FF0000;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: Montserrat;
+            font-weight: 700;
+            font-size: 16px;
+            z-index: 10;
+            box-shadow: 0px 4px 12px rgba(255, 0, 0, 0.3);
         }
 </style>
