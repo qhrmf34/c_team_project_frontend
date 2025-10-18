@@ -262,6 +262,7 @@
 <script>
 // HotelOne.vue의 script 부분만 업데이트
 import { authUtils, hotelAPI, adminAPI,memberCouponAPI  } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelOne',
@@ -291,26 +292,8 @@ export default {
     // 표시할 사용자 이름 계산 (소셜 로그인 개선)
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        const { provider, firstName, lastName, email } = this.userInfo;
-        
-        // 소셜 로그인의 경우 firstName만 사용
-        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
-          return firstName || email?.split('@')[0] || 'Social User';
-        }
-        
-        // local 로그인의 경우 firstName + lastName 사용
-        if (provider === 'local') {
-          if (firstName && lastName) {
-            return `${firstName} ${lastName}`;
-          } else if (firstName) {
-            return firstName;
-          } else if (email) {
-            return email.split('@')[0];
-          }
-        }
+        return formatMemberName(this.userInfo);
       }
-      
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     

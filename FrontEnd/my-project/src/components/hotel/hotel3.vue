@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Header -->
+    <!-- ========== HEADER ========== -->
     <header class="header">
       <nav>
         <div class="nav-left">
@@ -26,7 +26,7 @@
       </nav>
     </header>
 
-    <!-- User Dropdown -->
+    <!-- ========== USER DROPDOWN ========== -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
       <div class="dropdown-header">
         <div class="dropdown-avatar"></div>
@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <!-- Breadcrumb -->
+    <!-- ========== BREADCRUMB ========== -->
     <div class="breadcrumb" v-if="hotel">
       <a href="#" @click.prevent="searchByCountry(hotel.countryName)" style="color: rgba(255, 134, 130, 1);">
         {{ hotel.countryName || 'Turkey' }}
@@ -63,7 +63,9 @@
       <span>{{ hotel.hotelName }}</span>
     </div>
 
+    <!-- ========== MAIN CONTENT ========== -->
     <div class="main-content" v-if="hotel">
+      
       <!-- Hotel Header -->
       <div class="hotel-header">
         <div class="hotel-info">
@@ -129,6 +131,7 @@
 
       <div class="content-layout">
         <div class="content-main">
+          
           <!-- Overview Section -->
           <div class="overview-section">
             <h2 class="overview-title">Overview</h2>
@@ -156,19 +159,18 @@
           <div class="room-section">
             <h3 class="room-title">잔여 객실</h3>
             
-            <!-- 예약 가능한 객실만 표시 -->
-            <div v-if="availableRooms && availableRooms.length > 0">
-              <div v-for="room in availableRooms" :key="room.roomId" class="room-item">
-                <img :src="room.image || '/images/hotel_img/room-default.jpg'" :alt="room.roomName" class="room-image">
+            <div v-if="groupedRooms && groupedRooms.length > 0">
+              <div v-for="(group, index) in groupedRooms" :key="index" class="room-item">
+                <img :src="group.image || '/images/hotel_img/room-default.jpg'" :alt="group.roomName" class="room-image">
                 <div class="room-info">
                   <div class="room-details">
-                    {{ room.roomName }} · {{ room.bedType }}
-                    <span class="room-stock"> (재고: {{ room.availableCount }}개)</span>
+                    {{ group.roomName }} · {{ group.bedType }}
+                    <span class="room-stock"> (재고: {{ group.rooms.length }}개)</span>
                   </div>
                 </div>
                 <div class="room-price-section">
-                  <div class="room-price">{{ formatPrice(room.totalPrice) }}<span style="font-size: 14px; font-weight: 400;"> / {{ room.nights }}박</span></div>
-                  <button class="room-book-btn" @click="bookRoom(room)">Book now</button>
+                  <div class="room-price">{{ formatPrice(group.totalPrice) }}<span style="font-size: 14px; font-weight: 400;"> / {{ group.nights }}박</span></div>
+                  <button class="room-book-btn" @click="showRoomSelectionModal(group)">호실 선택</button>
                 </div>
               </div>
             </div>
@@ -206,7 +208,6 @@
               </div>
             </div>
           </div>
-
           <div class="beeline"></div>
           
           <!-- Reviews Section -->
@@ -258,36 +259,85 @@
             
             <div class="review-form-buttons">
               <button class="cancel-btn" @click="hideReviewForm">취소</button>
-              <button class="submit-review-btn" @click="submitReview">{{ isEditMode ? '리뷰 수정' : '리뷰 등록' }}</button>
-              <button v-if="isEditMode" class="delete-review-btn" @click="deleteReview">리뷰 삭제</button>
+              <button v-if="!isEditMode" class="submit-review-btn" @click="submitReview">등록</button>
+              <button v-if="isEditMode" class="edit-review-btn" @click="submitReview">수정</button>
+              <button v-if="isEditMode" class="delete-review-btn" @click="deleteReview">삭제</button>
             </div>
           </div>
           
+          <!-- Review Filters -->
           <div class="review-filters">
-            <button v-for="filter in reviewFilters" :key="filter.key" class="filter-btn" :class="{ active: activeFilter === filter.key }" @click="filterReviews(filter.key)">{{ filter.label }}</button>
+            <button v-for="filter in reviewFilters" :key="filter.key" class="filter-btn" :class="{ active: activeFilter === filter.key }" @click="filterReviews(filter.key)">
+              {{ filter.label }}
+            </button>
           </div>
 
+          <!-- Review List -->
           <div id="reviewsList">
             <div v-for="review in filteredReviews" :key="review.id" class="review-item">
               <div class="review-header">
                 <div class="review-user-info">
                   <div class="reviewer-avatar"></div>
-                  <div class="reviewer-info">
-                    <div class="reviewer-name">{{ review.rating }}.0 {{ getRatingText(review.rating) }} | {{ review.memberName }}</div>
-                    <div class="review-rating">{{ formatDate(review.createdAt) }}</div>
-                  </div>
+                <div class="reviewer-info">
+                  <div class="reviewer-name">{{ review.rating }}.0 {{ getRatingText(review.rating) }} | {{ review.displayName || review.memberName }}</div>
+                  <div class="review-rating">{{ formatDate(review.createdAt) }}</div>
                 </div>
-                <button class="report-btn" @click="showReportModal(review.id)">신고</button>
               </div>
-              <p class="review-text">{{ review.reviewContent }}</p>
-            </div>
-          </div>
 
+              <!-- 본인 리뷰면 수정+삭제 버튼, 아니면 신고 버튼 -->
+               <div v-if="review.isMyReview" class="my-review-buttons">
+                <button class="edit-my-review-btn" @click="editMyReview(review)">수정</button>
+                <button class="delete-my-review-btn" @click="deleteMyReview(review.id)">삭제</button>
+              </div>
+              <button v-else class="report-btn" @click="showReportModal(review.id)">신고</button>
+            </div>
+            <p class="review-text">{{ review.reviewContent }}</p>
+          </div>
+        </div>
+
+          <!-- Review Pagination -->
           <div class="review-pagination">
             <button class="pagination-btn">‹</button>
             <span class="pagination-info">1 of {{ Math.ceil(hotel.reviewCount / 10) }}</span>
             <button class="pagination-btn">›</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODALS ========== -->
+    
+    <!-- 호실 선택 모달 -->
+    <div class="modal-overlay" :class="{ active: isRoomSelectionModalVisible }" @click="hideRoomSelectionModal">
+      <div class="modal-content room-selection-modal" @click.stop>
+        <h3 class="modal-title">호실 선택</h3>
+        
+        <div v-if="selectedRoomGroup" class="selected-room-type">
+          <h4>{{ selectedRoomGroup.roomName }}</h4>
+          <p>{{ selectedRoomGroup.bedType }}</p>
+          <p class="price-info">{{ formatPrice(selectedRoomGroup.totalPrice) }} / {{ selectedRoomGroup.nights }}박</p>
+        </div>
+
+        <div class="room-numbers-grid">
+          <button 
+            v-for="room in selectedRoomGroup?.rooms" 
+            :key="room.roomId"
+            class="room-number-btn"
+            :class="{ selected: selectedRoomId === room.roomId }"
+            @click="selectRoom(room.roomId, room.roomNumber)">
+            <div class="room-num-text">{{ room.roomNumber }}호</div>
+            <div class="room-floor-text">{{ Math.floor(room.roomNumber / 100) }}층</div>
+          </button>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="modal-cancel-btn" @click="hideRoomSelectionModal">취소</button>
+          <button 
+            class="modal-submit-btn" 
+            @click="confirmRoomSelection"
+            :disabled="!selectedRoomId">
+            예약하기
+          </button>
         </div>
       </div>
     </div>
@@ -367,7 +417,7 @@
       </div>
     </div>
 
-    <!-- Newsletter & Footer -->
+    <!-- ========== NEWSLETTER & FOOTER ========== -->
     <section class="newsletter-section"></section>
     <div class="newsletter-content">
       <div class="newsletter-left">
@@ -452,6 +502,7 @@
 
 <script>
 import { authUtils, hotelAPI, paymentAPI } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelThree',
@@ -483,6 +534,15 @@ export default {
       isEditMode: false,
       editingReviewId: null,
       guests: 2,  
+
+      isRoomSelectionModalVisible: false,
+      selectedRoomGroup: null,
+      selectedRoomId: null,
+      selectedRoomNumber: null,
+
+      isRoomNumberModalVisible: false,
+      selectedRoomForBooking: null,
+      
       reviewCardOptions: [
         { value: 'NearPark', label: 'Near park' },
         { value: 'NearNightLife', label: 'Near nightlife' },
@@ -532,23 +592,8 @@ export default {
 
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        const { provider, firstName, lastName, email } = this.userInfo;
-        
-        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
-          return firstName || email?.split('@')[0] || 'Social User';
-        }
-        
-        if (provider === 'local') {
-          if (firstName && lastName) {
-            return `${firstName} ${lastName}`;
-          } else if (firstName) {
-            return firstName;
-          } else if (email) {
-            return email.split('@')[0];
-          }
-        }
+        return formatMemberName(this.userInfo);
       }
-      
       return 'Guest';
     },
     
@@ -563,6 +608,37 @@ export default {
         return providerNames[this.userInfo.provider] || 'Online';
       }
       return this.isLoggedIn ? 'Online' : 'Offline';
+    },
+    
+    groupedRooms() {
+      if (!this.availableRooms || this.availableRooms.length === 0) {
+        return [];
+      }
+      
+      const groups = {};
+      
+      this.availableRooms.forEach(room => {
+        const key = `${room.roomName}_${room.bedType}`;
+        
+        if (!groups[key]) {
+          groups[key] = {
+            roomName: room.roomName,
+            bedType: room.bedType,
+            totalPrice: room.totalPrice,
+            nights: room.nights,
+            image: room.image,
+            rooms: []
+          };
+        }
+        
+        groups[key].rooms.push({
+          roomId: room.roomId,
+          roomNumber: room.roomNumber,
+          totalPrice: room.totalPrice
+        });
+      });
+      
+      return Object.values(groups);
     }
   },
   
@@ -656,11 +732,42 @@ export default {
         return;
       }
       
-      console.log('=== 예약 시작 ===');
-      console.log('room 객체:', room);
+      // 날짜 검증 강화
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const checkInDate = new Date(this.checkIn);
+      const checkOutDate = new Date(this.checkOut);
+      checkInDate.setHours(0, 0, 0, 0);
+      checkOutDate.setHours(0, 0, 0, 0);
+      
+      // 체크인이 오늘 이전인지
+      if (checkInDate < today) {
+        alert('체크인 날짜는 오늘 이후여야 합니다.');
+        return;
+      }
+      
+      // 체크아웃이 체크인보다 이전인지
+      if (checkOutDate <= checkInDate) {
+        alert('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다.');
+        return;
+      }
+      
+      // 체크아웃이 이미 지난 날짜인지
+      if (checkOutDate < today) {
+        alert('체크아웃 날짜가 이미 지났습니다. 예약을 진행할 수 없습니다.');
+        return;
+      }
+      
+      // 체크인과 체크아웃이 모두 과거인지
+      if (checkInDate < today && checkOutDate < today) {
+        alert('선택하신 날짜가 이미 지났습니다. 날짜를 다시 선택해주세요.');
+        return;
+      }
+      
+      console.log('예약 시작');
       
       try {
-        // 1. 예약 생성
         const reservationData = {
           roomId: Number(room.roomId),
           checkInDate: this.checkIn,
@@ -670,13 +777,7 @@ export default {
           reservationsStatus: false
         };
         
-        console.log('=== 전송할 예약 데이터 ===');
-        console.log(JSON.stringify(reservationData, null, 2));
-        
         const reservationResponse = await paymentAPI.createReservation(reservationData);
-        
-        console.log('=== 예약 응답 ===');
-        console.log(reservationResponse);
         
         if (reservationResponse.code !== 200) {
           throw new Error(reservationResponse.message || '예약 생성 실패');
@@ -684,47 +785,71 @@ export default {
         
         const reservationId = reservationResponse.data.id;
         
-        console.log('=== 예약 ID ===', reservationId);
-        console.log('=== 페이지 이동 준비 ===');
-        
-        // 2. 결제 페이지로 이동
+        // query param으로 모든 데이터 전달
         await this.$router.push({
           path: '/hotelfour',
           query: {
             reservationId: reservationId,
             roomId: room.roomId,
             hotelId: this.hotel.id,
+            hotelName: this.hotel.hotelName,
+            roomName: room.roomName,
+            roomNumber: room.roomNumber || '',
             checkIn: this.checkIn,
             checkOut: this.checkOut,
             totalPrice: room.totalPrice,
-            nights: room.nights
+            nights: room.nights,
+            guests: this.guests
           }
         });
         
-        console.log('=== 페이지 이동 완료 ===');
-        
       } catch (error) {
-        console.error('=== 예약 생성 실패 ===');
+        console.error('예약 생성 실패');
         console.error('error:', error);
-        console.error('error.response?.data:', error.response?.data);
         
+        // 409 에러 (중복 예약) 처리
+        if (error.response?.status === 409) {
+          const existingReservationId = error.response.data?.reservationId;
+          
+          if (existingReservationId) {
+            if (confirm('미결제된 예약이 있습니다. 이어서 진행하시겠습니까?')) {
+              // query param으로 모든 데이터 전달
+              await this.$router.push({
+                path: '/hotelfour',
+                query: {
+                  reservationId: existingReservationId,
+                  roomId: room.roomId,
+                  hotelId: this.hotel.id,
+                  hotelName: this.hotel.hotelName,
+                  roomName: room.roomName,
+                  roomNumber: room.roomNumber || '',
+                  checkIn: this.checkIn,
+                  checkOut: this.checkOut,
+                  totalPrice: room.totalPrice,
+                  nights: room.nights,
+                  guests: this.guests
+                }
+              });
+              return;
+            }
+          } else {
+            alert('이미 해당 날짜에 예약이 존재합니다.');
+          }
+          return;
+        }
+        
+        // 다른 에러 처리
         let errorMessage = '예약 생성에 실패했습니다.';
         
         if (error.response?.data) {
           const errorData = error.response.data;
           
-          // 중복 예약 에러 처리
-          if (error.response.status === 409) {
-            errorMessage = errorData.message || '이미 해당 날짜에 예약이 존재합니다.';
-          }
-          // 유효성 검증 에러
-          else if (errorData.errors) {
+          if (errorData.errors) {
             const errors = Object.entries(errorData.errors)
               .map(([field, msg]) => `${field}: ${msg}`)
               .join('\n');
             errorMessage = `입력 오류:\n${errors}`;
           }
-          // 일반 에러
           else if (errorData.message) {
             errorMessage = errorData.message;
           }
@@ -733,6 +858,7 @@ export default {
         alert(errorMessage);
       }
     },
+    
     async showReviewForm() {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
@@ -774,120 +900,139 @@ export default {
     },
 
     async submitReview() {
-  if (!this.isLoggedIn) {
-    alert('로그인이 필요한 서비스입니다.');
-    this.$router.push('/login');
-    return;
-  }
-  
-  // 유효성 검사
-  if (!this.selectedRating || this.selectedRating === 0) {
-    alert('평점을 선택해주세요.');
-    return;
-  }
-  
-  if (!this.selectedCard) {
-    alert('리뷰 카드를 선택해주세요.');
-    return;
-  }
-  
-  if (!this.reviewText || this.reviewText.trim().length < 10) {
-    alert('리뷰 내용을 10자 이상 입력해주세요.');
-    return;
-  }
-  
-  try {
-    let response;
-    
-    if (this.isEditMode) {
-      const reviewData = {
-        id: this.editingReviewId,
-        hotelId: this.hotel.id,  
-        reservationsId: this.reviewEligibility.reservationId, 
-        rating: this.selectedRating.toString(),  
-        reviewContent: this.reviewText.trim(),
-        reviewCard: this.selectedCard
-      };
-      
-      response = await hotelAPI.updateReview(this.editingReviewId, reviewData);
-      
-      if (response.code === 200) {
-        alert('리뷰가 수정되었습니다.');
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
       }
-    } else {
-      const reviewData = {
-        hotelId: this.hotel.id,
-        reservationsId: this.reviewEligibility.reservationId,
-        rating: this.selectedRating.toString(),
-        reviewContent: this.reviewText.trim(),
-        reviewCard: this.selectedCard
-      };
       
-      response = await hotelAPI.createReview(reviewData);
-      
-      if (response.code === 200) {
-        alert('리뷰가 작성되었습니다.');
+      // 유효성 검사
+      if (!this.selectedRating || this.selectedRating === 0) {
+        alert('평점을 선택해주세요.');
+        return;
       }
-    }
-    
-    // 리뷰 목록 및 평점 정보 새로고침
-    await this.loadReviewsData(this.hotel.id);
-    await this.loadReviewStats(this.hotel.id);
-    await this.loadHotelRatingStats(this.hotel.id);
-    
-    this.hideReviewForm();
-    
-  } catch (error) {
-    console.error('=== 리뷰 처리 중 오류 ===');
-    console.error('error:', error);
-    console.error('error.response:', error.response);
-    console.error('error.response.data:', error.response?.data);
-    
-    // 상세한 에러 메시지 표시
-    if (error.response?.data?.errors) {
-      const errors = error.response.data.errors;
-      const errorMessages = Object.entries(errors)
-        .map(([field, message]) => `${field}: ${message}`)
-        .join('\n');
-      alert(`입력 오류:\n${errorMessages}`);
-    } else if (error.response?.data?.message) {
-      alert(error.response.data.message);
-    } else {
-      alert('리뷰 처리 중 오류가 발생했습니다.');
-    }
-  }
-},
+      
+      if (!this.selectedCard) {
+        alert('리뷰 카드를 선택해주세요.');
+        return;
+      }
+      
+      if (!this.reviewText || this.reviewText.trim().length < 10) {
+        alert('리뷰 내용을 10자 이상 입력해주세요.');
+        return;
+      }
+      
+      try {
+        let response;
+        
+        if (this.isEditMode) {
+          const reviewData = {
+            id: this.editingReviewId,
+            hotelId: this.hotel.id,  
+            reservationsId: this.reviewEligibility.reservationId, 
+            rating: this.selectedRating.toString(),  
+            reviewContent: this.reviewText.trim(),
+            reviewCard: this.selectedCard
+          };
+          
+          response = await hotelAPI.updateReview(this.editingReviewId, reviewData);
+          
+          if (response.code === 200) {
+            alert('리뷰가 수정되었습니다.');
+          }
+        } else {
+          const reviewData = {
+            hotelId: this.hotel.id,
+            reservationsId: this.reviewEligibility.reservationId,
+            rating: this.selectedRating.toString(),
+            reviewContent: this.reviewText.trim(),
+            reviewCard: this.selectedCard
+          };
+          
+          response = await hotelAPI.createReview(reviewData);
+          
+          if (response.code === 200) {
+            alert('리뷰가 작성되었습니다.');
+          }
+        }
+        
+        // 리뷰 목록 및 평점 정보 새로고침
+        await this.loadReviewsData(this.hotel.id);
+        await this.loadReviewStats(this.hotel.id);
+        await this.loadHotelRatingStats(this.hotel.id);
+        
+        this.hideReviewForm();
+        
+      } catch (error) {
+        console.error('=== 리뷰 처리 중 오류 ===');
+        console.error('error:', error);
+        console.error('error.response:', error.response);
+        console.error('error.response.data:', error.response?.data);
+        
+        // 상세한 에러 메시지 표시
+        if (error.response?.data?.errors) {
+          const errors = error.response.data.errors;
+          const errorMessages = Object.entries(errors)
+            .map(([field, message]) => `${field}: ${message}`)
+            .join('\n');
+          alert(`입력 오류:\n${errorMessages}`);
+        } else if (error.response?.data?.message) {
+          alert(error.response.data.message);
+        } else {
+          alert('리뷰 처리 중 오류가 발생했습니다.');
+        }
+      }
+    },
 
-async loadMyReview() {
-  try {
-    const response = await hotelAPI.getMyReview(this.hotel.id);
-    
-    if (response.code === 200 && response.data) {
-      const myReview = response.data;
-      
-      // 폼에 기존 리뷰 데이터 채우기
+    async loadMyReview() {
+      try {
+        const response = await hotelAPI.getMyReview(this.hotel.id);
+        
+        if (response.code === 200 && response.data) {
+          const myReview = response.data;
+          
+          // 폼에 기존 리뷰 데이터 채우기
+          this.isEditMode = true;
+          this.editingReviewId = myReview.id;
+          this.selectedRating = parseFloat(myReview.rating);
+          this.selectedCard = myReview.reviewCard;
+          this.reviewText = myReview.reviewContent;
+          this.isReviewFormVisible = true;
+          
+          // reviewEligibility에 reservationId 저장 (수정 시 필요)
+          if (!this.reviewEligibility) {
+            this.reviewEligibility = {};
+          }
+          this.reviewEligibility.reservationId = myReview.reservationsId;
+          
+          this.$nextTick(() => {
+            this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
+          });
+        }
+      } catch (error) {
+        console.error('내 리뷰 로드 중 오류:', error);
+        alert('리뷰 로드 중 오류가 발생했습니다.');
+      }
+    },
+    editMyReview(review) {
       this.isEditMode = true;
-      this.editingReviewId = myReview.id;
-      this.selectedRating = parseFloat(myReview.rating);
-      this.selectedCard = myReview.reviewCard;
-      this.reviewText = myReview.reviewContent;
+      this.editingReviewId = review.id;
+      this.selectedRating = parseFloat(review.rating);
+      this.selectedCard = review.reviewCard;
+      this.reviewText = review.reviewContent;
       this.isReviewFormVisible = true;
-      
-      // reviewEligibility에 reservationId 저장 (수정 시 필요)
+  
+      // reviewEligibility에 reservationId 저장
       if (!this.reviewEligibility) {
         this.reviewEligibility = {};
       }
-      this.reviewEligibility.reservationId = myReview.reservationsId;
-      
+      this.reviewEligibility.reservationId = review.reservationsId;
+  
+      // 리뷰 폼으로 스크롤
       this.$nextTick(() => {
         this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
       });
-    }
-  } catch (error) {
-    console.error('내 리뷰 로드 중 오류:', error);
-    alert('리뷰 로드 중 오류가 발생했습니다.');
-  }
-},
+    },
     
     async deleteReview() {
       if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
@@ -1001,11 +1146,15 @@ async loadMyReview() {
         if (response.code === 200) {
           this.reviews = response.data;
           
-          if (this.isLoggedIn && this.userInfo) {
-            this.reviews.forEach(review => {
+          // 백엔드에서 이미 memberName이 포맷팅되어 왔음
+          this.reviews.forEach(review => {
+            review.displayName = review.memberName;
+            
+            // 내 리뷰 체크
+            if (this.isLoggedIn && this.userInfo) {
               review.isMyReview = review.memberId === this.userInfo.id;
-            });
-          }
+            }
+          });
         }
       } catch (error) {
         console.error('리뷰 로드 중 오류:', error);
@@ -1414,6 +1563,91 @@ async loadMyReview() {
       } catch (error) {
         console.error('찜하기 처리 중 오류:', error);
         alert('찜하기 처리 중 오류가 발생했습니다.');
+      }
+    },
+
+    showRoomNumberModal(room) {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      this.selectedRoomForBooking = room;
+      this.isRoomNumberModalVisible = true;
+    },
+    
+    hideRoomNumberModal() {
+      this.isRoomNumberModalVisible = false;
+      this.selectedRoomForBooking = null;
+    },
+    
+    confirmRoomBooking() {
+      if (!this.selectedRoomForBooking) {
+        return;
+      }
+      
+      this.hideRoomNumberModal();
+      this.bookRoom(this.selectedRoomForBooking);
+    },
+// 호실 선택 모달 열기
+    showRoomSelectionModal(group) {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+        return;
+      }
+      
+      this.selectedRoomGroup = group;
+      this.selectedRoomId = null;
+      this.selectedRoomNumber = null;
+      this.isRoomSelectionModalVisible = true;
+    },
+    
+    hideRoomSelectionModal() {
+      this.isRoomSelectionModalVisible = false;
+      this.selectedRoomGroup = null;
+      this.selectedRoomId = null;
+      this.selectedRoomNumber = null;
+    },
+    
+    // 호실 선택
+    selectRoom(roomId, roomNumber) {
+      this.selectedRoomId = roomId;
+      this.selectedRoomNumber = roomNumber;
+    },
+    
+    // 예약 확정
+    confirmRoomSelection() {
+      if (!this.selectedRoomId) {
+        alert('호실을 선택해주세요.');
+        return;
+      }
+      
+      // 선택한 호실로 예약 진행
+      const selectedRoom = this.availableRooms.find(r => r.roomId === this.selectedRoomId);
+      
+      this.hideRoomSelectionModal();
+      this.bookRoom(selectedRoom);
+    },
+
+    async deleteMyReview(reviewId) {
+      if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
+        return;
+      }
+      try {
+        const response = await hotelAPI.deleteReview(reviewId);
+        if (response.code === 200) {
+          alert('리뷰가 삭제되었습니다.');
+      
+          // 리뷰 목록 및 평점 정보 새로고침
+          await this.loadReviewsData(this.hotel.id);
+          await this.loadReviewStats(this.hotel.id);
+          await this.loadHotelRatingStats(this.hotel.id);
+        }
+      } catch (error) {
+        console.error('리뷰 삭제 중 오류:', error);
+        alert(error.response?.data?.message || '리뷰 삭제 중 오류가 발생했습니다.');
       }
     }
   }
@@ -3174,6 +3408,195 @@ nav {
             angle: 0 deg;
             opacity: 0.25;
             background: rgba(17, 34, 17, 1);
-
         }
-    </style>
+        /* 호실 선택 모달 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.room-selection-modal {
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.selected-room-type {
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.selected-room-type h4 {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 18px;
+  color: #112211;
+  margin-bottom: 8px;
+}
+
+.selected-room-type p {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 4px;
+}
+
+.selected-room-type .price-info {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 16px;
+  color: #FF8682;
+  margin-top: 8px;
+}
+
+.room-numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.room-number-btn {
+  background: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.room-number-btn:hover {
+  border-color: #8DD3BB;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.room-number-btn.selected {
+  background: #8DD3BB;
+  border-color: #8DD3BB;
+}
+
+.room-num-text {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 16px;
+  color: #112211;
+}
+
+.room-floor-text {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 12px;
+  color: #666666;
+}
+
+.room-number-btn.selected .room-num-text,
+.room-number-btn.selected .room-floor-text {
+  color: #112211;
+  font-weight: 600;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-cancel-btn {
+  background: #F5F5F5;
+  color: #666666;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.modal-submit-btn {
+  background: #8DD3BB;
+  color: #112211;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.modal-submit-btn:disabled {
+  background: #E0E0E0;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.modal-submit-btn:not(:disabled):hover {
+  background: #7bc4a8;
+}
+
+/* 내 리뷰 수정 버튼 (초록색) */
+.edit-my-review-btn {
+  background: #8DD3BB;
+  color: #112211;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.edit-my-review-btn:hover {
+  background: #7bc4a8;
+}
+
+/* 내 리뷰 버튼 그룹 */
+.my-review-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* 내 리뷰 삭제 버튼 (빨간색) */
+.delete-my-review-btn {
+  background: #FF6B6B;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.delete-my-review-btn:hover {
+  background: #FF5252;
+}
+</style>

@@ -247,6 +247,7 @@
 
 <script>
 import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelSix',
@@ -296,21 +297,7 @@ export default {
 
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        const { provider, firstName, lastName, email } = this.userInfo;
-        
-        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
-          return firstName || email?.split('@')[0] || 'Social User';
-        }
-        
-        if (provider === 'local') {
-          if (firstName && lastName) {
-            return `${firstName} ${lastName}`;
-          } else if (firstName) {
-            return firstName;
-          } else if (email) {
-            return email.split('@')[0];
-          }
-        }
+        return formatMemberName(this.userInfo);
       }
       return 'Guest';
     },
