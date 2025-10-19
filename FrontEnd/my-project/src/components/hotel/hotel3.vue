@@ -501,7 +501,7 @@
 </template>
 
 <script>
-import { authUtils, hotelAPI, paymentAPI } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, paymentAPI, adminAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -704,7 +704,7 @@ export default {
           const response = await hotelAPI.getRoomImages(room.roomId);
           if (response.code === 200 && response.data.length > 0) {
             const imagePath = response.data[0].roomImagePath;
-            room.image = `http://localhost:8089/uploads${imagePath}`;
+            room.image = adminAPI.getImageUrl(imagePath);
           }
         } catch (error) {
           console.error(`객실 ${room.roomId} 이미지 로드 실패:`, error);
@@ -713,12 +713,18 @@ export default {
       }
     },
     
+    // ===== 리뷰 작성 가능 여부 체크 =====
     async checkReviewEligibility(hotelId) {
       try {
         const response = await hotelAPI.checkReviewEligibility(hotelId);
-        
+
         if (response.code === 200) {
           this.reviewEligibility = response.data;
+
+          console.log('리뷰 작성 가능 여부:', this.reviewEligibility);
+
+          // status에 따라 canWrite 설정
+          this.reviewEligibility.canWrite = (this.reviewEligibility.status === 'ELIGIBLE');
         }
       } catch (error) {
         console.error('리뷰 작성 가능 여부 체크 중 오류:', error);
@@ -859,138 +865,168 @@ export default {
       }
     },
     
+    // ===== 리뷰 작성 폼 표시 =====
     async showReviewForm() {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
         return;
       }
-      
+
+      // 리뷰 작성 가능 여부 체크
       await this.checkReviewEligibility(this.hotel.id);
-      
-      if (!this.reviewEligibility || !this.reviewEligibility.canWrite) {
-        if (this.reviewEligibility?.status === 'ALREADY_WRITTEN') {
-          if (confirm('이미 작성한 리뷰가 있습니다. 수정하시겠습니까?')) {
-            await this.loadMyReview();
-          }
-          return;
+
+      // 상태별 메시지 처리
+      if (this.reviewEligibility?.status === 'ALREADY_WRITTEN') {
+        if (confirm('이미 작성한 리뷰가 있습니다. 수정하시겠습니까?')) {
+          await this.loadMyReview();
         }
-        
-        const statusMessages = {
-          'NO_BOOKING': '예약 내역이 없습니다.',
-          'DATE_NOT_PASSED': '체크아웃 후에 리뷰를 작성할 수 있습니다.',
-          'NOT_PAID': '결제가 완료된 예약만 리뷰를 작성할 수 있습니다.',
-          'ERROR': '리뷰 작성 가능 여부 확인 중 오류가 발생했습니다.'
-        };
-        
-        const message = statusMessages[this.reviewEligibility?.status] || '리뷰를 작성할 수 없습니다.';
-        alert(message);
         return;
       }
-      
+
+      if (this.reviewEligibility?.status === 'NO_BOOKING') {
+        alert('예약 내역이 없습니다. 호텔 예약 후 리뷰를 작성할 수 있습니다.');
+        return;
+      }
+
+      if (this.reviewEligibility?.status === 'NOT_ELIGIBLE') {
+        // 체크아웃 날짜 확인
+        if (this.reviewEligibility.checkOut) {
+          const checkOutDate = new Date(this.reviewEligibility.checkOut);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          checkOutDate.setHours(0, 0, 0, 0);
+
+          if (checkOutDate > today) {
+            const daysRemaining = Math.ceil((checkOutDate - today) / (1000 * 60 * 60 * 24));
+            alert(`체크아웃 날짜(${this.reviewEligibility.checkOut}) 이후 ${daysRemaining}일 뒤에 리뷰를 작성할 수 있습니다.`);
+          } else {
+            alert('결제가 완료된 예약만 리뷰를 작성할 수 있습니다.');
+          }
+        } else {
+          alert('체크아웃 후에 리뷰를 작성할 수 있습니다.');
+        }
+        return;
+      }
+
+      if (!this.reviewEligibility?.canWrite) {
+        alert('리뷰를 작성할 수 없습니다.');
+        return;
+      }
+
+      // 리뷰 작성 가능 - 폼 표시
       this.isEditMode = false;
       this.isReviewFormVisible = true;
       this.selectedRating = 0;
       this.selectedCard = null;
       this.reviewText = '';
-      
+
       this.$nextTick(() => {
-        this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
+        this.$el.querySelector('.review-form-section')?.scrollIntoView({ behavior: 'smooth' });
       });
     },
 
+
+    // ===== 리뷰 등록/수정 =====
     async submitReview() {
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
         return;
       }
-      
+
       // 유효성 검사
       if (!this.selectedRating || this.selectedRating === 0) {
         alert('평점을 선택해주세요.');
         return;
       }
-      
+
       if (!this.selectedCard) {
         alert('리뷰 카드를 선택해주세요.');
         return;
       }
-      
-      if (!this.reviewText || this.reviewText.trim().length < 10) {
-        alert('리뷰 내용을 10자 이상 입력해주세요.');
+
+      if (!this.reviewText || this.reviewText.trim().length < 2) {
+        alert('리뷰 내용을 2자 이상 입력해주세요.');
         return;
       }
-      
+
       try {
         let response;
-        
+
         if (this.isEditMode) {
+          // 수정 모드
           const reviewData = {
-            id: this.editingReviewId,
-            hotelId: this.hotel.id,  
-            reservationsId: this.reviewEligibility.reservationId, 
-            rating: this.selectedRating.toString(),  
+            hotelId: this.hotel.id,
+            rating: this.selectedRating.toString(),
             reviewContent: this.reviewText.trim(),
             reviewCard: this.selectedCard
           };
-          
+
+          console.log('리뷰 수정 데이터:', reviewData);
+
           response = await hotelAPI.updateReview(this.editingReviewId, reviewData);
-          
+
           if (response.code === 200) {
             alert('리뷰가 수정되었습니다.');
           }
         } else {
           const reviewData = {
             hotelId: this.hotel.id,
-            reservationsId: this.reviewEligibility.reservationId,
             rating: this.selectedRating.toString(),
             reviewContent: this.reviewText.trim(),
             reviewCard: this.selectedCard
+            // reservationsId는 백엔드에서 자동으로 처리
           };
-          
+
+          console.log('리뷰 작성 데이터:', reviewData);
+
           response = await hotelAPI.createReview(reviewData);
-          
+
           if (response.code === 200) {
             alert('리뷰가 작성되었습니다.');
           }
         }
-        
+
         // 리뷰 목록 및 평점 정보 새로고침
         await this.loadReviewsData(this.hotel.id);
         await this.loadReviewStats(this.hotel.id);
         await this.loadHotelRatingStats(this.hotel.id);
-        
+
+        // 리뷰 작성 가능 여부 재확인
+        await this.checkReviewEligibility(this.hotel.id);
+
         this.hideReviewForm();
-        
+
       } catch (error) {
         console.error('=== 리뷰 처리 중 오류 ===');
         console.error('error:', error);
         console.error('error.response:', error.response);
         console.error('error.response.data:', error.response?.data);
-        
+
         // 상세한 에러 메시지 표시
-        if (error.response?.data?.errors) {
+        if (error.response?.data?.message) {
+          alert(error.response.data.message);
+        } else if (error.response?.data?.errors) {
           const errors = error.response.data.errors;
           const errorMessages = Object.entries(errors)
             .map(([field, message]) => `${field}: ${message}`)
             .join('\n');
           alert(`입력 오류:\n${errorMessages}`);
-        } else if (error.response?.data?.message) {
-          alert(error.response.data.message);
         } else {
-          alert('리뷰 처리 중 오류가 발생했습니다.');
+          alert(this.isEditMode ? '리뷰 수정 중 오류가 발생했습니다.' : '리뷰 작성 중 오류가 발생했습니다.');
         }
       }
     },
 
+    // ===== 내 리뷰 불러오기 (수정용) =====
     async loadMyReview() {
       try {
         const response = await hotelAPI.getMyReview(this.hotel.id);
-        
+
         if (response.code === 200 && response.data) {
           const myReview = response.data;
-          
+
           // 폼에 기존 리뷰 데이터 채우기
           this.isEditMode = true;
           this.editingReviewId = myReview.id;
@@ -998,22 +1034,25 @@ export default {
           this.selectedCard = myReview.reviewCard;
           this.reviewText = myReview.reviewContent;
           this.isReviewFormVisible = true;
-          
-          // reviewEligibility에 reservationId 저장 (수정 시 필요)
-          if (!this.reviewEligibility) {
-            this.reviewEligibility = {};
-          }
-          this.reviewEligibility.reservationId = myReview.reservationsId;
-          
+
           this.$nextTick(() => {
-            this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
+            this.$el.querySelector('.review-form-section')?.scrollIntoView({ behavior: 'smooth' });
           });
+        } else if (response.code === 404) {
+          alert('작성한 리뷰가 없습니다.');
         }
       } catch (error) {
         console.error('내 리뷰 로드 중 오류:', error);
-        alert('리뷰 로드 중 오류가 발생했습니다.');
+
+        if (error.response?.status === 404) {
+          alert('작성한 리뷰가 없습니다.');
+        } else {
+          alert('리뷰 로드 중 오류가 발생했습니다.');
+        }
       }
     },
+
+    // ===== 리뷰 목록에서 수정 버튼 클릭 =====
     editMyReview(review) {
       this.isEditMode = true;
       this.editingReviewId = review.id;
@@ -1021,36 +1060,55 @@ export default {
       this.selectedCard = review.reviewCard;
       this.reviewText = review.reviewContent;
       this.isReviewFormVisible = true;
-  
-      // reviewEligibility에 reservationId 저장
-      if (!this.reviewEligibility) {
-        this.reviewEligibility = {};
-      }
-      this.reviewEligibility.reservationId = review.reservationsId;
-  
+    
       // 리뷰 폼으로 스크롤
       this.$nextTick(() => {
-        this.$el.querySelector('.review-form-section').scrollIntoView({ behavior: 'smooth' });
+        this.$el.querySelector('.review-form-section')?.scrollIntoView({ behavior: 'smooth' });
       });
     },
-    
+
+    // ===== 리뷰 삭제 (폼에서) =====
     async deleteReview() {
       if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
         return;
       }
-      
+
       try {
         const response = await hotelAPI.deleteReview(this.editingReviewId);
-        
+
         if (response.code === 200) {
           alert('리뷰가 삭제되었습니다.');
-          
+
           await this.loadReviewsData(this.hotel.id);
           await this.loadReviewStats(this.hotel.id);
           await this.loadHotelRatingStats(this.hotel.id);
-          
+          await this.checkReviewEligibility(this.hotel.id);
+
           this.hideReviewForm();
-          this.reviewEligibility = null;
+        }
+      } catch (error) {
+        console.error('리뷰 삭제 중 오류:', error);
+        alert(error.response?.data?.message || '리뷰 삭제 중 오류가 발생했습니다.');
+      }
+    },
+
+    // ===== 리뷰 삭제 (목록에서) =====
+    async deleteMyReview(reviewId) {
+      if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        const response = await hotelAPI.deleteReview(reviewId);
+
+        if (response.code === 200) {
+          alert('리뷰가 삭제되었습니다.');
+
+          // 리뷰 목록 및 평점 정보 새로고침
+          await this.loadReviewsData(this.hotel.id);
+          await this.loadReviewStats(this.hotel.id);
+          await this.loadHotelRatingStats(this.hotel.id);
+          await this.checkReviewEligibility(this.hotel.id);
         }
       } catch (error) {
         console.error('리뷰 삭제 중 오류:', error);
@@ -1070,8 +1128,8 @@ export default {
         return;
       }
       
-      if (!this.reportDescription || this.reportDescription.length < 10) {
-        alert('신고 사유를 10자 이상 입력해주세요.');
+      if (!this.reportDescription || this.reportDescription.length < 2) {
+        alert('신고 사유를 2자 이상 입력해주세요.');
         return;
       }
 
@@ -1453,7 +1511,7 @@ export default {
       if (!imagePath) return '/images/hotel_img/hotel1.jpg';
       if (imagePath.startsWith('http')) return imagePath;
       if (imagePath.startsWith('/images/')) return imagePath;
-      return `http://localhost:8089/uploads${imagePath}`;
+      return adminAPI.getImageUrl(imagePath);
     },
 
     // ===== 공유 기능 =====
@@ -1629,27 +1687,8 @@ export default {
       
       this.hideRoomSelectionModal();
       this.bookRoom(selectedRoom);
-    },
-
-    async deleteMyReview(reviewId) {
-      if (!confirm('정말 이 리뷰를 삭제하시겠습니까?')) {
-        return;
-      }
-      try {
-        const response = await hotelAPI.deleteReview(reviewId);
-        if (response.code === 200) {
-          alert('리뷰가 삭제되었습니다.');
-      
-          // 리뷰 목록 및 평점 정보 새로고침
-          await this.loadReviewsData(this.hotel.id);
-          await this.loadReviewStats(this.hotel.id);
-          await this.loadHotelRatingStats(this.hotel.id);
-        }
-      } catch (error) {
-        console.error('리뷰 삭제 중 오류:', error);
-        alert(error.response?.data?.message || '리뷰 삭제 중 오류가 발생했습니다.');
-      }
     }
+
   }
 }
 </script>
@@ -3049,7 +3088,17 @@ nav {
             font-size: 14px;
             cursor: pointer;
         }
-
+        .edit-review-btn{
+            background: #8DD3BB;
+            color: #112211;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-family: Montserrat;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
         /* Report Modal */
         .modal-overlay {
             position: fixed;

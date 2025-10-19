@@ -401,7 +401,7 @@ export default {
 
       totalCount: 0,
       isLoading: false,
-      
+      availableCount: 0,    // 예약 가능한 호텔만 (showing-count용)
       currentOffset: 0,   
       pageSize: 3,
       
@@ -414,20 +414,20 @@ export default {
   
   computed: {
     showingCount() {
-      return this.showingAll ? this.hotels.length : Math.min(3, this.hotels.length);
+      return this.availableCount;
     },
 
      hasMoreHotels() {
-      return this.hotels.length < this.totalCount;
+        return this.hotels.length < this.totalCount;
     },
 
     priceTrackStyle() {
-  const range = this.priceRange.dynamicMax - this.priceRange.dynamicMin;
-  const minPercent = ((this.priceRange.min - this.priceRange.dynamicMin) / range) * 100;
-  const maxPercent = ((this.priceRange.max - this.priceRange.dynamicMin) / range) * 100;
-  return {
-    left: minPercent + '%',
-    width: (maxPercent - minPercent) + '%'
+      const range = this.priceRange.dynamicMax - this.priceRange.dynamicMin;
+      const minPercent = ((this.priceRange.min - this.priceRange.dynamicMin) / range) * 100;
+      const maxPercent = ((this.priceRange.max - this.priceRange.dynamicMin) / range) * 100;
+      return {
+      left: minPercent + '%',
+      width: (maxPercent - minPercent) + '%'
   };
 },
 
@@ -756,18 +756,23 @@ export default {
           console.log('받은 데이터:', data);
         
           this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
-          this.totalCount = data.totalCount;
-          this.currentOffset = this.pageSize;
+          this.totalCount = data.totalCount;              // 전체 (페이지네이션용)
+          this.availableCount = data.availableCount;      // 예약 가능만 (표시용)
+          this.currentOffset = this.hotels.length;
 
-          // 검색 결과 기반으로 탭 카운트 업데이트
-          if (data.hotelTypeCounts) {
-            console.log('호텔 타입 카운트:', data.hotelTypeCounts);
-            this.updateTabCounts(data.hotelTypeCounts);
+            // 검색 결과 기반으로 탭 카운트 업데이트 (예약 가능만)
+        if (data.hotelTypeCounts) {
+              console.log('호텔 타입 카운트:', data.hotelTypeCounts);
+              this.updateTabCounts(data.hotelTypeCounts);
           }
 
           console.log('변환된 호텔 목록:', this.hotels);
-          console.log('업데이트된 탭:', this.tabs);
-        }
+          console.log('totalCount (전체):', this.totalCount);
+          console.log('availableCount (예약 가능):', this.availableCount);
+          console.log('currentOffset:', this.currentOffset);
+          console.log('hasMoreHotels:', this.hasMoreHotels);
+      }
+
 
       } catch (error) {
         console.error('검색 중 오류:', error);
@@ -778,43 +783,53 @@ export default {
     },
 
     async loadMoreHotels() {
-      if (this.isLoading || !this.hasMoreHotels) return;
-      
-      this.isLoading = true;
+        if (this.isLoading || !this.hasMoreHotels) return;
 
-      try {
-        const params = {
-          destination: this.searchData.destination || null,
-          checkIn: this.searchData.checkIn || null,
-          checkOut: this.searchData.checkOut || null,
-          guests: this.searchData.guests,
-          minPrice: this.priceRange.min * 1000,
-          maxPrice: this.priceRange.max * 1000,
-          rating: this.selectedRating,
-          hotelType: this.convertHotelType(this.activeTab),
-          freebies: this.getSelectedFreebies(),
-          amenities: this.getSelectedAmenities(),
-          sortBy: this.convertSortBy(this.sortBy),
-          offset: this.currentOffset,
-          size: this.pageSize
-        };
-      
-        const response = await hotelAPI.searchHotels(params);
+        this.isLoading = true;
+    
+        try {
+            const params = {
+                destination: this.searchData.destination || null,
+                checkIn: this.searchData.checkIn || null,
+                checkOut: this.searchData.checkOut || null,
+                guests: this.searchData.guests,
+                minPrice: this.priceRange.min * 1000,
+                maxPrice: this.priceRange.max * 1000,
+                rating: this.selectedRating,
+                hotelType: this.convertHotelType(this.activeTab),
+                freebies: this.getSelectedFreebies(),
+                amenities: this.getSelectedAmenities(),
+                sortBy: this.convertSortBy(this.sortBy),
+                offset: this.currentOffset,
+                size: this.pageSize
+            };
 
-        if (response.code === 200) {
-          const data = response.data;
-        
-          const newHotels = data.hotels.map(hotel => this.convertHotelData(hotel));
-          this.hotels.push(...newHotels);
-          this.currentOffset += this.pageSize;
+            console.log('추가 로드 파라미터:', params);
+          
+            const response = await hotelAPI.searchHotels(params);
+          
+            if (response.code === 200) {
+                const data = response.data;
+
+                console.log('추가로 받은 호텔:', data.hotels.length);
+            
+                const newHotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+                this.hotels.push(...newHotels);
+
+                // ✅ currentOffset 업데이트
+                this.currentOffset = this.hotels.length;
+
+                console.log('현재 총 호텔 수:', this.hotels.length);
+                console.log('전체 호텔 수:', this.totalCount);
+                console.log('다음 offset:', this.currentOffset);
+            }
+          
+        } catch (error) {
+            console.error('추가 로드 중 오류:', error);
+            alert('추가 로드 중 오류가 발생했습니다.');
+        } finally {
+            this.isLoading = false;
         }
-
-      } catch (error) {
-        console.error('추가 로드 중 오류:', error);
-        alert('추가 로드 중 오류가 발생했습니다.');
-      } finally {
-        this.isLoading = false;
-      }
     },
     
     selectRating(rating) {
@@ -1639,7 +1654,6 @@ export default {
             display: flex;
             flex-direction: column;
             gap: 24px;
-            padding: 20px;
         }
         .hotel-card {
             display: flex;
@@ -1958,7 +1972,7 @@ export default {
             height: 422px;
             display: flex;
             flex-direction: column;
-            margin-top: 60px;
+            margin-top: 100px;
             z-index: 0;
             margin-bottom: -513px;
         }
