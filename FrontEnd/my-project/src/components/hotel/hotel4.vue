@@ -677,7 +677,10 @@ export default {
       nights: parseInt(this.$route.query.nights),
       basePrice: parseFloat(this.$route.query.totalPrice)
     };
-    
+      // ✅ 날짜 검증 추가
+    if (!this.validateDatesOnMount()) {
+      return;
+    }
     // 로그인 여부에 따라 화면 설정
     if (this.isLoggedIn) {
       this.currentScreen = 2;
@@ -705,16 +708,42 @@ export default {
       this.loadUserInfo();
     },
     
-    selectedCoupon(newCoupon) {
+    async selectedCoupon(newCoupon) {  
       if (newCoupon) {
         this.discount = Math.floor(this.baseFare * (newCoupon.discount / 100));
       } else {
         this.discount = 0;
-      }
     }
+    await this.updateTossAmount();
+
+    },
   },
-  
   methods: {
+    validateDatesOnMount() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const checkInDate = new Date(this.bookingInfo.checkIn);
+      const checkOutDate = new Date(this.bookingInfo.checkOut);
+      checkInDate.setHours(0, 0, 0, 0);
+      checkOutDate.setHours(0, 0, 0, 0);
+
+      // 체크인이 과거인 경우
+      if (checkInDate < today) {
+        alert('과거 날짜로는 예약할 수 없습니다. 검색 페이지로 돌아갑니다.');
+        this.$router.push('/hoteltwo');
+        return false;
+      }
+
+      // 체크아웃이 체크인보다 이전이거나 같은 경우
+      if (checkOutDate <= checkInDate) {
+        alert('잘못된 날짜입니다. 검색 페이지로 돌아갑니다.');
+        this.$router.push('/hoteltwo');
+        return false;
+      }
+
+      return true;
+    },
     // ===== 토스 SDK 로드 =====
     async loadTossSDK() {
       return new Promise((resolve, reject) => {

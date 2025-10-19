@@ -649,7 +649,11 @@ export default {
     const hotelId = this.$route.query.hotelId;
     this.checkIn = this.$route.query.checkIn || this.getToday();
     this.checkOut = this.$route.query.checkOut || this.getTomorrow();
-    
+      // ✅ 날짜 검증 추가
+    if (!this.validateDatesOnMount()) {
+      return;
+    }
+  
     if (hotelId) {
       await this.loadHotelDetail(hotelId);
       await this.loadRoomAvailability(hotelId);
@@ -676,6 +680,31 @@ export default {
   },
   
   methods: {
+    validateDatesOnMount() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const checkInDate = new Date(this.checkIn);
+      const checkOutDate = new Date(this.checkOut);
+      checkInDate.setHours(0, 0, 0, 0);
+      checkOutDate.setHours(0, 0, 0, 0);
+
+      // 체크인이 과거인 경우
+      if (checkInDate < today) {
+        alert('과거 날짜로는 예약할 수 없습니다. 검색 페이지로 돌아갑니다.');
+        this.$router.push('/hoteltwo');
+        return false;
+      }
+
+      // 체크아웃이 체크인보다 이전이거나 같은 경우
+      if (checkOutDate <= checkInDate) {
+        alert('잘못된 날짜입니다. 검색 페이지로 돌아갑니다.');
+        this.$router.push('/hoteltwo');
+        return false;
+      }
+
+      return true;
+    },
     // ========== API 메서드 ==========
     
     async loadRoomAvailability(hotelId) {

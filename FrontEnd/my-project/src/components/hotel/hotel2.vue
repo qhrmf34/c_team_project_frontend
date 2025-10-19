@@ -1972,7 +1972,7 @@ export default {
             height: 422px;
             display: flex;
             flex-direction: column;
-            margin-top: 100px;
+            margin-top: 60px;
             z-index: 0;
             margin-bottom: -513px;
         }
