@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <!-- Screen 1: Login -->
+    <!-- Screen 1: Login (로그인 안한 사용자용) -->
     <div class="screen" :class="{ active: currentScreen === 1 }">
       <main class="main-content">
         <div class="breadcrumb">
@@ -61,7 +61,7 @@
           <span>></span>
           <span>{{ hotelInfo?.hotelName || '호텔' }}</span>
         </div>
-
+      
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
@@ -90,71 +90,86 @@
                 </div>
               </div>
             </div>
+          
+            <!-- 로그인 섹션 (HotelLogin.vue 스타일 적용) -->
+            <div class="login-section-full">
+              <h2 class="section-title">로그인이 필요합니다</h2>
+              <p class="login-subtitle">예약을 완료하려면 로그인해주세요</p>
 
-            <div class="payment-section">
-              <div 
-                class="payment-method" 
-                :class="{ selected: selectedPaymentMethod === 0 }"
-                @click="selectPaymentMethod(0)"
-              >
-                <span class="payment-method-text">
-                  전체결제
-                  <div class="payment-method-content">전체 결제 후 예약 확정</div>
-                </span>
-                <div class="payment-radio"></div>
+            <form @submit.prevent="handleLoginInPaymentPage">
+              <div class="input-group">
+                <input 
+                  type="email" 
+                  id="email" 
+                  v-model="loginForm.email"
+                  placeholder="john.doe@gmail.com" 
+                  maxlength="100"
+                  required
+                >
+                <label for="email">Email</label>
               </div>
-              
-              <div 
-                class="payment-method" 
-                :class="{ selected: selectedPaymentMethod === 1 }"
-                @click="selectPaymentMethod(1)"
-              >
-                <span class="payment-method-text">
-                  쿠폰 사용
-                  <div class="payment-method-content">할인 쿠폰을 사용하여 결제</div>
-                </span>
-                <div class="payment-radio"></div>
+
+              <div class="input-group">
+                <div class="password-input-wrapper">
+                  <input 
+                    :type="showPassword ? 'text' : 'password'" 
+                    id="password" 
+                    v-model="loginForm.password"
+                    placeholder="••••••••••••••••" 
+                    maxlength="255"
+                    required
+                  >
+                  <button 
+                    type="button" 
+                    class="password-toggle" 
+                    @click="togglePasswordVisibility"
+                  >
+                    <img 
+                      :src="showPassword ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                      alt="Toggle Password" 
+                    />
+                  </button>
+                </div>
+                <label for="password">Password</label>
               </div>
-            </div>
-                    <!-- ✅ 토스 결제 UI 렌더링 영역 추가 -->
-            <div class="toss-payment-section">
-              <h3 class="section-title">결제수단 선택</h3>
-              <div id="payment-widget"></div>
-              <div id="agreement"></div>
-            </div>
-
-            <div class="login-section">
-              <h2 class="section-title">Login or Sign up to book</h2>
-              
-              <input type="tel" class="phone-input" placeholder="Phone Number" v-model="phoneNumber">
-              <p class="input-note">예약확인 문자/전화를 위한 연락처로도 사용됩니다</p>
-              <button class="continue-btn" @click="showScreen(2)">Continue</button>
-
+            
+              <!-- ✅ Turnstile 위젯 추가 -->
+              <div class="turnstile-wrapper">
+                <div 
+                  ref="turnstileWidget"
+                  class="cf-turnstile"
+                ></div>
+              </div>
+            
+              <div class="options">
+                <button type="submit" class="login-button" :disabled="isLoggingIn">
+                  {{ isLoggingIn ? '로그인 중...' : '로그인하고 예약하기' }}
+                </button>
+                <a href="#" class="signup-link" @click.prevent="goToSignup">회원가입</a>
+              </div>
+            </form>
+            
               <div class="divider">
-                <div class="continue-beeline"></div>
-                <div>Or</div>
-                <div class="continue-beeline"></div>
+                <span class="divider-beeline"></span>
+                <span>Or login with</span>
+                <span class="divider-beeline"></span>
               </div>
 
               <div class="social-login">
-                <button class="social-btn facebook">
-                  <img src="/images/hotel_img/facebook2.jpg" alt="facebook">
+                <button class="social-btn kakao-btn" @click="loginWithKakao">
+                  <img src="/images/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24"/>
                 </button>
-                <button class="social-btn google">
-                  <img src="/images/hotel_img/google.jpg" alt="google">
+                <button class="social-btn" @click="loginWithGoogle">
+                  <img src="/images/login_img/google.jpg" alt="구글 로그인" width="24" height="24"/>
                 </button>
-                <button class="social-btn apple">
-                  <img src="/images/hotel_img/apple.jpg" alt="apple">
+                <button class="social-btn" @click="loginWithNaver">
+                  <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24"/>
                 </button>
               </div>
-
-              <button class="email-login" @click="$router.push('/login')">
-                <span><img src="/images/hotel_img/email.jpg" alt="email"></span>
-                Continue with email
-              </button>
             </div>
           </div>
-
+        
+          <!-- 우측 요약 정보 -->
           <div class="right-section">
             <div class="booking-summary">
               <div class="hotel-image">
@@ -162,7 +177,7 @@
                 <div class="summary-hotel-info">
                   <div class="summary-title1">{{ hotelInfo?.hotelName || '호텔' }}</div>
                   <div class="summary-title2">{{ roomInfo?.roomName || '객실' }}</div>
-                  
+
                   <div class="rating">
                     <span class="rating-score">{{ hotelInfo?.averageRating?.toFixed(1) || '0.0' }}</span>
                     <span class="rating-text1">{{ getRatingText(hotelInfo?.averageRating) }}</span>
@@ -170,29 +185,25 @@
                   </div>
                 </div>
               </div>
-                  
-              <div class="hotel-beeline"></div>
 
+              <div class="hotel-beeline"></div>
+            
               <div class="golobe-protection">
                 Your booking is protected by <strong>golobe</strong>
               </div>
               <div class="hotel-beeline"></div>
-
+            
               <div class="price-details">
                 <div class="price-title">Price Details</div>
-                
+
                 <div class="price-breakdown">
                   <div class="price-item">
                     <span class="price-label">Base Fare ({{ bookingInfo.nights }}박)</span>
                     <span class="price-value">{{ formatPrice(baseFare) }}</span>
                   </div>
-                  <div class="price-item">
-                    <span class="price-label">Discount</span>
-                    <span class="price-value">-{{ formatPrice(discount) }}</span>
-                  </div>
                 </div>
                 <div class="hotel-beeline"></div>
-
+              
                 <div class="total-price">
                   <div class="price-item">
                     <span class="price-label">Total</span>
@@ -205,7 +216,6 @@
         </div>
       </main>
     </div>
-
     <!-- Screen 2: Payment Method Selection -->
     <div class="screen" :class="{ active: currentScreen === 2 }">
       <main class="main-content">
@@ -322,7 +332,17 @@
                 <div class="add-card">Add a new card</div>
               </div>
             </div>
+            <!-- ✅ 토스 위젯용 DOM (숨김 처리) -->
+            <div class="toss-payment-section">
+              <h3 class="section-title">결제수단 선택</h3>
+              <div id="payment-widget"></div>
+              <div id="agreement"></div>
+            </div>
 
+            <!-- <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+              <div id="payment-widget" style="width: 400px; min-height: 300px;"></div>
+              <div id="agreement" style="width: 400px; min-height: 100px;"></div>
+            </div> -->
             <!-- 결제 버튼 -->
             <button 
               class="payment-btn" 
@@ -563,7 +583,7 @@
 
 
 <script>
-import { authUtils, paymentMethodAPI, memberCouponAPI, hotelAPI, adminAPI } from '@/utils/commonAxios'
+import { authUtils, paymentMethodAPI, memberCouponAPI, hotelAPI, adminAPI,paymentAPI,memberAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -576,12 +596,22 @@ export default {
       selectedCard: -1,
       selectedCoupon: null,
       modalActive: false,
+      turnstileWidgetId: null,
+      turnstileToken: null,
+      turnstileSiteKey: '',
       phoneNumber: '',
       email: '',
-      
+      // 로그인 폼 
+      loginForm: {
+        email: '',
+        password: ''
+      },
+      showPassword: false,
+      isLoggingIn: false,
+      // 예약 정보
       // 예약 정보
       bookingInfo: {
-        reservationId: null,  
+        reservationId: null,
         roomId: null,
         hotelId: null,
         checkIn: null,
@@ -669,7 +699,7 @@ export default {
     
     // URL 파라미터에서 예약 정보 가져오기
     this.bookingInfo = {
-      reservationId: parseInt(this.$route.query.reservationId),
+      reservationId: this.$route.query.reservationId ? parseInt(this.$route.query.reservationId) : null,
       roomId: parseInt(this.$route.query.roomId),
       hotelId: parseInt(this.$route.query.hotelId),
       checkIn: this.$route.query.checkIn,
@@ -677,30 +707,57 @@ export default {
       nights: parseInt(this.$route.query.nights),
       basePrice: parseFloat(this.$route.query.totalPrice)
     };
-      // ✅ 날짜 검증 추가
+  
+      // 날짜 검증 추가
     if (!this.validateDatesOnMount()) {
       return;
     }
     // 로그인 여부에 따라 화면 설정
     if (this.isLoggedIn) {
       this.currentScreen = 2;
+
+      // reservationId가 없으면 예약 생성 (로그인 후 돌아온 경우)
+      if (!this.bookingInfo.reservationId) {
+        await this.createReservationAfterLogin();
+      }
+
       await this.loadBookingData();
       await this.$nextTick();
       await this.loadTossSDK();
-      
-      // ✅ 추가 대기 (화면 전환 완료 대기)
+
       await new Promise(resolve => setTimeout(resolve, 300));
       await this.initializeTossWidget();
-    } 
-     else {
+    } else {
+      // 로그인 안한 상태
       this.currentScreen = 1;
-      // 로그인 안한 상태에서도 기본 정보는 로드
       await this.loadBasicBookingData();
+
+      // Turnstile 로드
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.loadTurnstileScript();
+        }, 100);
+      });
     }
   },
   
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
+    // Turnstile 위젯 제거
+    if (window.turnstile && this.turnstileWidgetId !== null) {
+      try {
+        window.turnstile.remove(this.turnstileWidgetId);
+      } catch (error) {
+        console.error('Turnstile 위젯 제거 실패:', error);
+      }
+    }
+    // 전역 콜백 정리
+    if (window.onTurnstileSuccess) {
+      delete window.onTurnstileSuccess;
+    }
+    if (window.onTurnstileError) {
+      delete window.onTurnstileError;
+    }
   },
   
   watch: {
@@ -719,6 +776,93 @@ export default {
     },
   },
   methods: {
+      // ===== Turnstile 관련 =====
+  
+  loadTurnstileScript() {
+    // 이미 스크립트가 로드되어 있는지 확인
+    if (window.turnstile) {
+      this.initTurnstile();
+      return;
+    }
+  
+    // 스크립트가 이미 DOM에 있는지 확인
+    const existingScript = document.querySelector('script[src*="turnstile"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        this.initTurnstile();
+      });
+      return;
+    }
+  
+    // 새로운 스크립트 태그 생성 및 로드
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => {
+      console.log('Turnstile 스크립트 로드 완료');
+      this.initTurnstile();
+    };
+
+    script.onerror = () => {
+      console.error('Turnstile 스크립트 로드 실패');
+      alert('로봇 검증 시스템을 불러오는데 실패했습니다. 페이지를 새로고침해주세요.');
+    };
+
+    document.head.appendChild(script);
+  },
+  
+  initTurnstile() {
+    // 이미 렌더링된 위젯이 있다면 중단
+    if (this.turnstileWidgetId) {
+      console.log('Turnstile 위젯이 이미 렌더링되었습니다.');
+      return;
+    }
+    
+    // Turnstile 콜백을 전역으로 등록
+    window.onTurnstileSuccess = (token) => {
+      this.turnstileToken = token;
+      console.log('Turnstile 검증 성공');
+    };
+
+    window.onTurnstileError = (error) => {
+      this.turnstileToken = null;
+      console.error('Turnstile 검증 실패:', error);
+      alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
+    };
+
+    // Turnstile 위젯 렌더링
+    this.$nextTick(() => {
+      if (window.turnstile && this.$refs.turnstileWidget) {
+        try {
+          this.turnstileSiteKey = String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
+          this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
+            sitekey: this.turnstileSiteKey,
+            theme: 'light',
+            callback: window.onTurnstileSuccess,
+            'error-callback': window.onTurnstileError
+          });
+          console.log('Turnstile 위젯 렌더링 완료');
+        } catch (error) {
+          console.error('Turnstile 위젯 렌더링 실패:', error);
+        }
+      }
+    });
+  },
+  
+  resetTurnstile() {
+    this.turnstileToken = null;
+    if (window.turnstile && this.$refs.turnstileWidget) {
+      try {
+        window.turnstile.reset(this.$refs.turnstileWidget);
+      } catch (error) {
+        console.error('Turnstile 리셋 실패:', error);
+        // 리셋 실패 시 위젯 재렌더링 시도
+        this.initTurnstile();
+      }
+    }
+  },
     validateDatesOnMount() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -743,6 +887,130 @@ export default {
       }
 
       return true;
+    },
+      // 로그인 후 예약 생성
+    async createReservationAfterLogin() {
+      try {
+        const reservationData = {
+          roomId: Number(this.bookingInfo.roomId),
+          checkInDate: this.bookingInfo.checkIn,
+          checkOutDate: this.bookingInfo.checkOut,
+          guestsCount: Number(this.$route.query.guests) || 2,
+          basePayment: String(this.bookingInfo.basePrice),
+          reservationsStatus: false
+        };
+
+        const response = await paymentAPI.createReservation(reservationData);
+
+        if (response.code === 200) {
+          this.bookingInfo.reservationId = response.data.id;
+          console.log('로그인 후 예약 생성 완료:', this.bookingInfo.reservationId);
+        }
+      } catch (error) {
+        console.error('로그인 후 예약 생성 실패:', error);
+
+        if (error.response?.status === 409) {
+          const existingReservationId = error.response.data?.reservationId;
+          if (existingReservationId) {
+            this.bookingInfo.reservationId = existingReservationId;
+            console.log('기존 예약 사용:', existingReservationId);
+            return;
+          }
+        }
+
+        alert('예약 생성에 실패했습니다. 다시 시도해주세요.');
+        this.$router.push('/hoteltwo');
+      }
+    },
+    // 결제 페이지 내 로그인 처리
+    async handleLoginInPaymentPage() {
+      if (!this.loginForm.email || !this.loginForm.password) {
+        alert('이메일과 비밀번호를 입력해주세요.');
+        return;
+      }
+    // ✅ Turnstile 검증 확인
+    if (!this.turnstileToken) {
+      alert('로봇 검증을 완료해주세요.');
+      return;
+    }
+    
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.loginForm.email)) {
+        alert('올바른 이메일 형식을 입력해주세요.');
+        return;
+      }
+
+      this.isLoggingIn = true;
+
+      try {
+        const result = await memberAPI.login({
+          email: this.loginForm.email,
+          password: this.loginForm.password,
+          turnstileToken: this.turnstileToken  // Turnstile 토큰 전송
+
+        });
+
+        if (result.data && result.data.token) {
+          localStorage.setItem('jwt_token', result.data.token);
+          localStorage.setItem('user_info', JSON.stringify({
+            id: result.data.memberId,
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            email: result.data.email,
+            provider: result.data.provider
+          }));
+
+          this.loadUserInfo();
+
+          // 예약 생성
+          await this.createReservationAfterLogin();
+
+          // 화면 전환
+          this.currentScreen = 2;
+          await this.loadBookingData();
+          await this.$nextTick();
+          await this.loadTossSDK();
+          await new Promise(resolve => setTimeout(resolve, 300));
+          await this.initializeTossWidget();
+
+          alert('로그인이 완료되었습니다!');
+        }
+      } catch (error) {
+        console.error('로그인 실패:', error);
+        alert(error.response?.data?.message || '로그인에 실패했습니다.');
+        this.resetTurnstile();  // 로그인 실패 시 Turnstile 리셋
+      } finally {
+        this.isLoggingIn = false;
+      }
+    },
+      togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
+
+    loginWithKakao() {
+      // 현재 예약 정보를 세션에 저장
+      sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
+      sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+    },
+
+    loginWithGoogle() {
+      sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
+      sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
+    },
+
+    loginWithNaver() {
+      sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
+      sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
+    },
+
+    goToSignup() {
+      // 예약 정보 세션에 저장 후 회원가입 페이지로
+      sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
+      sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      this.$router.push('/signup');
     },
     // ===== 토스 SDK 로드 =====
     async loadTossSDK() {
@@ -2798,8 +3066,200 @@ export default {
       cursor: not-allowed;
       opacity: 0.6;
     }
+/* 로그인 섹션 전체 (Screen 1) */
+.login-section-full {
+  width: 790px;
+  min-height: 600px;
+  border-radius: 12px;
+  padding: 40px;
+  background: #FFFFFF;
+  box-shadow: 0px 4px 16px 0px #1122110D;
+}
 
+.login-section-full .section-title {
+  font-family: Noto Sans;
+  font-weight: 700;
+  font-size: 32px;
+  color: #112211;
+  margin-bottom: 8px;
+}
 
+.login-section-full .login-subtitle {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 16px;
+  color: #666666;
+  margin-bottom: 32px;
+}
+
+/* 입력 필드 스타일 (HotelLogin 스타일) */
+.login-section-full .input-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.login-section-full .input-group label {
+  position: absolute;
+  left: 12px;
+  top: -8px;
+  background: white;
+  padding: 0 4px;
+  font-size: 12px;
+  color: #79747E;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.login-section-full .input-group input {
+  width: 100%;
+  height: 56px;
+  padding: 16px 12px;
+  border: 1px solid #79747E;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  background: transparent;
+  transition: border-color 0.3s ease;
+}
+
+.login-section-full .input-group input:focus {
+  outline: none;
+  border-color: #7dd3c0;
+  border-width: 2px;
+}
+
+.login-section-full .input-group input:focus + label {
+  color: #7dd3c0;
+}
+
+/* 비밀번호 필드 */
+.login-section-full .password-input-wrapper {
+  position: relative;
+}
+
+.login-section-full .password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #79747E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-section-full .password-toggle img {
+  width: 22.5px;
+  height: 15px;
+}
+
+.login-section-full .password-toggle:hover {
+  color: #333;
+}
+
+/* 로그인 버튼 */
+.login-section-full .login-button {
+  width: 100%;
+  height: 48px;
+  padding: 8px 16px;
+  background-color: #7dd3c0;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.login-section-full .login-button:hover:not(:disabled) {
+  background-color: #6bc4a8;
+}
+
+.login-section-full .login-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.login-section-full .signup-link {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  display: block;
+  color: #333;
+  text-decoration: none;
+  margin-bottom: 32px;
+}
+
+.login-section-full .signup-link:hover {
+  text-decoration: underline;
+}
+
+/* 구분선 */
+.login-section-full .divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 32px 0;
+  color: #666;
+}
+
+.login-section-full .divider-beeline {
+  width: 30%;
+  height: 1px;
+  background: rgba(17, 34, 17, 0.25);
+}
+
+.login-section-full .divider span {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-size: 14px;
+  padding: 0 16px;
+}
+
+/* 소셜 로그인 버튼들 */
+.login-section-full .social-login {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+}
+
+.login-section-full .social-btn {
+  width: 160px;
+  height: 56px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  padding: 16px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.login-section-full .social-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.login-section-full .social-btn img {
+  border-radius: 4px;
+}
+/* Turnstile 위젯 */
+.login-section-full .turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
 
         /* Screen transitions */
         .screen {

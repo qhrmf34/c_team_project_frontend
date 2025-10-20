@@ -761,47 +761,54 @@ export default {
     },
     
     async bookRoom(room) {
-      if (!this.isLoggedIn) {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-        return;
-      }
-      
-      // 날짜 검증 강화
+      // 날짜 검증만 수행 (로그인 체크 제거)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const checkInDate = new Date(this.checkIn);
       const checkOutDate = new Date(this.checkOut);
       checkInDate.setHours(0, 0, 0, 0);
       checkOutDate.setHours(0, 0, 0, 0);
-      
-      // 체크인이 오늘 이전인지
+
       if (checkInDate < today) {
         alert('체크인 날짜는 오늘 이후여야 합니다.');
         return;
       }
-      
-      // 체크아웃이 체크인보다 이전인지
+
       if (checkOutDate <= checkInDate) {
         alert('체크아웃 날짜는 체크인 날짜보다 이후여야 합니다.');
         return;
       }
-      
-      // 체크아웃이 이미 지난 날짜인지
+
       if (checkOutDate < today) {
-        alert('체크아웃 날짜가 이미 지났습니다. 예약을 진행할 수 없습니다.');
+        alert('체크아웃 날짜가 이미 지났습니다.');
         return;
       }
-      
-      // 체크인과 체크아웃이 모두 과거인지
-      if (checkInDate < today && checkOutDate < today) {
-        alert('선택하신 날짜가 이미 지났습니다. 날짜를 다시 선택해주세요.');
-        return;
-      }
-      
+
       console.log('예약 시작');
-      
+
+      // 로그인하지 않은 경우: 예약 정보만 쿼리로 전달
+      if (!this.isLoggedIn) {
+        await this.$router.push({
+          path: '/hotelfour',
+          query: {
+            roomId: room.roomId,
+            hotelId: this.hotel.id,
+            hotelName: this.hotel.hotelName,
+            roomName: room.roomName,
+            roomNumber: room.roomNumber || '',
+            checkIn: this.checkIn,
+            checkOut: this.checkOut,
+            totalPrice: room.totalPrice,
+            nights: room.nights,
+            guests: this.guests,
+            needLogin: 'true'
+          }
+        });
+        return;
+      }
+
+      // 로그인한 경우: 기존 예약 생성 로직
       try {
         const reservationData = {
           roomId: Number(room.roomId),
@@ -811,16 +818,15 @@ export default {
           basePayment: String(room.totalPrice),
           reservationsStatus: false
         };
-        
+
         const reservationResponse = await paymentAPI.createReservation(reservationData);
-        
+
         if (reservationResponse.code !== 200) {
           throw new Error(reservationResponse.message || '예약 생성 실패');
         }
-        
+
         const reservationId = reservationResponse.data.id;
-        
-        // query param으로 모든 데이터 전달
+
         await this.$router.push({
           path: '/hotelfour',
           query: {
@@ -837,18 +843,15 @@ export default {
             guests: this.guests
           }
         });
-        
+
       } catch (error) {
-        console.error('예약 생성 실패');
-        console.error('error:', error);
-        
-        // 409 에러 (중복 예약) 처리
+        console.error('예약 생성 실패:', error);
+
         if (error.response?.status === 409) {
           const existingReservationId = error.response.data?.reservationId;
-          
+
           if (existingReservationId) {
             if (confirm('미결제된 예약이 있습니다. 이어서 진행하시겠습니까?')) {
-              // query param으로 모든 데이터 전달
               await this.$router.push({
                 path: '/hotelfour',
                 query: {
@@ -872,13 +875,12 @@ export default {
           }
           return;
         }
-        
-        // 다른 에러 처리
+
         let errorMessage = '예약 생성에 실패했습니다.';
-        
+
         if (error.response?.data) {
           const errorData = error.response.data;
-          
+
           if (errorData.errors) {
             const errors = Object.entries(errorData.errors)
               .map(([field, msg]) => `${field}: ${msg}`)
@@ -889,11 +891,10 @@ export default {
             errorMessage = errorData.message;
           }
         }
-        
+
         alert(errorMessage);
       }
     },
-    
     // ===== 리뷰 작성 폼 표시 =====
     async showReviewForm() {
       if (!this.isLoggedIn) {
@@ -1679,11 +1680,6 @@ export default {
     },
 // 호실 선택 모달 열기
     showRoomSelectionModal(group) {
-      if (!this.isLoggedIn) {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-        return;
-      }
       
       this.selectedRoomGroup = group;
       this.selectedRoomId = null;
@@ -1710,13 +1706,13 @@ export default {
         alert('호실을 선택해주세요.');
         return;
       }
-      
-      // 선택한 호실로 예약 진행
+
       const selectedRoom = this.availableRooms.find(r => r.roomId === this.selectedRoomId);
-      
+
       this.hideRoomSelectionModal();
       this.bookRoom(selectedRoom);
     }
+
 
   }
 }
