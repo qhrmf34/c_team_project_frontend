@@ -290,6 +290,16 @@ export const paymentMethodAPI = {
     return companyNames[cardCompany.toUpperCase()] || cardCompany;
   }
 }
+// 예약 API
+export const reservationAPI = {
+  /**
+   * 내 예약 목록 조회
+   */
+  async getMyReservations() {
+    const response = await apiClient.get('/api/reservations/my');
+    return response.data;
+  }
+}
 // 결제 API 추가
 export const paymentAPI = {
   /**

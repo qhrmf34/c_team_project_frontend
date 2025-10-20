@@ -1297,7 +1297,6 @@ export default {
       } catch (error) {
         console.error('❌ 토스 위젯 초기화 실패:', error);
         console.error('에러 상세:', error.message);
-        alert('결제 모듈 초기화에 실패했습니다: ' + error.message);
       }
     },
 

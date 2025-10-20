@@ -93,7 +93,7 @@
       <!-- ✅ 수정: Tabs - 동적 개수 표시 -->
       <div class="favourites-tabs">
         <div class="select-tab-btn" :class="{ active: activeTab === 'flights' }" @click="switchTab('flights')">
-          Flights
+          Reservations
           <span class="tab-count">0 marked</span>
         </div>
 
@@ -105,12 +105,74 @@
         </div>
       </div>
 
-      <!-- Flights Content -->
+      <!-- 예약 목록 -->
       <div class="tab-content" :class="{ active: activeTab === 'flights' }">
-        <div class="empty-state">
-          <h3>항공편 찜하기 목록이 비어있습니다</h3>
-          <p>마음에 드는 항공편을 찜해보세요!</p>
-        </div>
+        <main class="main-content">
+          <section class="results-section">
+            <!-- 로딩 중 -->
+            <div v-if="isLoadingReservations" class="loading-state">
+              <p>로딩 중...</p>
+            </div>
+
+            <!-- 예약이 없을 때 -->
+            <div v-else-if="reservations.length === 0" class="empty-state">
+              <h3>예약 내역이 없습니다</h3>
+              <p>호텔을 검색하고 예약해보세요!</p>
+            </div>
+
+            <!-- 예약 목록 -->
+            <div v-else class="hotel-cards">
+              <div v-for="reservation in reservations" :key="reservation.reservationId" 
+                class="hotel-card">
+                <div class="hotel-image-container">
+                  <img :src="getImageUrl(reservation.hotelImage)" :alt="reservation.hotelName" class="hotel-image">
+                  <div class="reservation-status" :class="{ paid: reservation.reservationsStatus }">
+                    {{ reservation.reservationsStatus ? '결제완료' : '미결제' }}
+                  </div>
+                </div>
+                <div class="hotel-content">
+                  <h3 class="hotel-title">{{reservation.hotelName}} - {{ reservation.roomName }}</h3>
+                  <div class="price-info">
+                    <div class="price-label-total">Total Price</div>
+                    <div class="price-amount">{{ formatPrice(reservation.basePayment) }}</div>
+                  </div>
+                  <div class="hotel-location">
+                    <span><img src="/images/hotel_img/map.jpg" alt="map"/></span>
+                    <span>{{ reservation.hotelAddress }}</span>
+                  </div>
+                  <div class="hotel-meta">
+                    <span class="stars">{{ generateStars(reservation.hotelStar) }}</span>
+                    <span class="hotel-type">{{ convertHotelType(reservation.hotelType) }}</span>
+                    <span class="date-range">
+                      {{ formatReservationDate(reservation.checkInDate) }} - {{ formatReservationDate(reservation.checkOutDate) }}
+                    </span>
+                  </div>
+                  <div class="rating-section">
+                    <span class="rating-score">{{ reservation.hotelRating ? reservation.hotelRating.toFixed(1) : '0.0' }}</span>
+                    <span class="rating-text">{{ getRatingText(reservation.hotelRating) }} {{ reservation.reviewCount }} reviews</span>
+                  </div>
+                  <div class="hotel-beeline"></div>
+                  <div class="bottom-section">
+                    <div class="button-container">
+                      <button 
+                        v-if="!reservation.reservationsStatus"
+                        class="view-place-btn payment-btn" 
+                        @click="goToPayment(reservation)">
+                        결제하기
+                      </button>
+                      <button 
+                        v-else
+                        class="view-place-btn completed-btn" 
+                        disabled>
+                        결제완료
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
 
       <!-- Places Content -->
@@ -298,7 +360,7 @@
 </template>
 
 <script>
-import { authUtils, hotelAPI, adminAPI,memberCouponAPI  } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI, memberCouponAPI, reservationAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -311,6 +373,11 @@ export default {
       email: '',
       isLoading: false,
       hotels: [],
+      
+      // 예약 관련
+      isLoadingReservations: false,
+      reservations: [],
+      reservationsCount: 0,
       
       // 사용자 정보
       userInfo: null,
@@ -332,6 +399,7 @@ export default {
     
     if (this.isLoggedIn) {
       await this.loadWishlistHotels();
+      await this.loadReservations();
     }
   },
   
@@ -375,6 +443,71 @@ export default {
     goToLogin() {
       this.isDropdownActive = false;
       this.$router.push('/login');
+    },
+
+    /**
+     * 예약 목록 로드
+     */
+    async loadReservations() {
+      this.isLoadingReservations = true;
+      
+      try {
+        const response = await reservationAPI.getMyReservations();
+        
+        if (response.code === 200) {
+          this.reservations = response.data;
+          this.reservationsCount = this.reservations.length;
+        }
+      } catch (error) {
+        console.error('예약 목록 로드 중 오류:', error);
+        alert('예약 목록을 불러올 수 없습니다.');
+      } finally {
+        this.isLoadingReservations = false;
+      }
+    },
+
+    /**
+     * 결제 화면으로 이동
+     */
+    goToPayment(reservation) {
+      const nights = Math.ceil(
+        (new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)) / (1000 * 60 * 60 * 24)
+      );
+      
+      this.$router.push({
+        path: '/hotelfour',
+        query: {
+          reservationId: reservation.reservationId,
+          roomId: reservation.roomId,
+          hotelId: reservation.hotelId,
+          checkIn: reservation.checkInDate,
+          checkOut: reservation.checkOutDate,
+          nights: nights,
+          totalPrice: reservation.basePayment,
+          guests: reservation.guestsCount
+        }
+      });
+    },
+
+    /**
+     * 날짜 포맷팅
+     */
+    formatReservationDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+    },
+
+    /**
+     * 평점 텍스트 변환
+     */
+    getRatingText(rating) {
+      if (!rating) return 'No Rating';
+      if (rating >= 4.5) return 'Excellent';
+      if (rating >= 4.0) return 'Very Good';
+      if (rating >= 3.5) return 'Good';
+      if (rating >= 3.0) return 'Fair';
+      return 'No Rating';
     },
 
     /**
@@ -438,16 +571,14 @@ export default {
     },
     
     /**
-     * ✅ 수정: Show less (처음으로 초기화)
+     * Show less (처음으로 초기화)
      */
     async showLess() {
       this.isLoading = true;
       
       try {
-        // 처음 3개만 다시 로드
         await this.loadWishlistHotels();
         
-        // 스크롤 올리기
         this.$nextTick(() => {
           const resultsSection = document.querySelector('.results-section');
           if (resultsSection) {
@@ -496,14 +627,6 @@ export default {
         'resort': 'Resort'
       };
       return typeMap[type] || type;
-    },
-    
-    getRatingText(rating) {
-      if (rating >= 4.5) return 'Excellent';
-      if (rating >= 4.0) return 'Very Good';
-      if (rating >= 3.5) return 'Good';
-      if (rating >= 3.0) return 'Fair';
-      return 'No Rating';
     },
     
     getFirstImage() {
@@ -586,24 +709,28 @@ export default {
     
     switchTab(tabName) {
       this.activeTab = tabName;
+      
+      if (tabName === 'flights' && this.reservations.length === 0) {
+        this.loadReservations();
+      } else if (tabName === 'places' && this.hotels.length === 0) {
+        this.loadWishlistHotels();
+      }
     },
 
     async subscribe() {
-      // 로그인 확인
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.')
         this.$router.push('/login')
         return
       }
 
-      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
       try {
         const response = await memberCouponAPI.subscribeAndReceiveCoupons()
         
         if (response.code === 200) {
           this.receivedCoupons = response.data || []
           this.showCouponModal = true
-          this.newsletter.email = '' // 이메일 입력창 초기화
+          this.email = ''
         }
       } catch (error) {
         console.error('쿠폰 지급 실패:', error)
@@ -634,7 +761,6 @@ export default {
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
     },
 
-    
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -1157,7 +1283,7 @@ export default {
     margin-bottom: -20px;
     margin-top: 20px;
     position: relative;
-    margin-left: 220px;
+    margin-left: 260px;
   }
 
   .price-label {
@@ -1175,7 +1301,21 @@ export default {
     color: #666666;
     margin-bottom: 10px;
   }
-
+  .price-label-total{
+    position: absolute;
+    right: -300px;
+    width: 157px;
+    height: 15px;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    font-size: 12px;
+    color: #666666;
+    margin-bottom: 10px;
+  }
   .price-amount {
     position: absolute;
     width: 157px;
@@ -1224,7 +1364,7 @@ export default {
   }
 
   .hotel-beeline{
-    width: 700px;
+    width: 744px;
     height: 0.5px;
     angle: 0 deg;
     opacity: 0.25;
@@ -1240,7 +1380,7 @@ export default {
   }
 
   .view-place-btn {
-    width: 645px;
+    width: 790px;
     height: 48px;
     padding: 8px 16px;
     background: #8DD3BB;
@@ -1760,7 +1900,61 @@ export default {
     border-color: #8DD3BB;
     color: #8DD3BB;
   }
+  /* 예약 상태 표시 */
+  .reservation-status {
+    position: absolute;
+    width: 77px;
+    height: 32px;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 107, 107, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 100%;
+    display: flex;          
+    align-items: center;   
+    justify-content: center;
+    z-index: 10;
+  }
 
+  .reservation-status.paid {
+    background: rgba(141, 211, 187, 0.9);
+    color: #112211;
+  }
+
+  /* 결제 버튼 스타일 */
+  .payment-btn {
+    background: #FF6B6B !important;
+    color: white !important;
+  }
+
+  .payment-btn:hover {
+    background: #ff5252 !important;
+  }
+
+  .completed-btn {
+    background: #8DD3BB !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    color: #112211 !important;
+  }
+
+  .completed-btn:hover {
+    background: #8DD3BB !important;
+  }
+
+  /* 날짜 범위 표시 */
+  .date-range {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 12px;
+    color: #666666;
+    margin-left: 8px;
+  }
   /* 반응형 */
   @media screen and (max-width: 768px) {
     .coupon-modal {
