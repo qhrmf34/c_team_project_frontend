@@ -639,7 +639,13 @@ export const adminAPI = {
     })
     return response.data
   },
-
+  // 파일 삭제 메서드 
+  async deleteFile(filePath) {
+    const response = await apiClient.delete('/api/admin/delete-file', {
+      params: { filePath }
+    })
+    return response.data
+  },
   // 폴더별 파일 업로드 편의 메서드
   async uploadCityImage(file) {
     const formData = new FormData()

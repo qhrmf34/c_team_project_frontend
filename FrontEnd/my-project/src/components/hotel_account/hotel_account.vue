@@ -586,7 +586,7 @@
 </template>
 
 <script>
-import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI } from '@/utils/commonAxios'
+import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelAccount',
@@ -867,7 +867,7 @@ export default {
       }
 
       // 서버 업로드 이미지 (/member/)
-      return `http://localhost:8089/uploads${imagePath}`;
+      return adminAPI.getImageUrl(imagePath);
     },
     // 결제수단 목록 로드
     async loadPaymentMethods() {

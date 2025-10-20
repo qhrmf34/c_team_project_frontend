@@ -963,62 +963,61 @@ export default {
       }
     },
     
-    // ===== 결제 처리 =====
-    async processPayment() {
-      console.log('=== 결제 시작 ===');
 
-      if (!this.isLoggedIn) {
-        alert('로그인이 필요합니다.');
-        return;
+  // ===== 결제 처리 =====
+  async processPayment() {
+    console.log('=== 결제 시작 ===');
+  
+    if (!this.isLoggedIn) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+  
+    if (!this.tossWidgets || !this.isWidgetReady) {
+      alert('결제 모듈이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+  
+    if (!this.bookingInfo.reservationId) {
+      alert('예약 정보가 없습니다.');
+      return;
+    }
+  
+    this.isProcessingPayment = true;
+  
+    try {
+      const orderId = 'ORDER_' + Date.now() + '_' + this.bookingInfo.reservationId;
+    
+      console.log('결제 요청:', {
+        orderId,
+        totalPrice: this.totalPrice,  // ✅ 쿠폰 할인이 적용된 최종 금액
+        reservationId: this.bookingInfo.reservationId,
+        couponId: this.selectedCoupon?.id || null
+      });
+    
+      // ✅ 토스 결제위젯으로 결제 요청 (totalPrice는 이미 할인 적용됨)
+      await this.tossWidgets.requestPayment({
+        orderId: orderId,
+        orderName: '호텔 예약 결제',
+        successUrl: `${window.location.origin}/payment/success?reservationId=${this.bookingInfo.reservationId}&couponId=${this.selectedCoupon?.id || ''}`,
+        failUrl: `${window.location.origin}/payment/fail`,
+        customerEmail: this.userInfo.email || 'customer@example.com',
+        customerName: this.displayUserName,
+        customerMobilePhone: this.phoneNumber || '01012341234'
+      });
+    
+    } catch (error) {
+      console.error('❌ 결제 요청 실패:', error);
+    
+      if (error.code === 'USER_CANCEL') {
+        alert('결제가 취소되었습니다.');
+      } else {
+        alert(error.message || '결제 처리 중 오류가 발생했습니다.');
       }
-
-      if (!this.tossWidgets || !this.isWidgetReady) {
-        alert('결제 모듈이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-
-      if (!this.bookingInfo.reservationId) {
-        alert('예약 정보가 없습니다.');
-        return;
-      }
-
-      // ✅ selectedCard 체크 제거 (토스 위젯이 알아서 체크함)
-
-      this.isProcessingPayment = true;
-
-      try {
-        const orderId = 'ORDER_' + Date.now() + '_' + this.bookingInfo.reservationId;
-
-        console.log('결제 요청:', {
-          orderId,
-          totalPrice: this.totalPrice,
-          reservationId: this.bookingInfo.reservationId
-        });
-
-        //토스 결제위젯으로 결제 요청
-        await this.tossWidgets.requestPayment({
-          orderId: orderId,
-          orderName: '호텔 예약 결제',
-          // paymentMethodId는 제거 (우리 DB ID가 아니라 토스가 결제수단 처리)
-          successUrl: `${window.location.origin}/payment/success?reservationId=${this.bookingInfo.reservationId}&couponId=${this.selectedCoupon?.id || ''}`,
-          failUrl: `${window.location.origin}/payment/fail`,
-          customerEmail: this.userInfo.email || 'customer@example.com',
-          customerName: this.displayUserName,
-          customerMobilePhone: this.phoneNumber || '01012341234'
-        });
-
-      } catch (error) {
-        console.error('❌ 결제 요청 실패:', error);
-
-        if (error.code === 'USER_CANCEL') {
-          alert('결제가 취소되었습니다.');
-        } else {
-          alert(error.message || '결제 처리 중 오류가 발생했습니다.');
-        }
-      } finally {
-        this.isProcessingPayment = false;
-      }
-    },
+    } finally {
+      this.isProcessingPayment = false;
+    }
+  },
     
     // 카드 추가
     async addNewCard(event) {

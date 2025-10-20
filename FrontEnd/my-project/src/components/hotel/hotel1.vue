@@ -25,29 +25,48 @@
       </nav>
     </header>
 
-    <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
-      <div class="dropdown-header">
-        <div class="dropdown-avatar"></div>
-        <div class="dropdown-info">
-          <h3>{{ displayUserName }}</h3>
-          <p>{{ userStatus }}</p>
+<div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
+      <!-- 로그인된 경우 -->
+      <template v-if="isLoggedIn">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>{{ displayUserName }}</h3>
+            <p>{{ userStatus }}</p>
+          </div>
         </div>
-      </div>
-      <div class="dropdown-menu">
-        <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="/images/hotel_img/account.jpg">계정
-        </a>
-      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-        <img src="/images/hotel_img/card.jpg">결제내역
-      </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/setting.jpg">설정
-        </a>
-        <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="/images/hotel_img/logout.jpg">로그아웃
-        </a>
-      </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToAccount">
+            <img src="/images/hotel_img/account.jpg">계정
+          </a>
+          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+            <img src="/images/hotel_img/card.jpg">결제내역
+          </a>
+          <a href="#" class="dropdown-item">
+            <img src="/images/hotel_img/setting.jpg">설정
+          </a>
+          <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+          <a href="#" class="dropdown-item" @click="handleLogout">
+            <img src="/images/hotel_img/logout.jpg">로그아웃
+          </a>
+        </div>
+      </template>
+
+      <!-- 로그인되지 않은 경우 -->
+      <template v-else>
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>Guest</h3>
+            <p>로그인이 필요합니다</p>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToLogin">
+            <img src="/images/hotel_img/account.jpg">로그인
+          </a>
+        </div>
+      </template>
     </div>
 
     <section class="hero-section">
@@ -313,177 +332,181 @@ export default {
   },
   
     methods: {
-        toggleDropdown() {
-          this.isDropdownActive = !this.isDropdownActive;
-        },
+      goToLogin() {
+        this.isDropdownActive = false;
+        this.$router.push('/login');
+      },
+      toggleDropdown() {
+        this.isDropdownActive = !this.isDropdownActive;
+      },
 
-        handleClickOutside(event) {
-          if (!this.$refs.userDropdown.contains(event.target) && 
-              !event.target.closest('.user-profile')) {
-            this.isDropdownActive = false;
-          }
-        },
+      handleClickOutside(event) {
+        if (!this.$refs.userDropdown.contains(event.target) && 
+            !event.target.closest('.user-profile')) {
+          this.isDropdownActive = false;
+        }
+      },
 
-        loadUserInfo() {
-          this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
+      loadUserInfo() {
+        this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
 
-          if (this.isLoggedIn) {
-            this.userInfo = authUtils.getUserInfo();
-            console.log('사용자 정보:', this.userInfo);
-          } else {
-            this.userInfo = null;
-          }
-        },
+        if (this.isLoggedIn) {
+          this.userInfo = authUtils.getUserInfo();
+          console.log('사용자 정보:', this.userInfo);
+        } else {
+          this.userInfo = null;
+        }
+      },
 
-        async handleLogout() {
-          if (confirm('로그아웃하시겠습니까?')) {
-            try {
-              await authUtils.logout();
-              this.loadUserInfo();
-              alert('로그아웃되었습니다.');
-              this.$router.push('/login');
-            } catch (error) {
-              console.error('로그아웃 중 오류:', error);
-              authUtils.logout();
-              this.loadUserInfo();
-              alert('로그아웃되었습니다.');
-              this.$router.push('/login');
-            }
-          }
-        },
-
-        goToAccount() {
-          if (this.isLoggedIn) {
-            this.$router.push('/hotelaccount');
-          } else {
-            alert('로그인이 필요한 서비스입니다.');
-            this.$router.push('/login');
-          }
-        },
-
-        goToHotel() {
-          if (this.isLoggedIn) {
-            this.$router.push('/hotelone');
-          } else {
-            alert('로그인이 필요한 서비스입니다.');
-            this.$router.push('/login');
-          }
-        },
-
-        goToFavourites() {
-          if (this.isLoggedIn) {
-            this.$router.push('/hotelsix');
-          } else {
-            alert('로그인이 필요한 서비스입니다.');
-            this.$router.push('/login');
-          }
-        },
-        async subscribe() {
-           // 로그인 확인
-          if (!this.isLoggedIn) {
-            alert('로그인이 필요한 서비스입니다.')
-            this.$router.push('/login')
-            return
-          }
-        
-          // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      async handleLogout() {
+        if (confirm('로그아웃하시겠습니까?')) {
           try {
-            const response = await memberCouponAPI.subscribeAndReceiveCoupons()
-
-            if (response.code === 200) {
-              this.receivedCoupons = response.data || []
-              this.showCouponModal = true
-              this.newsletter.email = '' // 이메일 입력창 초기화
-            }
+            await authUtils.logout();
+            this.loadUserInfo();
+            alert('로그아웃되었습니다.');
+            this.$router.push('/login');
           } catch (error) {
-            console.error('쿠폰 지급 실패:', error)
-
-            if (error.response?.status === 404) {
-              alert('현재 지급 가능한 쿠폰이 없습니다.')
-            } else if (error.response?.status === 401) {
-              alert('로그인이 필요한 서비스입니다.')
-              this.$router.push('/login')
-            } else {
-              alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
-            }
-          }
-        },
-
-        closeCouponModal() {
-          this.showCouponModal = false
-          this.receivedCoupons = []
-        },
-      
-        formatCouponDiscount(discount) {
-          return `${discount}%`
-        },
-      
-        formatCouponDate(date) {
-          if (!date) return ''
-          const d = new Date(date)
-          return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-        },
-
-        async loadFeaturedCities() {
-          try {
-            const response = await hotelAPI.getFeaturedCities(4);
-            this.featuredCities = response.data || [];
-          } catch (error) {
-            console.error('추천 도시 로드 실패:', error);
-            this.featuredCities = [];
-          }
-        },
-
-        getCityImageUrl(imagePath) {
-          if (!imagePath) {
-            return '/images/hotel_img/melbourne.jpg';
-          }
-          return adminAPI.getImageUrl(imagePath);
-        },
-
-        formatPrice(price) {
-          if (!price) return '₩0';
-          return '₩' + adminAPI.formatNumber(price);
-        },
-
-        bookHotelByCity(cityName) {
-          this.$router.push({
-            path: '/hoteltwo',
-            query: { 
-              destination: cityName,
-              checkIn: this.getToday(),
-              checkOut: this.getTomorrow()
-            }
-          });
-        },
-
-        goToHotelSearch() {
-          this.$router.push('/hoteltwo');
-        },
-
-        getToday() {
-          const today = new Date();
-          return today.toISOString().split('T')[0];
-        },
-
-        getTomorrow() {
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          return tomorrow.toISOString().split('T')[0];
-        },      
-        goToPaymentHistory() {
-          if (this.isLoggedIn) {
-            this.$router.push({
-              path: '/hotelaccount',
-              query: { tab: 'history' }
-            });
-            this.isDropdownActive = false; // 드롭다운 닫기
-          } else {
-            alert('로그인이 필요한 서비스입니다.');
+            console.error('로그아웃 중 오류:', error);
+            authUtils.logout();
+            this.loadUserInfo();
+            alert('로그아웃되었습니다.');
             this.$router.push('/login');
           }
         }
       },
+
+      goToAccount() {
+        if (this.isLoggedIn) {
+          this.$router.push('/hotelaccount');
+        } else {
+          alert('로그인이 필요한 서비스입니다.');
+          this.$router.push('/login');
+        }
+      },
+
+      goToHotel() {
+        if (this.isLoggedIn) {
+          this.$router.push('/hotelone');
+        } else {
+          alert('로그인이 필요한 서비스입니다.');
+          this.$router.push('/login');
+        }
+      },
+
+      goToFavourites() {
+        if (this.isLoggedIn) {
+          this.$router.push('/hotelsix');
+        } else {
+          alert('로그인이 필요한 서비스입니다.');
+          this.$router.push('/login');
+        }
+      },
+      async subscribe() {
+         // 로그인 확인
+        if (!this.isLoggedIn) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+          return
+        }
+      
+        // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+        try {
+          const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+
+          if (response.code === 200) {
+            this.receivedCoupons = response.data || []
+            this.showCouponModal = true
+            this.newsletter.email = '' // 이메일 입력창 초기화
+          }
+        } catch (error) {
+          console.error('쿠폰 지급 실패:', error)
+
+          if (error.response?.status === 404) {
+            alert('현재 지급 가능한 쿠폰이 없습니다.')
+          } else if (error.response?.status === 401) {
+            alert('로그인이 필요한 서비스입니다.')
+            this.$router.push('/login')
+          } else {
+            alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+          }
+        }
+      },
+
+      closeCouponModal() {
+        this.showCouponModal = false
+        this.receivedCoupons = []
+      },
+    
+      formatCouponDiscount(discount) {
+        return `${discount}%`
+      },
+    
+      formatCouponDate(date) {
+        if (!date) return ''
+        const d = new Date(date)
+        return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+      },
+
+      async loadFeaturedCities() {
+        try {
+          const response = await hotelAPI.getFeaturedCities(4);
+          this.featuredCities = response.data || [];
+        } catch (error) {
+          console.error('추천 도시 로드 실패:', error);
+          this.featuredCities = [];
+        }
+      },
+
+      getCityImageUrl(imagePath) {
+        if (!imagePath) {
+          return '/images/hotel_img/melbourne.jpg';
+        }
+        return adminAPI.getImageUrl(imagePath);
+      },
+
+      formatPrice(price) {
+        if (!price) return '₩0';
+        return '₩' + adminAPI.formatNumber(price);
+      },
+
+      bookHotelByCity(cityName) {
+        this.$router.push({
+          path: '/hoteltwo',
+          query: { 
+            destination: cityName,
+            checkIn: this.getToday(),
+            checkOut: this.getTomorrow()
+          }
+        });
+      },
+
+      goToHotelSearch() {
+        this.$router.push('/hoteltwo');
+      },
+
+      getToday() {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+      },
+
+      getTomorrow() {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+      },      
+      goToPaymentHistory() {
+        if (this.isLoggedIn) {
+          this.$router.push({
+            path: '/hotelaccount',
+            query: { tab: 'history' }
+          });
+          this.isDropdownActive = false; // 드롭다운 닫기
+        } else {
+          alert('로그인이 필요한 서비스입니다.');
+          this.$router.push('/login');
+        }
+      }
+    },
 
       mounted() {
         document.addEventListener('click', this.handleClickOutside);
