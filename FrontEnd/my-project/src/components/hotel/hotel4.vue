@@ -332,12 +332,12 @@
                 <div class="add-card">Add a new card</div>
               </div>
             </div>
-            <!-- ✅ 토스 위젯용 DOM (숨김 처리) -->
+            <!-- ✅ 토스 위젯용 DOM (숨김 처리)
             <div class="toss-payment-section">
               <h3 class="section-title">결제수단 선택</h3>
               <div id="payment-widget"></div>
               <div id="agreement"></div>
-            </div>
+            </div> -->
 
             <!-- <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
               <div id="payment-widget" style="width: 400px; min-height: 300px;"></div>
@@ -346,12 +346,10 @@
             <!-- 결제 버튼 -->
             <button 
               class="payment-btn" 
-              @click="processPayment"
-              :disabled="isProcessingPayment || !isWidgetReady"
+              @click="openPaymentModal"
+              :disabled="isProcessingPayment"
             >
-              {{ isProcessingPayment ? '결제 처리 중...' : 
-                 !isWidgetReady ? '결제 준비 중...' :
-                 `${formatPrice(totalPrice)} 결제하기` }}
+              {{ isProcessingPayment ? '결제 처리 중...' : `${formatPrice(totalPrice)} 결제하기` }}
             </button>
 
             <!-- Add Card Modal -->
@@ -501,7 +499,36 @@
       </main>
     </div>
 
+    <div class="payment-modal" :class="{ active: paymentModalActive }" @click="closePaymentModalOnOverlay">
+      <div class="payment-modal-content">
+        <div class="payment-modal-header">
+          <h2>결제하기</h2>
+          <button class="close-btn" @click="closePaymentModal">&times;</button>
+        </div>
 
+        <div class="payment-modal-body">
+          <div class="payment-summary">
+            <div class="summary-item">
+              <span>결제 금액</span>
+              <strong>{{ formatPrice(totalPrice) }}</strong>
+            </div>
+          </div>
+
+          <div id="payment-widget"></div>
+          <div id="agreement"></div>
+
+          <button 
+            class="confirm-payment-btn" 
+            @click="processPayment"
+            :disabled="isProcessingPayment || !isWidgetReady"
+          >
+            {{ isProcessingPayment ? '결제 처리 중...' : 
+               !isWidgetReady ? '결제 준비 중...' :
+               `${formatPrice(totalPrice)} 결제하기` }}
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- Newsletter Section -->
     <section class="newsletter-section">
             </section>
@@ -645,6 +672,8 @@ export default {
       savedCards: [],
       availableCoupons: [],
 
+      paymentModalActive: false,
+
       tossWidgets: null,
       isWidgetReady: false,
       TOSS_CLIENT_KEY: 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm',
@@ -695,6 +724,8 @@ export default {
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
+    await this.handleSocialLoginCallback();
+
     this.loadUserInfo();
     
     // URL 파라미터에서 예약 정보 가져오기
@@ -776,7 +807,105 @@ export default {
     },
   },
   methods: {
-      // ===== Turnstile 관련 =====
+    // 결제 버튼 클릭 시 모달 열기
+    async openPaymentModal() {
+      // ✅ 이미 모달이 열려있으면 중단
+      if (this.paymentModalActive) {
+        console.log('결제 모달이 이미 열려있습니다.');
+        return;
+      }
+    
+      this.paymentModalActive = true;
+
+      await this.$nextTick();
+      await new Promise(resolve => setTimeout(resolve, 200)); // 100ms -> 200ms로 증가
+
+      try {
+        await this.loadTossSDK();
+        await this.initializeTossWidget();
+      } catch (error) {
+        console.error('결제 모듈 초기화 실패:', error);
+        alert('결제 모듈을 불러오는데 실패했습니다.');
+        this.closePaymentModal();
+      }
+    },
+
+    // 모달 닫기
+    closePaymentModal() {
+      this.paymentModalActive = false;
+      this.isWidgetReady = false;
+
+      // ✅ 위젯 완전 제거
+      if (this.tossWidgets) {
+        try {
+          // DOM 요소 내용 제거
+          const paymentWidget = document.getElementById('payment-widget');
+          const agreement = document.getElementById('agreement');
+          if (paymentWidget) paymentWidget.innerHTML = '';
+          if (agreement) agreement.innerHTML = '';
+        } catch (error) {
+          console.error('위젯 정리 실패:', error);
+        }
+      }
+
+      this.tossWidgets = null;
+    },
+    async handleSocialLoginCallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      const userInfoParam = urlParams.get('userInfo');
+      const loginSuccess = urlParams.get('login');
+    
+      if (loginSuccess === 'success' && token && userInfoParam) {
+        try {
+          console.log('✅ 소셜 로그인 성공 - 토큰 저장 중...');
+
+          // JWT 토큰 저장
+          localStorage.setItem('jwt_token', token);
+
+          // 사용자 정보 파싱 및 저장
+          const userInfo = JSON.parse(decodeURIComponent(userInfoParam));
+          localStorage.setItem('user_info', JSON.stringify(userInfo));
+
+          // 세션에 저장된 예약 정보 복원
+          const pendingReservation = sessionStorage.getItem('pendingReservation');
+          const pendingGuests = sessionStorage.getItem('pendingGuests');
+
+          if (pendingReservation) {
+            const reservationData = JSON.parse(pendingReservation);
+
+            // URL 파라미터 재설정 (clean URL로)
+            const newQuery = {
+              roomId: reservationData.roomId,
+              hotelId: reservationData.hotelId,
+              checkIn: reservationData.checkIn,
+              checkOut: reservationData.checkOut,
+              nights: reservationData.nights,
+              totalPrice: reservationData.basePrice,
+              guests: pendingGuests || 2
+            };
+
+            // URL 정리 (토큰과 userInfo 제거)
+            await this.$router.replace({ 
+              path: '/hotelfour', 
+              query: newQuery 
+            });
+
+            // 세션 정리
+            sessionStorage.removeItem('pendingReservation');
+            sessionStorage.removeItem('pendingGuests');
+
+            console.log('✅ 소셜 로그인 후 예약 정보 복원 완료');
+          }
+
+        } catch (error) {
+          console.error('❌ 소셜 로그인 콜백 처리 실패:', error);
+          alert('로그인 정보 처리에 실패했습니다.');
+        }
+      }
+    },
+
+  // ===== Turnstile 관련 =====
   
   loadTurnstileScript() {
     // 이미 스크립트가 로드되어 있는지 확인
@@ -988,21 +1117,30 @@ export default {
     },
 
     loginWithKakao() {
-      // 현재 예약 정보를 세션에 저장
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
       sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+
+      // ✅ 쿠키 설정 추가
+      document.cookie = 'returnToPayment=true; path=/; max-age=300'; // 5분 유효
+
       window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
     },
+
 
     loginWithGoogle() {
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
       sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+
+      document.cookie = 'returnToPayment=true; path=/; max-age=300';
+
       window.location.href = 'http://localhost:8089/oauth2/authorization/google';
     },
-
     loginWithNaver() {
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
       sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+
+      document.cookie = 'returnToPayment=true; path=/; max-age=300';
+
       window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
     },
 
@@ -1041,57 +1179,62 @@ export default {
         console.error('토스 SDK가 로드되지 않음');
         return;
       }
-
+    
+      // ✅ 이미 초기화되어 있으면 중단
+      if (this.tossWidgets && this.isWidgetReady) {
+        console.log('토스 위젯이 이미 초기화되어 있습니다.');
+        return;
+      }
+    
       try {
         console.log('토스 위젯 초기화 시작...');
-
-        // ✅ DOM이 먼저 렌더링될 때까지 대기
+      
         await this.$nextTick();
-
-        // DOM 요소 존재 확인
+      
         const paymentWidgetElement = document.getElementById('payment-widget');
         const agreementElement = document.getElementById('agreement');
-
+      
         if (!paymentWidgetElement || !agreementElement) {
           console.error('결제 UI 요소를 찾을 수 없습니다');
-          await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기 후 재시도
-
+          await new Promise(resolve => setTimeout(resolve, 500));
+        
           if (!document.getElementById('payment-widget')) {
             throw new Error('결제 UI 요소가 렌더링되지 않았습니다');
           }
         }
-
+      
+        // ✅ 기존 내용 제거
+        paymentWidgetElement.innerHTML = '';
+        agreementElement.innerHTML = '';
+      
         const tossPayments = window.TossPayments(this.TOSS_CLIENT_KEY);
         const customerKey = 'customer_' + this.userInfo.id;
         console.log('customerKey:', customerKey);
-
+      
         this.tossWidgets = tossPayments.widgets({ customerKey });
-
-        // 초기 금액 설정
+      
         await this.tossWidgets.setAmount({
           currency: 'KRW',
           value: this.totalPrice
         });
-
+      
         console.log('결제 UI 렌더링 시작...');
-
-        // ✅ 결제 UI 렌더링
+      
         await this.tossWidgets.renderPaymentMethods({
           selector: '#payment-widget',
           variantKey: 'DEFAULT'
         });
-
+      
         console.log('이용약관 UI 렌더링 시작...');
-
-        // ✅ 이용약관 UI 렌더링
+      
         await this.tossWidgets.renderAgreement({
           selector: '#agreement',
           variantKey: 'AGREEMENT'
         });
-
+      
         this.isWidgetReady = true;
         console.log('✅✅ 토스 위젯 초기화 및 렌더링 완료');
-
+      
       } catch (error) {
         console.error('❌ 토스 위젯 초기화 실패:', error);
         console.error('에러 상세:', error.message);
@@ -1236,6 +1379,12 @@ export default {
   async processPayment() {
     console.log('=== 결제 시작 ===');
   
+    // ✅ 이미 처리 중이면 중단
+    if (this.isProcessingPayment) {
+      console.log('이미 결제 처리 중입니다.');
+      return;
+    }
+  
     if (!this.isLoggedIn) {
       alert('로그인이 필요합니다.');
       return;
@@ -1258,12 +1407,11 @@ export default {
     
       console.log('결제 요청:', {
         orderId,
-        totalPrice: this.totalPrice,  // ✅ 쿠폰 할인이 적용된 최종 금액
+        totalPrice: this.totalPrice,
         reservationId: this.bookingInfo.reservationId,
         couponId: this.selectedCoupon?.id || null
       });
     
-      // ✅ 토스 결제위젯으로 결제 요청 (totalPrice는 이미 할인 적용됨)
       await this.tossWidgets.requestPayment({
         orderId: orderId,
         orderName: '호텔 예약 결제',
@@ -1279,12 +1427,15 @@ export default {
     
       if (error.code === 'USER_CANCEL') {
         alert('결제가 취소되었습니다.');
+      } else if (error.message?.includes('이미 다른 요청')) {
+        alert('결제 처리 중입니다. 잠시만 기다려주세요.');
       } else {
         alert(error.message || '결제 처리 중 오류가 발생했습니다.');
       }
-    } finally {
+      
       this.isProcessingPayment = false;
     }
+    // ✅ finally 제거 - 결제 성공 시 페이지 이동하므로
   },
     
     // 카드 추가
@@ -3260,7 +3411,68 @@ export default {
   justify-content: center;
   margin: 20px 0;
 }
+.payment-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
 
+.payment-modal.active {
+  display: flex;
+}
+
+.payment-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.payment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.payment-modal-body {
+  padding: 20px;
+}
+
+.payment-summary {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.confirm-payment-btn {
+  width: 100%;
+  padding: 16px;
+  background: #8DD3BB;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.confirm-payment-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
         /* Screen transitions */
         .screen {
             display: none;
