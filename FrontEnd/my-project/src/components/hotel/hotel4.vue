@@ -27,29 +27,49 @@
     </header>
 
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
-      <div class="dropdown-header">
-        <div class="dropdown-avatar"></div>
-        <div class="dropdown-info">
-          <h3>{{ displayUserName }}</h3>
-          <p>{{ userStatus }}</p>
+      <!-- 로그인된 경우 -->
+      <template v-if="isLoggedIn">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>{{ displayUserName }}</h3>
+            <p>{{ userStatus }}</p>
+          </div>
         </div>
-      </div>
-      <div class="dropdown-menu">
-        <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="/images/hotel_img/account.jpg">계정
-        </a>
-      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-        <img src="/images/hotel_img/card.jpg">결제내역
-      </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/setting.jpg">설정
-        </a>
-        <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="/images/hotel_img/logout.jpg">로그아웃
-        </a>
-      </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToAccount">
+            <img src="/images/hotel_img/account.jpg">계정
+          </a>
+          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+            <img src="/images/hotel_img/card.jpg">결제내역
+          </a>
+          <a href="#" class="dropdown-item">
+            <img src="/images/hotel_img/setting.jpg">설정
+          </a>
+          <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+          <a href="#" class="dropdown-item" @click="handleLogout">
+            <img src="/images/hotel_img/logout.jpg">로그아웃
+          </a>
+        </div>
+      </template>
+
+      <!-- 로그인되지 않은 경우 -->
+      <template v-else>
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>Guest</h3>
+            <p>로그인이 필요합니다</p>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToLogin">
+            <img src="/images/hotel_img/account.jpg">로그인
+          </a>
+        </div>
+      </template>
     </div>
+
 
     <!-- Screen 1: Login (로그인 안한 사용자용) -->
     <div class="screen" :class="{ active: currentScreen === 1 }">
@@ -605,6 +625,38 @@
           </div>
         </div>
       </div>
+    <!-- 쿠폰 지급 모달 -->
+    <div v-if="showCouponModal" class="coupon-modal-overlay" @click="closeCouponModal">
+      <div class="coupon-modal" @click.stop>
+        <div class="coupon-modal-header">
+          <h2>🎉 쿠폰이 지급되었습니다!</h2>
+          <button class="modal-close-btn" @click="closeCouponModal">✕</button>
+        </div>
+        
+        <div class="coupon-modal-content">
+          <p class="coupon-count">총 {{ receivedCoupons.length }}개의 쿠폰을 받았습니다</p>
+          
+          <div class="coupon-list">
+            <div v-for="coupon in receivedCoupons" :key="coupon.id" class="coupon-item">
+              <div class="coupon-badge">
+                <span class="discount">{{ formatCouponDiscount(coupon.discount) }}</span>
+                <span class="discount-label">할인</span>
+              </div>
+              
+              <div class="coupon-info">
+                <h3>{{ coupon.couponName }}</h3>
+                <p class="coupon-expiry">유효기간: ~ {{ formatCouponDate(coupon.lastDate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="coupon-modal-footer">
+            <button class="btn-close" @click="closeCouponModal">닫기</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -626,6 +678,8 @@ export default {
       turnstileWidgetId: null,
       turnstileToken: null,
       turnstileSiteKey: '',
+      showCouponModal: false,
+      receivedCoupons: [],
       phoneNumber: '',
       email: '',
       // 로그인 폼 
@@ -807,6 +861,11 @@ export default {
     },
   },
   methods: {
+    goToLogin() {
+      this.isDropdownActive = false;
+      this.$router.push('/login');
+    },
+
     // 결제 버튼 클릭 시 모달 열기
     async openPaymentModal() {
       // ✅ 이미 모달이 열려있으면 중단
@@ -1606,12 +1665,52 @@ export default {
       }
     },
     
-    subscribe() {
-      if (this.email) {
-        console.log('Subscribed:', this.email);
-        this.email = '';
+    async subscribe() {
+      // 로그인 확인
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
+      }
+
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.newsletter.email = '' // 이메일 입력창 초기화
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
       }
     },
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+
     
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
@@ -1684,1419 +1783,611 @@ export default {
 
 <style scoped>
         
-    /* Header */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 21px 104px;
-        background: #FFFFFF;
-        box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        height: 87px;
-        width: 100%;
-    }
-
-    nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        max-width: 1232px;
-        margin: 0 auto;
-    }
-
-    .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .nav-right {
-        display: flex;
-        align-items: center;
-        gap: 32px;
-    }
-
-    .nav-item {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 14px;
-        line-height: 100%;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: #112211;
-        text-decoration: none;
-    }
-
-    .user-profile {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 14px;
-        line-height: 100%;
-        color: #112211;
-    }
-
-    .user-avatar {
-        width: 45px;
-        height: 45px;
-        background: #D9D9D9;
-        border: 1px solid #000000;
-        border-radius: 50%;
-        position: relative;
-    }
-
-    .online-dot {
-        position: absolute;
-        width: 10px;
-        height: 10px;
-        background: #112211;
-        border-radius: 50%;
-        bottom: 2px;
-        right: 2px;
-    }
-
-    /* User Dropdown */
-    .user-dropdown {
-        position: fixed;
-        top: 82px;
-        left: 64%;
-        width: 329px;
-        background: #FFFFFF;
-        border-radius: 12px;
-        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-        padding: 32px;
-        display: none;
-        z-index: 1001;
-    }
-
-    .user-dropdown.active {
-        display: block;
-    }
-
-    .dropdown-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-
-    .dropdown-avatar {
-        width: 64px;
-        height: 64px;
-        background: #D9D9D9;
-        border-radius: 50%;
-    }
-
-    .dropdown-info h3 {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 16px;
-        line-height: 100%;
-        color: #112211;
-        margin-bottom: 4px;
-    }
-
-    .dropdown-info p {
-        font-family: Montserrat;
-        font-weight: 400;
-        font-size: 14px;
-        line-height: 100%;
-        color: #112211;
-        opacity: 0.75;
-    }
-
-    .dropdown-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-        padding-top: 24px;
-    }
-
-    .dropdown-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #112211;
-        text-decoration: none;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-size: 14px;
-        line-height: 100%;
-        padding: 4px 0;
-    }
-    
-    /* Main Content */
-    .main-content {
-        margin-top: 87px;
-        padding: 40px 104px 60px;
-        max-width: 1440px;
-        margin: 87px auto 0;
-        flex: 1;
-    }
-
-    /* Breadcrumb */
-    .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 32px;
-        font-family: Montserrat;
-        font-weight: 400;
-        font-size: 14px;
-    }
-
-    .breadcrumb a {
-        color: #FF6B6B;
-        text-decoration: none;
-    }
-
-    .breadcrumb span {
-        color: #666666;
-    }
-
-    /* Hotel Info Section */
-    .booking-container {
-        display: flex;
-        width: 1280px;
-        height: auto;
-        top: 181px;
-        left: 80px;
-        gap: 40px;
-        angle: 0 deg;
-        opacity: 1;
-        margin-bottom: 140px;
-    }
-
-    .left-section {
-        flex: 1;
-        width: 790px;
-        height: auto;
-    }
-
-    .hotel-info {
-        width: 790px;
-        height: 305px;
-        border-radius: 12px;
-        gap: 24px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 32px 24px;
-        background: #FFFFFF;
-        box-shadow: 0px 4px 16px 0px #1122110D;
-        margin-bottom: 40px;
-    }
-
-    .hotel-title {
-        width: 742px;
-        height: 33px;
-        justify-content: space-between;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Noto Sans;
-        font-weight: 700;
-        font-style: Bold;
-        font-size: 24px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        margin-bottom: 20px;
-    }
-
-    .hotel-location {
-        width: 742px;
-        height: 95px;
-        border-radius: 8px;
-        gap: 24px;
-        angle: 0 deg;
-        opacity: 1;
-        border: 0.5px solid #8DD3BB;
-        padding: 16px 32px;
-        gap: 4px;
-        margin-bottom: 30px;
-        display: flex;
-    }
-
-    .hotel-location img{
-        width: 63px;
-        height: 63px;
-        border-radius: 12px;
-        angle: 0 deg;
-        opacity: 1;
-    }
-    
-    .hotel-location-map{
-        width: 372px;
-        height: 50px;
-        gap: 8px;
-        angle: 0 deg;
-        opacity: 1;
-        padding-top: 5px;
-    }
-    
-    .hotel-location-hotel{
-        font-family: ABeeZee;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 20px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-    
-    .hotel-location-hotelmap{
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 14px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    /* Date Selection */
-    .date-section {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 742px;
-        height: 49px;
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .date-item {
-        display: flex;
-        flex-direction: column;
-        align-items: left;
-    }
-
-    .date-label {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-style: SemiBold;
-        font-size: 20px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        margin-bottom: 4px;
-    }
-
-    .date-value {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 14px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #666666;
-    }
-
-    .hotel-icon{
-        width: 168px;
-        height: 100%;
-        gap: 24px;
-        angle: 90 deg;
-        opacity: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1px;
-    }
-
-    .hotel-icon .img1{
-        width: 42px;
-        height: 45px;
-        top: 1.5px;
-        left: 3px;
-        angle: -0 deg;
-        opacity: 1;
-    }
-    
-    .hotel-icon .img2{
-        width: 36px;
-        height: 5px;
-    }
-
-    /* Payment Section */
-    .payment-section {
-        width: 790px;
-        height: 217px;
-        gap: 16px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 16px;
-        background: #FFFFFF;
-        border-radius: 12px;
-        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-        margin-bottom: 40px;
-    }
-
-    .section-title {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 18px;
-        color: #112211;
-        margin-bottom: 24px;
-    }
-
-    /* Payment Method Section */
-    .payment-method {
-        width: 758px;
-        height: 80px;
-        border-radius: 12px;
-        justify-content: space-between;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 16px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        transition: background-color 0.3s ease;
-    }
-    
-    .payment-method:hover{
-        background: #8DD3BB;
-    }
-    
-    .payment-method.selected {
-        background: #8DD3BB;
-    }
-    
-    .payment-method.selected .payment-radio {
-        border: 2px solid #FFFFFF;
-    }
-    
-    .payment-method.selected .payment-radio::after {
-        content: '';
-        width: 8px;
-        height: 8px;
-        background: #FFFFFF;
-        border-radius: 50%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .payment-radio {
-        width: 20px;
-        height: 20px;
-        border: 2px solid #112211;
-        border-radius: 50%;
-        position: relative;
-        background: transparent;
-    }
-
-    .payment-method-text {
-        font-family: Noto Sans;
-        font-weight: 700;
-        font-style: Bold;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211; 
-    }
-    
-    .payment-method-content{
-        padding-top: 5px;
-        font-family: Montserrat;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 14px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-    }
-
-    /* Login Form */
-    .login-section{
-        width: 790px;
-        height: 438px;
-        border-radius: 12px;
-        gap: 24px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 24px;
-        background: #FFFFFF;
-        box-shadow: 0px 4px 16px 0px #1122110D;
-    }
-
-    .phone-input {
-        width: 742px;
-        height: 56px;
-        border-radius: 4px;
-        gap: 10px;
-        angle: 0 deg;
-        opacity: 1;
-        border: 1px solid #79747E;           
-        font-family: Montserrat;
-        font-weight: 400;
-        font-size: 14px;
-        margin-bottom: 15px;
-        padding-left: 15px;
-    }
-
-    .input-note {
-        width: 742px;
-        height: 17px;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Montserrat;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 14px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #666666;
-        margin-bottom: 15px;
-    }
-
-    .continue-btn {
-        border: none;
-        width: 742px;
-        height: 48px;
-        border-radius: 4px;
-        gap: 4px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 8px 16px;
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 14px;
-        background: #8DD3BB;
-        color: #112211;
-        cursor: pointer;
-        margin-bottom: 15px;
-    }
-
-    .divider {
-        width: 742px;
-        height: 20px;
-        gap: 24px;
-        angle: 0 deg;
-        opacity: 1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;   
-        margin-bottom: 15px;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-    
-    .continue-beeline{
-        width: 337px;
-        height: 0px;
-        angle: 0 deg;
-        opacity: 0.25;
-        border-width: 1px;
-        border: 1px solid #112211
-    }
-
-    /* Social Login Buttons */
-    .social-login {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .social-btn {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid #8DD3BB;
-        border-radius: 4px;
-        background: #FFFFFF;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-
-    .social-btn img{
-        width: 24px;
-        height: 24px;
-        angle: 0 deg;
-        opacity: 1;
-    }
-
-    .email-login {
-        width: 742px;
-        height: 56px;
-        gap: 16px;
-        angle: 0 deg;
-        opacity: 1;
-        border: 1px solid #8DD3BB;
-        border-radius: 4px;
-        cursor: pointer;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        background-color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .email-login img{
-        width: 21px;
-        height: 16.5px;
-        top: 3.75px;
-        left: 1.5px;
-        angle: 0 deg;
-        opacity: 1;
-    }
-
-    /* Card List */
-    .card-list {
-        width: 790px;
-        min-height: 316.8339538574219px;
-        border-radius: 12px;
-        gap: 16px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 16px;
-        box-shadow: 0px 4px 16px 0px #1122110D;
-    }
-
-    .saved-card {
-        width: 758px;
-        height: 80px;
-        background: #FFFFFF;
-        border: 2px solid #8DD3BB;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .saved-card.selected {
-        background: #8DD3BB;
-        border: 2px solid #8DD3BB;
-    }
-    
-    .saved-card.selected .card-radio {
-        border: 2px solid #FFFFFF;
-    }
-    
-    .saved-card.selected .card-radio::after {
-        content: '';
-        width: 8px;
-        height: 8px;
-        background: #FFFFFF;
-        border-radius: 50%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .card-radio {
-        width: 20px;
-        height: 20px;
-        border: 2px solid #112211;
-        border-radius: 50%;
-        position: relative;
-        background: transparent;
-    }
-
-    .card-info {
-        width: 164px;
-        height: 32px;
-        gap: 32px;
-        angle: 0 deg;
-        opacity: 1;
-        display: flex;
-        align-items: center;
-    }
-
-    .card-icon img{
-        width: 32px;
-        height: 20.09600067138672px;
-        angle: 0 deg;
-        opacity: 1;
-        top: 5.95px;
-    }
-
-    .card-number {
-        width: 53px;
-        height: 20px;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Acme;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        padding-left: 16px;
-    }
-    
-    .card-date{
-        width: 39px;
-        height: 17px;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Montserrat;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 14px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    .add-card-btn {
-        width: 758px;
-        height: 188.83395385742188px;
-        border-radius: 15px;
-        gap: 10px;
-        angle: 0 deg;
-        opacity: 1;
-        border-width: 2px;
-        border-style: dashed;
-        dashes: 8, 8;
-        border-color:  #8DD3BB;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 8px;
-        color: #8DD3BB;
-        background-color: white;
-    }
-    
-    .plus-btn{
-        width: 48px;
-        height: 48px;
-        angle: 0 deg;
-        opacity: 1;
-        border: 2px solid rgba(141, 211, 187, 1);
-        border-radius: 50%;
-        angle: 0 deg;
-        opacity: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-size: 30px;
-        padding-bottom: 7px;
-    }
-    
-    .add-card{
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 12px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        vertical-align: middle;
-        color: rgba(17, 34, 17, 1);
-    }
-
-    /* Right Section - Booking Summary */
-    .right-section {
-        width: 450px;
-        height: 1040px;
-    }
-
-    .booking-summary {
-        background: #FFFFFF;
-        width: 100%;
-        height: 469.5px;
-        border-radius: 12px;
-        gap: 16px;
-        angle: 0 deg;
-        opacity: 1;
-        padding: 24px;
-        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-        position: sticky;
-        top: 120px;
-    }
-
-    .hotel-beeline{
-        width: 402px;
-        height: 0.5px;
-        angle: 0 deg;
-        opacity: 0.25;
-        background: #112211;
-    }
-
-    .hotel-image{
-        width: 100%;
-        height: 120px;
-        font-family: Montserrat;
-        font-weight: 600;
-        font-style: SemiBold;
-        font-size: 20px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        display: flex;
-        margin-bottom: 20px;
-    }
-
-    .hotel-image img{
-        width: 121px;
-        height: 120px;
-        border-radius: 12px;
-        angle: 0 deg;
-        opacity: 1;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .summary-hotel-info {
-        margin-bottom: 16px;
-        margin-left: 12px;
-    }
-
-    .summary-title1{
-        width: 257px;
-        height: 20px;
-        angle: 0 deg;
-        opacity: 0.75;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        margin-bottom: 10px;
-    }
-    
-    .summary-title2{
-        width: 257px;
-        height: 48px;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Montserrat;
-        font-weight: 600;
-        font-style: SemiBold;
-        font-size: 20px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    .rating {
-        width: 257px;
-        height: 32px;
-        gap: 8px;
-        angle: 0 deg;
-        opacity: 1;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .rating-score {
-        width: 40px;
-        height: 32px;
-        gap: 10px;
-        angle: 0 deg;
-        opacity: 1;
-        background: white;
-        border: 1px solid #8DD3BB;
-        border-radius: 4px;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 12px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .rating-text1 {
-        font-family: Montserrat;
-        font-weight: 700;
-        font-style: Bold;
-        font-size: 12px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-    }
-    
-    .rating-text2 {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 12px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        margin-left: -4px;
-    }
-
-    .golobe-protection {
-        width: 296px;
-        height: 20px;
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-
-    /* Price Details */
-    .price-details {
-        width: 402px;
-        height: 164px;
-        gap: 16px;
-        angle: 0 deg;
-        opacity: 1;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .price-title{
-        width: 50%;
-        height: 20px;
-        angle: 0 deg;
-        opacity: 1;
-        font-family: Acme;
-        font-weight: 400;
-        font-style: Regular;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    .price-breakdown {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 16px 0;
-    }
-
-    .price-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .price-label {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-    }
-
-    .price-value {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-style: SemiBold;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-        color: #112211;
-    }
-
-    .total-price {
-        width: 402px;
-        height: 20px;
-        justify-content: space-between;
-        angle: 0 deg;
-        opacity: 1;
-        margin-top: 20px;
-    }
-
-    .total-price .price-label {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-style: Medium;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    .total-price .price-value {
-        font-family: Montserrat;
-        font-weight: 600;
-        font-style: SemiBold;
-        font-size: 16px;
-        leading-trim: NONE;
-        line-height: 100%;
-        letter-spacing: 0%;
-    }
-
-    /* Newsletter Section */
-    .newsletter-section {
-        background: rgba(141, 211, 187, 1);
-        padding: 80px 104px;
-        position: relative;
-        height: 422px;
-        display: flex;
-        flex-direction: column;
-        margin-top: 60px;
-        z-index: 0;
-        margin-bottom: -513px;
-    }
-
-    .newsletter-content {
-        background: rgba(205, 234, 225, 1);
-        border-radius: 20px;
-        padding: 48px;
-        box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 1232px;
-        height: 305px;
-        margin: 0 auto;
-        position: relative;
-        z-index: 2;
-        margin-bottom: 40px;
-    }
-
-    .newsletter-left {
-        flex: 1;
-        max-width: 500px;
-    }
-
-    .newsletter-title {
-        font-family: 'Noto Sans', sans-serif;
-        font-weight: 900;
-        font-size: 44px;
-        line-height: 54px;
-        color: #112211;
-        margin-bottom: 24px;
-    }
-
-    .newsletter-info {
-        margin-bottom: 24px;
-    }
-
-    .newsletter-brand {
-        font-family: Acme;
-        font-weight: 400;
-        font-size: 20px;
-        line-height: 100%;
-        color: #112211;
-        opacity: 0.8;
-        margin-bottom: 8px;
-    }
-
-    .newsletter-desc {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-size: 16px;
-        line-height: 100%;
-        color: #112211;
-        opacity: 0.7;
-    }
-
-    .newsletter-form {
-        display: flex;
-        gap: 16px;
-        align-items: center;
-    }
-
-    .newsletter-input {
-        flex: 1;
-        padding: 16px;
-        border: none;
-        border-radius: 4px;
-        font-family: Montserrat;
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 100%;
-        height: 56px;
-    }
-
-    .subscribe-btn {
-        padding: 16px 24px;
-        background: #112211;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 4px;
-        font-family: Montserrat;
-        font-weight: 600;
-        font-size: 14px;
-        line-height: 100%;
-        cursor: pointer;
-        height: 56px;
-    }
-
-    /* Mailbox Design */
-    .mailbox-container {
-        position: relative;
-        width: 400px;
-        height: 305px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10;
-    }
-
-    .mailbox-back {
-        position: absolute;
-        width: 208px;
-        height: 191px;
-        top: 47px;
-        left: 0px;
-        background: rgba(101, 181, 153, 1);
-        border-top-left-radius: 70px; 
-        border-top-right-radius: 70px; 
-        z-index: 5;
-    }
-
-    .mailbox-base {
-        position: absolute;
-        width: 187px;
-        height: 179px;
-        top: 59px;
-        left: 10px;
-        border-top-left-radius: 70px; 
-        border-top-right-radius: 70px; 
-        background: rgba(84, 104, 105, 1);
-        z-index: 10;
-    }
-
-    .mailbox-front {
-        position: absolute;
-        width: 291px;
-        height: 191px;
-        top: 47px;
-        left: 71px;
-        background: rgba(17, 34, 17, 1);
-        border-top-left-radius: 70px; 
-        border-top-right-radius: 70px; 
-        z-index: 4;
-    }
-
-    .mailbox-flag {
-        position: absolute;
-        width: 169px;
-        height: 40px;
-        top: 154px;
-        left: 231px;
-        background: rgba(255, 134, 130, 1);
-        z-index: 6;
-    }
-
-    .mailbox-flag2 {
-        position: absolute;
-        width: 39px;
-        height: 77px;
-        top: 154px;
-        left: 361px;
-        background: rgba(255, 134, 130, 1);
-        z-index: 6;
-    }
-
-    .mailbox-pole {
-        position: absolute;
-        width: 47px;
-        height: 188px;
-        top: 117px;
-        left: 194px;
-        background: rgba(164, 128, 109, 1);
-        z-index: 3;
-    }
-
-    .mailbox-stand-base {
-        position: absolute;
-        width: 85px;
-        height: 57px;
-        top: 212px;
-        left: 156px;
-        background: rgba(164, 128, 109, 1);
-        z-index: 3;
-    }
-
-    .mailbox-stand-front {
-        position: absolute;
-        width: 85px;
-        height: 188px;
-        top: 117px;
-        left: 156px;
-        background: rgba(223, 173, 146, 1);
-        z-index: 2;
-    }
-
-    /* Footer Content */
-    .footer-content {
-        max-width: 1232px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        position: relative;
-        z-index: 1;
-        gap: 64px;
-        padding-bottom: 40px;
-    }
-
-    .social-icons {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 32px;
-    }
-
-    .footer-links {
-        display: flex;
-        gap: 60px;
-    }
-
-    .footer-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .footer-column h4 {
-        font-family: Acme;
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 100%;
-        color: #112211;
-        margin-bottom: 8px;
-    }
-
-    .footer-column a {
-        font-family: Montserrat;
-        font-weight: 500;
-        font-size: 14px;
-        line-height: 100%;
-        color: #112211;
-        text-decoration: none;
-        opacity: 0.7;
-    }
-
-    .footer-column a:hover {
-        opacity: 1;
-    }
-
-    /* Modal Base */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 2000;
-    }
-    
-    .modal.active {
+  /* Header */
+  .header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-    }
-
-    /* Modal Box */
-    .modal-full {
-      width: 640px;
-      height: 686.2418823242188px;
-      border-radius: 12px;
-      background: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      width: 512px;
-      height: 590px;
-      display: flex;
-      flex-direction: column;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    /* Header */
-    .modal-header {
-      display: flex;
-      justify-content: flex-end;
-    }
-    
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-
-    /* Title */
-    .modal-title {
-      font-family: Noto Sans, sans-serif;
-      font-weight: 700;
-      font-size: 32px;
-      margin: 16px 0 24px;
-      color: #112211;
-    }
-
-    /* Form */
-    .form-group {
-      margin-bottom: 20px;
-      position: relative;
-    }
-    
-    .form-label {
-      position: absolute;
-      top: -8px;
-      left: 12px;
+      padding: 21px 104px;
       background: #FFFFFF;
-      padding: 0 4px;
-      font-family: Montserrat, sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-      color: #112211;
-      z-index: 1;
-    }
-    
-    .form-input {
+      box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: 87px;
       width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: Montserrat, sans-serif;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    
-    .form-row {
+  }
+
+  nav {
       display: flex;
-      gap: 16px;
-    }
-    
-    .form-row .form-group {
-      flex: 1;
-    }
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1232px;
+      margin: 0 auto;
+  }
 
-    /* Card Number + VISA */
-    .card-input-wrapper {
-      position: relative;
-    }
-    
-    .card-input-wrapper input {
-      padding-right: 50px;
-      height: 56px;
-    }
-    
-    .card-logo {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      height: 20px;
-    }
-
-    /* Checkbox */
-    .checkbox-group {
+  .nav-left {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-family: Montserrat, sans-serif;
-      font-size: 14px;
-      color: #112211;
-      margin-bottom: 20px;
-      padding-left: 0;
-    }
-    
-    .checkbox-group label {
-      position: static;
-      background: none;
-      padding: 0;
-    }
-
-    /* Button */
-    .save-card-btn {
-      width: 100%;
-      height: 48px;
-      padding: 8px 16px;
       gap: 4px;
-      background: #8dd3bb;
-      border: none;
-      border-radius: 4px;
-      font-family: Montserrat, sans-serif;
+  }
+
+  .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+  }
+
+  .nav-item {
+      font-family: Montserrat;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 14px;
+      line-height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       color: #112211;
+      text-decoration: none;
+  }
+
+  .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       cursor: pointer;
       font-family: Montserrat;
       font-weight: 600;
-      font-style: SemiBold;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+  }
+
+  .user-avatar {
+      width: 45px;
+      height: 45px;
+      background: #D9D9D9;
+      border: 1px solid #000000;
+      border-radius: 50%;
+      position: relative;
+  }
+
+  .online-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #112211;
+      border-radius: 50%;
+      bottom: 2px;
+      right: 2px;
+  }
+
+  /* User Dropdown */
+  .user-dropdown {
+      position: fixed;
+      top: 82px;
+      left: 64%;
+      width: 329px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      display: none;
+      z-index: 1001;
+  }
+
+  .user-dropdown.active {
+      display: block;
+  }
+
+  .dropdown-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+  }
+
+  .dropdown-avatar {
+      width: 64px;
+      height: 64px;
+      background: #D9D9D9;
+      border-radius: 50%;
+  }
+
+  .dropdown-info h3 {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 4px;
+  }
+
+  .dropdown-info p {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.75;
+  }
+
+  .dropdown-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+      padding-top: 24px;
+  }
+
+  .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #112211;
+      text-decoration: none;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 100%;
+      padding: 4px 0;
+  }
+  
+  /* Main Content */
+  .main-content {
+      margin-top: 87px;
+      padding: 40px 104px 60px;
+      max-width: 1440px;
+      margin: 87px auto 0;
+      flex: 1;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+  }
+
+  .breadcrumb a {
+      color: #FF6B6B;
+      text-decoration: none;
+  }
+
+  .breadcrumb span {
+      color: #666666;
+  }
+
+  /* Hotel Info Section */
+  .booking-container {
+      display: flex;
+      width: 1280px;
+      height: auto;
+      top: 181px;
+      left: 80px;
+      gap: 40px;
+      angle: 0 deg;
+      opacity: 1;
+      margin-bottom: 140px;
+  }
+
+  .left-section {
+      flex: 1;
+      width: 790px;
+      height: auto;
+  }
+
+  .hotel-info {
+      width: 790px;
+      height: 305px;
+      border-radius: 12px;
+      gap: 24px;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 32px 24px;
+      background: #FFFFFF;
+      box-shadow: 0px 4px 16px 0px #1122110D;
+      margin-bottom: 40px;
+  }
+
+  .hotel-title {
+      width: 742px;
+      height: 33px;
+      justify-content: space-between;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Noto Sans;
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 24px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 20px;
+  }
+
+  .hotel-location {
+      width: 742px;
+      height: 95px;
+      border-radius: 8px;
+      gap: 24px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 0.5px solid #8DD3BB;
+      padding: 16px 32px;
+      gap: 4px;
+      margin-bottom: 30px;
+      display: flex;
+  }
+
+  .hotel-location img{
+      width: 63px;
+      height: 63px;
+      border-radius: 12px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+  
+  .hotel-location-map{
+      width: 372px;
+      height: 50px;
+      gap: 8px;
+      angle: 0 deg;
+      opacity: 1;
+      padding-top: 5px;
+  }
+  
+  .hotel-location-hotel{
+      font-family: ABeeZee;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+  
+  .hotel-location-hotelmap{
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
       font-size: 14px;
       leading-trim: NONE;
       line-height: 100%;
       letter-spacing: 0%;
+  }
 
-    }
-    /* 쿠폰 섹션 */
-    .coupon-section {
+  /* Date Selection */
+  .date-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 742px;
+      height: 49px;
+      gap: 24px;
+      margin-bottom: 32px;
+  }
+
+  .date-item {
+      display: flex;
+      flex-direction: column;
+      align-items: left;
+  }
+
+  .date-label {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 4px;
+  }
+
+  .date-value {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #666666;
+  }
+
+  .hotel-icon{
+      width: 168px;
+      height: 100%;
+      gap: 24px;
+      angle: 90 deg;
+      opacity: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1px;
+  }
+
+  .hotel-icon .img1{
+      width: 42px;
+      height: 45px;
+      top: 1.5px;
+      left: 3px;
+      angle: -0 deg;
+      opacity: 1;
+  }
+  
+  .hotel-icon .img2{
+      width: 36px;
+      height: 5px;
+  }
+
+  /* Payment Section */
+  .payment-section {
       width: 790px;
-      min-height: 200px;
-      border-radius: 12px;
+      height: 217px;
       gap: 16px;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 16px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+      margin-bottom: 40px;
+  }
+
+  .section-title {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 18px;
+      color: #112211;
+      margin-bottom: 24px;
+  }
+
+  /* Payment Method Section */
+  .payment-method {
+      width: 758px;
+      height: 80px;
+      border-radius: 12px;
+      justify-content: space-between;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      transition: background-color 0.3s ease;
+  }
+  
+  .payment-method:hover{
+      background: #8DD3BB;
+  }
+  
+  .payment-method.selected {
+      background: #8DD3BB;
+  }
+  
+  .payment-method.selected .payment-radio {
+      border: 2px solid #FFFFFF;
+  }
+  
+  .payment-method.selected .payment-radio::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+  }
+  
+  .payment-radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #112211;
+      border-radius: 50%;
+      position: relative;
+      background: transparent;
+  }
+
+  .payment-method-text {
+      font-family: Noto Sans;
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211; 
+  }
+  
+  .payment-method-content{
+      padding-top: 5px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+
+  /* Login Form */
+  .login-section{
+      width: 790px;
+      height: 438px;
+      border-radius: 12px;
+      gap: 24px;
+      angle: 0 deg;
+      opacity: 1;
       padding: 24px;
       background: #FFFFFF;
       box-shadow: 0px 4px 16px 0px #1122110D;
-      margin-bottom: 40px;
-    }
+  }
 
-    .coupon-item {
+  .phone-input {
       width: 742px;
-      min-height: 100px;
+      height: 56px;
+      border-radius: 4px;
+      gap: 10px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 1px solid #79747E;           
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      margin-bottom: 15px;
+      padding-left: 15px;
+  }
+
+  .input-note {
+      width: 742px;
+      height: 17px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #666666;
+      margin-bottom: 15px;
+  }
+
+  .continue-btn {
+      border: none;
+      width: 742px;
+      height: 48px;
+      border-radius: 4px;
+      gap: 4px;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 8px 16px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      background: #8DD3BB;
+      color: #112211;
+      cursor: pointer;
+      margin-bottom: 15px;
+  }
+
+  .divider {
+      width: 742px;
+      height: 20px;
+      gap: 24px;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;   
+      margin-bottom: 15px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+  
+  .continue-beeline{
+      width: 337px;
+      height: 0px;
+      angle: 0 deg;
+      opacity: 0.25;
+      border-width: 1px;
+      border: 1px solid #112211
+  }
+
+  /* Social Login Buttons */
+  .social-login {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+  }
+
+  .social-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #8DD3BB;
+      border-radius: 4px;
+      background: #FFFFFF;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+  }
+
+  .social-btn img{
+      width: 24px;
+      height: 24px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+
+  .email-login {
+      width: 742px;
+      height: 56px;
+      gap: 16px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 1px solid #8DD3BB;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+  }
+
+  .email-login img{
+      width: 21px;
+      height: 16.5px;
+      top: 3.75px;
+      left: 1.5px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+
+  /* Card List */
+  .card-list {
+      width: 790px;
+      min-height: 316.8339538574219px;
+      border-radius: 12px;
+      gap: 16px;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 16px;
+      box-shadow: 0px 4px 16px 0px #1122110D;
+  }
+
+  .saved-card {
+      width: 758px;
+      height: 80px;
       background: #FFFFFF;
       border: 2px solid #8DD3BB;
       border-radius: 8px;
@@ -3107,22 +2398,18 @@ export default {
       justify-content: space-between;
       cursor: pointer;
       transition: all 0.3s ease;
-    }
-
-    .coupon-item:hover {
-      background: #F0F9F6;
-    }
-
-    .coupon-item.selected {
+  }
+  
+  .saved-card.selected {
       background: #8DD3BB;
       border: 2px solid #8DD3BB;
-    }
-
-    .coupon-item.selected .coupon-radio {
+  }
+  
+  .saved-card.selected .card-radio {
       border: 2px solid #FFFFFF;
-    }
-
-    .coupon-item.selected .coupon-radio::after {
+  }
+  
+  .saved-card.selected .card-radio::after {
       content: '';
       width: 8px;
       height: 8px;
@@ -3132,353 +2419,1402 @@ export default {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-    }
-
-    .coupon-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .coupon-name {
-      font-family: Montserrat;
-      font-weight: 600;
-      font-size: 18px;
-      color: #112211;
-    }
-
-    .coupon-discount {
-      font-family: Montserrat;
-      font-weight: 700;
-      font-size: 24px;
-      color: #FF6B6B;
-    }
-
-    .coupon-expiry {
-      font-family: Montserrat;
-      font-weight: 400;
-      font-size: 14px;
-      color: #666666;
-    }
-
-    .coupon-radio {
+  }
+  
+  .card-radio {
       width: 20px;
       height: 20px;
       border: 2px solid #112211;
       border-radius: 50%;
       position: relative;
       background: transparent;
-    }
+  }
 
-    .no-coupons {
+  .card-info {
+      width: 164px;
+      height: 32px;
+      gap: 32px;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      align-items: center;
+  }
+
+  .card-icon img{
+      width: 32px;
+      height: 20.09600067138672px;
+      angle: 0 deg;
+      opacity: 1;
+      top: 5.95px;
+  }
+
+  .card-number {
+      width: 53px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      padding-left: 16px;
+  }
+  
+  .card-date{
+      width: 39px;
+      height: 17px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .add-card-btn {
+      width: 758px;
+      height: 188.83395385742188px;
+      border-radius: 15px;
+      gap: 10px;
+      angle: 0 deg;
+      opacity: 1;
+      border-width: 2px;
+      border-style: dashed;
+      dashes: 8, 8;
+      border-color:  #8DD3BB;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      color: #8DD3BB;
+      background-color: white;
+  }
+  
+  .plus-btn{
+      width: 48px;
+      height: 48px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 2px solid rgba(141, 211, 187, 1);
+      border-radius: 50%;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 30px;
+      padding-bottom: 7px;
+  }
+  
+  .add-card{
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      vertical-align: middle;
+      color: rgba(17, 34, 17, 1);
+  }
+
+  /* Right Section - Booking Summary */
+  .right-section {
+      width: 450px;
+      height: 1040px;
+  }
+
+  .booking-summary {
+      background: #FFFFFF;
       width: 100%;
-      padding: 40px;
-      text-align: center;
+      height: 469.5px;
+      border-radius: 12px;
+      gap: 16px;
+      angle: 0 deg;
+      opacity: 1;
+      padding: 24px;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 120px;
+  }
+
+  .hotel-beeline{
+      width: 402px;
+      height: 0.5px;
+      angle: 0 deg;
+      opacity: 0.25;
+      background: #112211;
+  }
+
+  .hotel-image{
+      width: 100%;
+      height: 120px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      display: flex;
+      margin-bottom: 20px;
+  }
+
+  .hotel-image img{
+      width: 121px;
+      height: 120px;
+      border-radius: 12px;
+      angle: 0 deg;
+      opacity: 1;
+      position: relative;
+      overflow: hidden;
+  }
+
+  .summary-hotel-info {
+      margin-bottom: 16px;
+      margin-left: 12px;
+  }
+
+  .summary-title1{
+      width: 257px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 0.75;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 10px;
+  }
+  
+  .summary-title2{
+      width: 257px;
+      height: 48px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .rating {
+      width: 257px;
+      height: 32px;
+      gap: 8px;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+
+  .rating-score {
+      width: 40px;
+      height: 32px;
+      gap: 10px;
+      angle: 0 deg;
+      opacity: 1;
+      background: white;
+      border: 1px solid #8DD3BB;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .rating-text1 {
+      font-family: Montserrat;
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+  
+  .rating-text2 {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-left: -4px;
+  }
+
+  .golobe-protection {
+      width: 296px;
+      height: 20px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-top: 20px;
+      margin-bottom: 20px;
+  }
+
+  /* Price Details */
+  .price-details {
+      width: 402px;
+      height: 164px;
+      gap: 16px;
+      angle: 0 deg;
+      opacity: 1;
+      margin-top: 20px;
+      margin-bottom: 20px;
+  }
+  
+  .price-title{
+      width: 50%;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .price-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 0;
+  }
+
+  .price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+
+  .price-label {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+
+  .price-value {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+
+  .total-price {
+      width: 402px;
+      height: 20px;
+      justify-content: space-between;
+      angle: 0 deg;
+      opacity: 1;
+      margin-top: 20px;
+  }
+
+  .total-price .price-label {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .total-price .price-value {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  /* Newsletter Section */
+  .newsletter-section {
+      background: rgba(141, 211, 187, 1);
+      padding: 80px 104px;
+      position: relative;
+      height: 422px;
+      display: flex;
+      flex-direction: column;
+      margin-top: 60px;
+      z-index: 0;
+      margin-bottom: -513px;
+  }
+
+  .newsletter-content {
+      background: rgba(205, 234, 225, 1);
+      border-radius: 20px;
+      padding: 48px;
+      box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 1232px;
+      height: 305px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 40px;
+  }
+
+  .newsletter-left {
+      flex: 1;
+      max-width: 500px;
+  }
+
+  .newsletter-title {
+      font-family: 'Noto Sans', sans-serif;
+      font-weight: 900;
+      font-size: 44px;
+      line-height: 54px;
+      color: #112211;
+      margin-bottom: 24px;
+  }
+
+  .newsletter-info {
+      margin-bottom: 24px;
+  }
+
+  .newsletter-brand {
+      font-family: Acme;
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.8;
+      margin-bottom: 8px;
+  }
+
+  .newsletter-desc {
       font-family: Montserrat;
       font-weight: 500;
       font-size: 16px;
-      color: #666666;
-    }
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.7;
+  }
 
-    /* 카드 섹션 제목 */
-    .card-list .section-title {
+  .newsletter-form {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+  }
+
+  .newsletter-input {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 100%;
+      height: 56px;
+  }
+
+  .subscribe-btn {
+      padding: 16px 24px;
+      background: #112211;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
       font-family: Montserrat;
       font-weight: 600;
-      font-size: 18px;
-      color: #112211;
-      margin-bottom: 16px;
-    }
-
-
-    /* 결제 버튼 */
-    .payment-btn {
-      width: 790px;
-      height: 56px;
-      border-radius: 8px;
-      background: #8DD3BB;
-      border: none;
-      font-family: Montserrat;
-      font-weight: 700;
-      font-size: 18px;
-      color: #112211;
+      font-size: 14px;
+      line-height: 100%;
       cursor: pointer;
-      margin-top: 24px;
-      transition: all 0.3s ease;
+      height: 56px;
+  }
+
+  /* Mailbox Design */
+  .mailbox-container {
+      position: relative;
+      width: 400px;
+      height: 305px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+  }
+
+  .mailbox-back {
+      position: absolute;
+      width: 208px;
+      height: 191px;
+      top: 47px;
+      left: 0px;
+      background: rgba(101, 181, 153, 1);
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      z-index: 5;
+  }
+
+  .mailbox-base {
+      position: absolute;
+      width: 187px;
+      height: 179px;
+      top: 59px;
+      left: 10px;
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      background: rgba(84, 104, 105, 1);
+      z-index: 10;
+  }
+
+  .mailbox-front {
+      position: absolute;
+      width: 291px;
+      height: 191px;
+      top: 47px;
+      left: 71px;
+      background: rgba(17, 34, 17, 1);
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      z-index: 4;
+  }
+
+  .mailbox-flag {
+      position: absolute;
+      width: 169px;
+      height: 40px;
+      top: 154px;
+      left: 231px;
+      background: rgba(255, 134, 130, 1);
+      z-index: 6;
+  }
+
+  .mailbox-flag2 {
+      position: absolute;
+      width: 39px;
+      height: 77px;
+      top: 154px;
+      left: 361px;
+      background: rgba(255, 134, 130, 1);
+      z-index: 6;
+  }
+
+  .mailbox-pole {
+      position: absolute;
+      width: 47px;
+      height: 188px;
+      top: 117px;
+      left: 194px;
+      background: rgba(164, 128, 109, 1);
+      z-index: 3;
+  }
+
+  .mailbox-stand-base {
+      position: absolute;
+      width: 85px;
+      height: 57px;
+      top: 212px;
+      left: 156px;
+      background: rgba(164, 128, 109, 1);
+      z-index: 3;
+  }
+
+  .mailbox-stand-front {
+      position: absolute;
+      width: 85px;
+      height: 188px;
+      top: 117px;
+      left: 156px;
+      background: rgba(223, 173, 146, 1);
+      z-index: 2;
+  }
+
+  /* Footer Content */
+  .footer-content {
+      max-width: 1232px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+      gap: 64px;
+      padding-bottom: 40px;
+  }
+
+  .social-icons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+  }
+
+  .footer-links {
+      display: flex;
+      gap: 60px;
+  }
+
+  .footer-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+  }
+
+  .footer-column h4 {
+      font-family: Acme;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 8px;
+  }
+
+  .footer-column a {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+      text-decoration: none;
+      opacity: 0.7;
+  }
+
+  .footer-column a:hover {
+      opacity: 1;
+  }
+
+  /* Modal Base */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+  }
+  
+  .modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Modal Box */
+  .modal-full {
+    width: 640px;
+    height: 686.2418823242188px;
+    border-radius: 12px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    width: 512px;
+    height: 590px;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  /* Header */
+  .modal-header {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+
+  /* Title */
+  .modal-title {
+    font-family: Noto Sans, sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    margin: 16px 0 24px;
+    color: #112211;
+  }
+
+  /* Form */
+  .form-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .form-label {
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    background: #FFFFFF;
+    padding: 0 4px;
+    font-family: Montserrat, sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #112211;
+    z-index: 1;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: Montserrat, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+
+  /* Card Number + VISA */
+  .card-input-wrapper {
+    position: relative;
+  }
+  
+  .card-input-wrapper input {
+    padding-right: 50px;
+    height: 56px;
+  }
+  
+  .card-logo {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+  }
+
+  /* Checkbox */
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: Montserrat, sans-serif;
+    font-size: 14px;
+    color: #112211;
+    margin-bottom: 20px;
+    padding-left: 0;
+  }
+  
+  .checkbox-group label {
+    position: static;
+    background: none;
+    padding: 0;
+  }
+
+  /* Button */
+  .save-card-btn {
+    width: 100%;
+    height: 48px;
+    padding: 8px 16px;
+    gap: 4px;
+    background: #8dd3bb;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #112211;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+
+  }
+  /* 쿠폰 섹션 */
+  .coupon-section {
+    width: 790px;
+    min-height: 200px;
+    border-radius: 12px;
+    gap: 16px;
+    padding: 24px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px 0px #1122110D;
+    margin-bottom: 40px;
+  }
+
+  .coupon-item {
+    width: 742px;
+    min-height: 100px;
+    background: #FFFFFF;
+    border: 2px solid #8DD3BB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .coupon-item:hover {
+    background: #F0F9F6;
+  }
+
+  .coupon-item.selected {
+    background: #8DD3BB;
+    border: 2px solid #8DD3BB;
+  }
+
+  .coupon-item.selected .coupon-radio {
+    border: 2px solid #FFFFFF;
+  }
+
+  .coupon-item.selected .coupon-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .coupon-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .coupon-name {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 18px;
+    color: #112211;
+  }
+
+  .coupon-discount {
+    font-family: Montserrat;
+    font-weight: 700;
+    font-size: 24px;
+    color: #FF6B6B;
+  }
+
+  .coupon-expiry {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 14px;
+    color: #666666;
+  }
+
+  .coupon-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #112211;
+    border-radius: 50%;
+    position: relative;
+    background: transparent;
+  }
+
+  .no-coupons {
+    width: 100%;
+    padding: 40px;
+    text-align: center;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 16px;
+    color: #666666;
+  }
+
+  /* 카드 섹션 제목 */
+  .card-list .section-title {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 18px;
+    color: #112211;
+    margin-bottom: 16px;
+  }
+
+
+  /* 결제 버튼 */
+  .payment-btn {
+    width: 790px;
+    height: 56px;
+    border-radius: 8px;
+    background: #8DD3BB;
+    border: none;
+    font-family: Montserrat;
+    font-weight: 700;
+    font-size: 18px;
+    color: #112211;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: all 0.3s ease;
+  }
+
+  .payment-btn:hover:not(:disabled) {
+    background: #7BC4AD;
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.4);
+  }
+
+  .payment-btn:disabled {
+    background: #CCCCCC;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  /* 로그인 섹션 전체 (Screen 1) */
+  .login-section-full {
+    width: 790px;
+    min-height: 600px;
+    border-radius: 12px;
+    padding: 40px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px 0px #1122110D;
+  }
+
+  .login-section-full .section-title {
+    font-family: Noto Sans;
+    font-weight: 700;
+    font-size: 32px;
+    color: #112211;
+    margin-bottom: 8px;
+  }
+
+  .login-section-full .login-subtitle {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 16px;
+    color: #666666;
+    margin-bottom: 32px;
+  }
+
+  /* 입력 필드 스타일 (HotelLogin 스타일) */
+  .login-section-full .input-group {
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .login-section-full .input-group label {
+    position: absolute;
+    left: 12px;
+    top: -8px;
+    background: white;
+    padding: 0 4px;
+    font-size: 12px;
+    color: #79747E;
+    font-weight: 500;
+    z-index: 1;
+  }
+
+  .login-section-full .input-group input {
+    width: 100%;
+    height: 56px;
+    padding: 16px 12px;
+    border: 1px solid #79747E;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background: transparent;
+    transition: border-color 0.3s ease;
+  }
+
+  .login-section-full .input-group input:focus {
+    outline: none;
+    border-color: #7dd3c0;
+    border-width: 2px;
+  }
+
+  .login-section-full .input-group input:focus + label {
+    color: #7dd3c0;
+  }
+
+  /* 비밀번호 필드 */
+  .login-section-full .password-input-wrapper {
+    position: relative;
+  }
+
+  .login-section-full .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #79747E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-section-full .password-toggle img {
+    width: 22.5px;
+    height: 15px;
+  }
+
+  .login-section-full .password-toggle:hover {
+    color: #333;
+  }
+
+  /* 로그인 버튼 */
+  .login-section-full .login-button {
+    width: 100%;
+    height: 48px;
+    padding: 8px 16px;
+    background-color: #7dd3c0;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+
+  .login-section-full .login-button:hover:not(:disabled) {
+    background-color: #6bc4a8;
+  }
+
+  .login-section-full .login-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .login-section-full .signup-link {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    text-align: center;
+    display: block;
+    color: #333;
+    text-decoration: none;
+    margin-bottom: 32px;
+  }
+
+  .login-section-full .signup-link:hover {
+    text-decoration: underline;
+  }
+
+  /* 구분선 */
+  .login-section-full .divider {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 32px 0;
+    color: #666;
+  }
+
+  .login-section-full .divider-beeline {
+    width: 30%;
+    height: 1px;
+    background: rgba(17, 34, 17, 0.25);
+  }
+
+  .login-section-full .divider span {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  /* 소셜 로그인 버튼들 */
+  .login-section-full .social-login {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .login-section-full .social-btn {
+    width: 160px;
+    height: 56px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    padding: 16px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .login-section-full .social-btn:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+  }
+
+  .login-section-full .social-btn img {
+    border-radius: 4px;
+  }
+  /* Turnstile 위젯 */
+  .login-section-full .turnstile-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .payment-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .payment-modal.active {
+    display: flex;
+  }
+
+  .payment-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .payment-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .payment-modal-body {
+    padding: 20px;
+  }
+
+  .payment-summary {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .confirm-payment-btn {
+    width: 100%;
+    padding: 16px;
+    background: #8DD3BB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+
+  .confirm-payment-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  /* Screen transitions */
+  .screen {
+      display: none;
+  }
+
+  .screen.active {
+      display: block;
+  }
+   /* 쿠폰 모달 스타일 */
+  .coupon-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .coupon-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
     }
-
-    .payment-btn:hover:not(:disabled) {
-      background: #7BC4AD;
-      transform: translateY(-2px);
-      box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.4);
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
-
-    .payment-btn:disabled {
-      background: #CCCCCC;
-      cursor: not-allowed;
-      opacity: 0.6;
+  }
+  
+  .coupon-modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .coupon-modal-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #112211;
+    margin: 0;
+  }
+  
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+  
+  .modal-close-btn:hover {
+    color: #112211;
+  }
+  
+  .coupon-modal-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .coupon-count {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  .coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .coupon-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #8DD3BB 0%, #7CC5AE 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .coupon-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(141, 211, 187, 0.4);
+  }
+  
+  .coupon-badge {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .discount {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #8DD3BB;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  
+  .discount-label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .coupon-info {
+    flex: 1;
+  }
+  
+  .coupon-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    margin: 0 0 8px 0;
+  }
+  
+  .coupon-expiry {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+  
+  .coupon-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .btn-use-coupon,
+  .btn-close {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-use-coupon {
+    background: #8DD3BB;
+    color: #112211;
+  }
+  
+  .btn-use-coupon:hover {
+    background: #7CC5AE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+  }
+  
+  .btn-close {
+    background: white;
+    color: #112211;
+    border: 2px solid #e0e0e0;
+  }
+  
+  .btn-close:hover {
+    border-color: #8DD3BB;
+    color: #8DD3BB;
+  }
+  
+  /* 반응형 */
+  @media screen and (max-width: 768px) {
+    .coupon-modal {
+      width: 95%;
+      max-height: 90vh;
     }
-/* 로그인 섹션 전체 (Screen 1) */
-.login-section-full {
-  width: 790px;
-  min-height: 600px;
-  border-radius: 12px;
-  padding: 40px;
-  background: #FFFFFF;
-  box-shadow: 0px 4px 16px 0px #1122110D;
-}
+  
+    .coupon-modal-header {
+      padding: 24px 20px 16px;
+    }
+  
+    .coupon-modal-header h2 {
+      font-size: 20px;
+    }
+  
+    .coupon-modal-content {
+      padding: 16px 20px;
+    }
+  
+    .coupon-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px;
+    }
+  
+    .coupon-badge {
+      align-self: flex-start;
+    }
+  
+    .coupon-modal-footer {
+      flex-direction: column;
+      padding: 16px 20px;
+    }
+  }
 
-.login-section-full .section-title {
-  font-family: Noto Sans;
-  font-weight: 700;
-  font-size: 32px;
-  color: #112211;
-  margin-bottom: 8px;
-}
-
-.login-section-full .login-subtitle {
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 16px;
-  color: #666666;
-  margin-bottom: 32px;
-}
-
-/* 입력 필드 스타일 (HotelLogin 스타일) */
-.login-section-full .input-group {
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.login-section-full .input-group label {
-  position: absolute;
-  left: 12px;
-  top: -8px;
-  background: white;
-  padding: 0 4px;
-  font-size: 12px;
-  color: #79747E;
-  font-weight: 500;
-  z-index: 1;
-}
-
-.login-section-full .input-group input {
-  width: 100%;
-  height: 56px;
-  padding: 16px 12px;
-  border: 1px solid #79747E;
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-size: 16px;
-  background: transparent;
-  transition: border-color 0.3s ease;
-}
-
-.login-section-full .input-group input:focus {
-  outline: none;
-  border-color: #7dd3c0;
-  border-width: 2px;
-}
-
-.login-section-full .input-group input:focus + label {
-  color: #7dd3c0;
-}
-
-/* 비밀번호 필드 */
-.login-section-full .password-input-wrapper {
-  position: relative;
-}
-
-.login-section-full .password-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: #79747E;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-section-full .password-toggle img {
-  width: 22.5px;
-  height: 15px;
-}
-
-.login-section-full .password-toggle:hover {
-  color: #333;
-}
-
-/* 로그인 버튼 */
-.login-section-full .login-button {
-  width: 100%;
-  height: 48px;
-  padding: 8px 16px;
-  background-color: #7dd3c0;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-bottom: 16px;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.login-section-full .login-button:hover:not(:disabled) {
-  background-color: #6bc4a8;
-}
-
-.login-section-full .login-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.login-section-full .signup-link {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 14px;
-  text-align: center;
-  display: block;
-  color: #333;
-  text-decoration: none;
-  margin-bottom: 32px;
-}
-
-.login-section-full .signup-link:hover {
-  text-decoration: underline;
-}
-
-/* 구분선 */
-.login-section-full .divider {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 32px 0;
-  color: #666;
-}
-
-.login-section-full .divider-beeline {
-  width: 30%;
-  height: 1px;
-  background: rgba(17, 34, 17, 0.25);
-}
-
-.login-section-full .divider span {
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 14px;
-  padding: 0 16px;
-}
-
-/* 소셜 로그인 버튼들 */
-.login-section-full .social-login {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  width: 100%;
-}
-
-.login-section-full .social-btn {
-  width: 160px;
-  height: 56px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  padding: 16px 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.login-section-full .social-btn:hover {
-  background-color: #f5f5f5;
-  border-color: #ccc;
-}
-
-.login-section-full .social-btn img {
-  border-radius: 4px;
-}
-/* Turnstile 위젯 */
-.login-section-full .turnstile-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-.payment-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-
-.payment-modal.active {
-  display: flex;
-}
-
-.payment-modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.payment-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.payment-modal-body {
-  padding: 20px;
-}
-
-.payment-summary {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.confirm-payment-btn {
-  width: 100%;
-  padding: 16px;
-  background: #8DD3BB;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.confirm-payment-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-        /* Screen transitions */
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-        }
 </style>

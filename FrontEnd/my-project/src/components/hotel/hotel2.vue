@@ -26,29 +26,49 @@
     </header>
 
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
-      <div class="dropdown-header">
-        <div class="dropdown-avatar"></div>
-        <div class="dropdown-info">
-          <h3>{{ displayUserName }}</h3>
-          <p>{{ userStatus }}</p>
+      <!-- 로그인된 경우 -->
+      <template v-if="isLoggedIn">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>{{ displayUserName }}</h3>
+            <p>{{ userStatus }}</p>
+          </div>
         </div>
-      </div>
-      <div class="dropdown-menu">
-        <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="/images/hotel_img/account.jpg">계정
-        </a>
-      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-        <img src="/images/hotel_img/card.jpg">결제내역
-      </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/setting.jpg">설정
-        </a>
-        <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="/images/hotel_img/logout.jpg">로그아웃
-        </a>
-      </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToAccount">
+            <img src="/images/hotel_img/account.jpg">계정
+          </a>
+          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+            <img src="/images/hotel_img/card.jpg">결제내역
+          </a>
+          <a href="#" class="dropdown-item">
+            <img src="/images/hotel_img/setting.jpg">설정
+          </a>
+          <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+          <a href="#" class="dropdown-item" @click="handleLogout">
+            <img src="/images/hotel_img/logout.jpg">로그아웃
+          </a>
+        </div>
+      </template>
+
+      <!-- 로그인되지 않은 경우 -->
+      <template v-else>
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>Guest</h3>
+            <p>로그인이 필요합니다</p>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToLogin">
+            <img src="/images/hotel_img/account.jpg">로그인
+          </a>
+        </div>
+      </template>
     </div>
+
 
     <section class="search-bar">
       <div class="search-form2">
@@ -354,11 +374,43 @@
           </div>
         </div>
       </div>
+      <!-- 쿠폰 지급 모달 -->
+      <div v-if="showCouponModal" class="coupon-modal-overlay" @click="closeCouponModal">
+        <div class="coupon-modal" @click.stop>
+          <div class="coupon-modal-header">
+            <h2>🎉 쿠폰이 지급되었습니다!</h2>
+            <button class="modal-close-btn" @click="closeCouponModal">✕</button>
+          </div>
+
+          <div class="coupon-modal-content">
+            <p class="coupon-count">총 {{ receivedCoupons.length }}개의 쿠폰을 받았습니다</p>
+
+            <div class="coupon-list">
+              <div v-for="coupon in receivedCoupons" :key="coupon.id" class="coupon-item">
+                <div class="coupon-badge">
+                  <span class="discount">{{ formatCouponDiscount(coupon.discount) }}</span>
+                  <span class="discount-label">할인</span>
+                </div>
+
+                <div class="coupon-info">
+                  <h3>{{ coupon.couponName }}</h3>
+                  <p class="coupon-expiry">유효기간: ~ {{ formatCouponDate(coupon.lastDate) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="coupon-modal-footer">
+            <button class="btn-close" @click="closeCouponModal">닫기</button>
+          </div>
+        </div>
+      </div>
+
   </div>
 </template>
 
 <script>
-import { authUtils, hotelAPI, adminAPI } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI, memberCouponAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 export default {
   name: 'HotelTwo',
@@ -404,7 +456,10 @@ export default {
       availableCount: 0,    // 예약 가능한 호텔만 (showing-count용)
       currentOffset: 0,   
       pageSize: 3,
-      
+
+      showCouponModal: false,
+      receivedCoupons: [],
+
       // 사용자 정보
       userInfo: null,
       isLoggedIn: false,
@@ -468,6 +523,10 @@ export default {
         timeout = setTimeout(later, wait);
       };
     },
+    goToLogin() {
+        this.isDropdownActive = false;
+        this.$router.push('/login');
+      },
 
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
@@ -524,14 +583,52 @@ export default {
       }
     },
     
-    subscribe() {
-      if (this.newsletter.email) {
-        alert('구독이 완료되었습니다!');
-        this.newsletter.email = '';
-      } else {
-        alert('이메일을 입력해주세요.');
+    async subscribe() {
+      // 로그인 확인
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
+      }
+
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.newsletter.email = '' // 이메일 입력창 초기화
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
       }
     },
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+
     
     handleClickOutside(event) {
       if (!this.$refs.userDropdown.contains(event.target) && 
@@ -1017,1245 +1114,1482 @@ export default {
 }
 </script>
 
-  <style scoped>
+<style scoped>
        
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 21px 104px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            height: 87px;
-            width: 100%;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1232px;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-item {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #112211;
-            text-decoration: none;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: #D9D9D9;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .online-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #112211;
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: fixed;
-            top: 82px;
-            left: 64%;
-            width: 329px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 32px;
-            display: none;
-            z-index: 1001;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dropdown-avatar {
-            width: 64px;
-            height: 64px;
-            background: #D9D9D9;
-            border-radius: 50%;
-        }
-
-        .dropdown-info h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .dropdown-info p {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.75;
-        }
-
-        .dropdown-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-            padding-top: 24px;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #112211;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            padding: 4px 0;
-        }
-        
-        .vertical-line{
-            width: 0.5px;
-            min-width: 0.5px;
-            flex-shrink: 0;
-            height: 1420px;
-            top: 287px;
-            left: 471px;
-            opacity: 0.25;
-            background: rgba(17, 34, 17, 1);
-
-        }
-
-        /* Search Bar */
-        .search-bar {
-            width: 1232px;
-            height: 120px;
-            top: 135px;
-            left: 104px;
-            border-radius: 16px;
-            padding: 32px 24px;
-            gap: 32px;
-            margin: 120px auto 0 auto;
-            background: #FFFFFF;
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-form2 {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            max-width: 1232px;
-            margin: 0 auto;
-            margin-top: 0px;
-            width: 100%;
-        }
-
-        .form-field {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-field input, .form-field select {
-            background: #FFFFFF;
-            border: 1px solid #79747E;
-            border-radius: 4px;
-            padding: 16px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            height: 56px;
-        }
-
-        .form-field label {
-            position: absolute;
-            top: -8px;
-            left: 12px;
-            background: #FFFFFF;
-            padding: 0 4px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .destination-field {
-            flex: 1;
-            width: 344px;
-        }
-
-        .date-field {
-            width: 240px;
-        }
-
-        .guests-field {
-            width: 240px;
-        }
-
-        .search-btn {
-            padding: 16px 24px;
-            background: #8DD3BB;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            color: #112211;
-            cursor: pointer;
-            height: 56px;
-            width: 56px;
-            display: flex;
-            align-items: center; 
-            justify-content: center;
-        }
-
-        /* Main Content */
-        .main-content {
-            display: flex;
-            gap: 32px;
-            padding: 24px 104px 60px;
-            max-width: 1440px;
-            margin: 0 auto;
-            flex: 1;
-        }
-
-        /* Filters Section */
-        .filters-section {
-            max-width: 343px;
-            min-width: 343px;
-            height: fit-content;
-        }
-
-        .filters-title {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 20px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 24px;
-        }
-
-        .filter-group {
-            border-bottom: 1px solid rgba(17, 34, 17, 0.1);
-            padding-bottom: 24px;
-            margin-bottom: 24px;
-        }
-
-        .filter-group:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .filter-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            margin-bottom: 16px;
-        }
-
-        .filter-header h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .filter-toggle {
-            font-size: 12px;
-            color: #112211;
-        }
-
-        .filter-content {
-            display: block;
-        }
-
-        .filter-content.collapsed {
-            display: none;
-        }
-
-        /* Price Slider */
-        .price-slider-container {
-            margin: 16px 0;
-            padding: 0 8px;
-        }
-
-        .price-range-slider {
-            position: relative;
-            height: 2px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            margin: 20px 0;
-        }
-
-        .price-range-track {
-            position: absolute;
-            height: 2px;
-            background: rgba(17, 34, 17, 1);
-            border-radius: 3px;
-            left: 20%;
-            width: 60%;
-        }
-
-        .price-range-input {
-            position: absolute;
-            top: -8px;
-            width: 100%;
-            height: 20px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            pointer-events: none;
-        }
-
-        .price-range-input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #8DD3BB;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-            pointer-events: all;
-            position: relative;
-        }
-
-        .price-range-input::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #8DD3BB;
-            border: 3px solid #ffffff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-            pointer-events: all;
-        }
-
-        .price-values {
-            display: flex;
-            justify-content: space-between;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            color: #112211;
-            margin-top: 8px;
-        }
-
-        /* Rating Options */
-        .rating-options {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .rating-btn {
-            padding: 4px 10px;              /* 작은 버튼 사이즈 */
-            border: 1px solid #e0e0e0;     
-            border-radius: 3px;
-            background: #FFFFFF;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;               /* Medium */
-            font-size: 12px;                /* Figma 기준 */
-            line-height: 1;                 /* 100% */
-            letter-spacing: 0;
-            color: #112211;
-            cursor: pointer;
-            transition: all 0.2s ease;
-
-            display: inline-flex;           /* 글자 수직정렬 */
-            align-items: center;
-            justify-content: center;
-        }
-
-        .rating-btn:hover {
-            border-color: #8DD3BB;
-        }
-
-        .rating-btn.active {
-            background: #8DD3BB;
-            border-color: #8DD3BB;
-            color: #112211;
-        }
-
-        /* Checkbox Groups */
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            border: 1px solid #E0E0E0;
-            border-radius: 3px;
-        }
-
-        .checkbox-item label {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            color: #112211;
-            cursor: pointer;
-        }
-
-        /* Results Section */
-        .results-section {
-            flex: 1;
-            max-width: 840px;
-            width: auto;
-        }
-
-        /* Tabs */
-        .tabs-container {
-            background: #FFFFFF;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 24px;
-            display: flex;
-            gap: 0;
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-            position: relative;
-            display: flex;           /* 추가 */
-        }
-
-        .tab {
-            flex: 1;
-            padding: 16px 24px;
-            background: transparent;
-            border: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 16px;
-            color: #666666;
-            cursor: pointer;
-            border-radius: 8px;
-            text-align: center;
-            position: relative;
-            transition: all 0.3s ease;
-            
-        }
-
-        .tab:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 40px;
-            width: 1px;
-            background: #E0E0E0;
-        }
-
-        .tab.active {
-            color: #112211;
-            position: relative;
-         
-        }
-
-        .tab.active::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 248px;
-            height: 0px;
-            border-width: 4px;
-            border: 2px solid rgba(141, 211, 187, 1);
-        }
-
-        .tab-title {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .tab-count {
-            font-size: 12px;
-            opacity: 0.7;
-            font-weight: 400;
-        }
-
-        /* 정렬 순서 */
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .results-count {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 16px;
-            color: #112211;
-        }
-
-        .sort-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sort-label {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            color: #112211;
-            padding-right: -70px;
-        }
-
-        .sort-select {
-            appearance: none;
-            padding: 8px 3px;
-            border: none;
-            font-family: Montserrat;
-            font-weight: 700;
-            font-size: 14px;
-            background: transparent;
-            cursor: pointer;
-            padding-right: 30px; 
-        }
-        .custom-select-wrapper { 
-            position: relative;
-            display: inline-block;
-        }       
-        .select-arrow { 
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            pointer-events: none;
-            font-size: 14px;
-            color: #112211;
-        
-        }
-
-        /* 초기화 버튼 스타일 추가 */
-        .reset-filters-btn {
-          width: 100%;
-          padding: 14px 20px;
-          margin-top: 24px;
-          background: #FFFFFF;
-          border: 1.5px solid #8DD3BB;
-          border-radius: 8px;
-          font-family: Montserrat;
-          font-weight: 600;
-          font-size: 14px;
-          color: #112211;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .reset-filters-btn:hover {
-          background: #8DD3BB;
-          transform: translateY(-2px);
-          box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.3);
-        }
-
-        .reset-filters-btn:active {
-          transform: translateY(0);
-          box-shadow: 0px 2px 6px rgba(141, 211, 187, 0.2);
-        }
-
-        /* 호텔 카드 */
-        
-        .show-more-btn {
-            width: 100%;
-            padding: 16px;
-            background: #112211;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 24px;
-            margin-bottom: 200px;
-        }
-         .hotel-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .hotel-card {
-            display: flex;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            height: 272.5px;
-            border: 1px solid #f0f0f0;
-            width: 840px;
-        }
-
-        .hotel-image-container {
-            position: relative;
-            width: 300px;
-            height: 272.5px;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .hotel-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .image-count {
-            position: absolute;
-            width: 72px;
-            height: 32px;
-            top: 10px;
-            left: 220px;
-            background: rgba(255, 255, 255, 0.5);
-            color: black;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            gap: 10px;
-            display: flex;          
-            align-items: center;   
-            justify-content: center; 
-        }
-
-        .hotel-content {
-            flex: 1;
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            height: 272.5px;
-        }
-
-        .hotel-title {
-            font-family: ABeeZee;
-            font-family: ABeeZee;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-top: 21px;
-            margin-bottom: -50px;
-        }
-
-        .hotel-location {
-            width: 500px;
-            height: 15px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #666666;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 4px;
-        }
-
-        .hotel-location img{
-            width: 10px;
-            height: 14px;
-            top: 1px;
-            left: 3px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-
-        .hotel-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .stars {
-            angle: 0 deg;
-            opacity: 1;
-            top: 1px;
-            left: 0.5px;
-            color: rgba(255, 134, 130, 1);
-            font-size: 12px;
-            letter-spacing: 1px;
-        }
-
-
-        .hotel-type {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 12px;
-            color: #666666;
-        }
-
-        .amenities {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 12px;
-            color: #666666;
-        }
-
-        .rating-section {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .rating-score {
-            width: 18px;
-            height: 25px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-
-            color: #112211;
-            background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #7bc4a8;
-            min-width: 35px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-
-
-        .rating-text {
-            font-family: Montserrat;
-            font-weight: 700;
-            font-style: Bold;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;            
-            color: #666666;
-        }
-
-
-
-        .bottom-section {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .price-info {
-            text-align: right;
-            width: 157px;
-            height: 66px;
-            margin-bottom: -20px;
-            margin-top: 20px;
-            position: relative;
-        }
-
-        .price-label {
-            position: absolute;
-            right: -270px;
-            width: 157px;
-            height: 15px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            font-size: 12px;
-            color: #666666;
-            margin-bottom: 10px;
-        }
-
-        .price-amount {
-            position: absolute;
-            width: 157px;
-            height: 36px;
-            left: 300px;
-            font-size: Static/Headline Small/Size;
-            font-weight: 500;
-            font-style: Medium;
-            leading-trim: NONE;
-            line-height: Static/Headline Small/Line Height;
-            letter-spacing: Static/Headline Small/Tracking;
-            text-align: right;            
-            color: #FF6B6B;
-            margin-top: 12px;
-        }
-
-
-        .price-unit {
-            height: 36px;
-            left: 300px;
-            font-family: Static/Headline Small/Font;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: Static/Headline Small/Line Height;
-            letter-spacing: Static/Headline Small/Tracking;
-            text-align: right;
-            color: rgba(255, 134, 130, 1);
-        }
-
-
-        .price-tax {
-            position: absolute;
-            width: 157px;
-            height: 15px;
-            right: -320px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            text-align: right;
-            color: #666;
-            margin-top: 36px;
-        }
-        
-        .hotel-beeline{
-            width: 492px;
-            height: 0.5px;
-            angle: 0 deg;
-            opacity: 0.25;
-            background: rgba(17, 34, 17, 1);
-
-        }
-
-        /* 버튼 컨테이너 추가 */
-        .button-container {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .view-place-btn {
-            width: 428px;
-            height: 48px;
-            padding: 8px 16px;
-            background: #8DD3BB;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            color: #112211;
-            cursor: pointer;
-            gap: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .view-place-btn:hover {
-            background: #7bc4a8;
-        }
-
-        .wishlist-btn {
-            width: 48px;
-            height: 48px;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 18px;
-            color: #666666;
-        }
-
-        .wishlist-btn:hover {
-            background: #F9FAFB;
-        }
-        /* Newsletter Section */
-        .newsletter-section {
-            background: rgba(141, 211, 187, 1);
-            padding: 80px 104px 80px 104px;
-            position: relative;
-            height: 422px;
-            display: flex;
-            flex-direction: column;
-            margin-top: 60px;
-            z-index: 0;
-            margin-bottom: -513px;
-        }
-
-        .newsletter-content {
-            background: rgba(205, 234, 225, 1);
-            border-radius: 20px;
-            padding: 48px;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 1232px;
-            height: 305px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-            margin-bottom: 40px;
-        }
-
-        .newsletter-left {
-            flex: 1;
-            max-width: 500px;
-        }
-
-        .newsletter-title {
-            font-family: 'Noto Sans', sans-serif;
-            font-weight: 900;
-            font-size: 44px;
-            line-height: 54px;
-            color: #112211;
-            margin-bottom: 24px;
-        }
-
-        .newsletter-info {
-            margin-bottom: 24px;
-        }
-
-        .newsletter-brand {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 20px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.8;
-            margin-bottom: 8px;
-        }
-
-        .newsletter-desc {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.7;
-        }
-
-        .newsletter-form {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .newsletter-input {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            height: 56px;
-        }
-
-        .subscribe-btn {
-            padding: 16px 24px;
-            background: #112211;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 4px;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            cursor: pointer;
-            height: 56px;
-        }
-
-        /* 우체통 디자인 */
-        .mailbox-container {
-            position: relative;
-            width: 400px;
-            height: 305px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .mailbox-back {
-            position: absolute;
-            width: 208px;
-            height: 191px;
-            top: 47px;
-            left: 0px;
-            background: rgba(101, 181, 153, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 5;
-        }
-
-        .mailbox-base {
-            position: absolute;
-            width: 187px;
-            height: 179px;
-            top: 59px;
-            left: 10px;
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            background: rgba(84, 104, 105, 1);
-            z-index: 10;
-        }
-
-        .mailbox-front {
-            position: absolute;
-            width: 291px;
-            height: 191px;
-            top: 47px;
-            left: 71px;
-            background: rgba(17, 34, 17, 1);
-            border-top-left-radius: 70px; 
-            border-top-right-radius: 70px; 
-            z-index: 4;
-        }
-
-        .mailbox-flag {
-            position: absolute;
-            width: 169px;
-            height: 40px;
-            top: 154px;
-            left: 231px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
-        .mailbox-flag2 {
-            position: absolute;
-            width: 39px;
-            height: 77px;
-            top: 154px;
-            left: 361px;
-            background: rgba(255, 134, 130, 1);
-            z-index: 6;
-        }
-
-        .mailbox-pole {
-            position: absolute;
-            width: 47px;
-            height: 188px;
-            top: 117px;
-            left: 194px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
-
-        .mailbox-stand-base {
-            position: absolute;
-            width: 85px;
-            height: 57px;
-            top: 212px;
-            left: 156px;
-            background: rgba(164, 128, 109, 1);
-            z-index: 3;
-        }
-
-        .mailbox-stand-front {
-            position: absolute;
-            width: 85px;
-            height: 188px;
-            top: 117px;
-            left: 156px;
-            background: rgba(223, 173, 146, 1);
-            z-index: 2;
-        }
-
-        /* Footer Content */
-        .footer-content {
-            max-width: 1232px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
-            z-index: 1;
-            gap: 64px;
-            padding-bottom: 40px;
-        }
-
-        /* Social Icons */
-        .social-icons {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        /* Footer Columns */
-        .footer-links {
-            display: flex;
-            gap: 60px;
-        }
-
-        .footer-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .footer-column h4 {
-            font-family: Acme;
-            font-weight: 400;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 8px;
-        }
-
-        .footer-column a {
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            text-decoration: none;
-            opacity: 0.7;
-        }
-
-        .footer-column a:hover {
-            opacity: 1;
-        }
-
-        .hidden-hotels {
-            display: none;
-        }
-
-        .show-all .hidden-hotels {
-            display: flex;
-        }
-                .image-count {
-            position: absolute;
-            width: 72px;
-            height: 32px;
-            top: 10px;
-            left: 220px;
-            background: rgba(255, 255, 255, 0.5);
-            color: black;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            gap: 10px;
-            display: flex;          
-            align-items: center;   
-            justify-content: center; 
-        }
-
-        .sold-out-badge {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #FF0000;
-            color: #FFFFFF;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-family: Montserrat;
-            font-weight: 700;
-            font-size: 16px;
-            z-index: 10;
-            box-shadow: 0px 4px 12px rgba(255, 0, 0, 0.3);
-        }
+  /* Header */
+  .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 21px 104px;
+      background: #FFFFFF;
+      box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: 87px;
+      width: 100%;
+  }
+
+  nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1232px;
+      margin: 0 auto;
+  }
+
+  .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+  }
+
+  .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+  }
+
+  .nav-item {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #112211;
+      text-decoration: none;
+  }
+
+  .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+  }
+
+  .user-avatar {
+      width: 45px;
+      height: 45px;
+      background: #D9D9D9;
+      border: 1px solid #000000;
+      border-radius: 50%;
+      position: relative;
+  }
+
+  .online-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #112211;
+      border-radius: 50%;
+      bottom: 2px;
+      right: 2px;
+  }
+
+  /* User Dropdown */
+  .user-dropdown {
+      position: fixed;
+      top: 82px;
+      left: 64%;
+      width: 329px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      display: none;
+      z-index: 1001;
+  }
+
+  .user-dropdown.active {
+      display: block;
+  }
+
+  .dropdown-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+  }
+
+  .dropdown-avatar {
+      width: 64px;
+      height: 64px;
+      background: #D9D9D9;
+      border-radius: 50%;
+  }
+
+  .dropdown-info h3 {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 4px;
+  }
+
+  .dropdown-info p {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.75;
+  }
+
+  .dropdown-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+      padding-top: 24px;
+  }
+
+  .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #112211;
+      text-decoration: none;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 100%;
+      padding: 4px 0;
+  }
+  
+  .vertical-line{
+      width: 0.5px;
+      min-width: 0.5px;
+      flex-shrink: 0;
+      height: 1420px;
+      top: 287px;
+      left: 471px;
+      opacity: 0.25;
+      background: rgba(17, 34, 17, 1);
+
+  }
+
+  /* Search Bar */
+  .search-bar {
+      width: 1232px;
+      height: 120px;
+      top: 135px;
+      left: 104px;
+      border-radius: 16px;
+      padding: 32px 24px;
+      gap: 32px;
+      margin: 120px auto 0 auto;
+      background: #FFFFFF;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .search-form2 {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      max-width: 1232px;
+      margin: 0 auto;
+      margin-top: 0px;
+      width: 100%;
+  }
+
+  .form-field {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .form-field input, .form-field select {
+      background: #FFFFFF;
+      border: 1px solid #79747E;
+      border-radius: 4px;
+      padding: 16px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 100%;
+      height: 56px;
+  }
+
+  .form-field label {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      background: #FFFFFF;
+      padding: 0 4px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+  }
+
+  .destination-field {
+      flex: 1;
+      width: 344px;
+  }
+
+  .date-field {
+      width: 240px;
+  }
+
+  .guests-field {
+      width: 240px;
+  }
+
+  .search-btn {
+      padding: 16px 24px;
+      background: #8DD3BB;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      color: #112211;
+      cursor: pointer;
+      height: 56px;
+      width: 56px;
+      display: flex;
+      align-items: center; 
+      justify-content: center;
+  }
+
+  /* Main Content */
+  .main-content {
+      display: flex;
+      gap: 32px;
+      padding: 24px 104px 60px;
+      max-width: 1440px;
+      margin: 0 auto;
+      flex: 1;
+  }
+
+  /* Filters Section */
+  .filters-section {
+      max-width: 343px;
+      min-width: 343px;
+      height: fit-content;
+  }
+
+  .filters-title {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 20px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 24px;
+  }
+
+  .filter-group {
+      border-bottom: 1px solid rgba(17, 34, 17, 0.1);
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+  }
+
+  .filter-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+  }
+
+  .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 16px;
+  }
+
+  .filter-header h3 {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+  }
+
+  .filter-toggle {
+      font-size: 12px;
+      color: #112211;
+  }
+
+  .filter-content {
+      display: block;
+  }
+
+  .filter-content.collapsed {
+      display: none;
+  }
+
+  /* Price Slider */
+  .price-slider-container {
+      margin: 16px 0;
+      padding: 0 8px;
+  }
+
+  .price-range-slider {
+      position: relative;
+      height: 2px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 20px 0;
+  }
+
+  .price-range-track {
+      position: absolute;
+      height: 2px;
+      background: rgba(17, 34, 17, 1);
+      border-radius: 3px;
+      left: 20%;
+      width: 60%;
+  }
+
+  .price-range-input {
+      position: absolute;
+      top: -8px;
+      width: 100%;
+      height: 20px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      pointer-events: none;
+  }
+
+  .price-range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #8DD3BB;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      pointer-events: all;
+      position: relative;
+  }
+
+  .price-range-input::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #8DD3BB;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      pointer-events: all;
+  }
+
+  .price-values {
+      display: flex;
+      justify-content: space-between;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      color: #112211;
+      margin-top: 8px;
+  }
+
+  /* Rating Options */
+  .rating-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+  }
+
+  .rating-btn {
+      padding: 4px 10px;              /* 작은 버튼 사이즈 */
+      border: 1px solid #e0e0e0;     
+      border-radius: 3px;
+      background: #FFFFFF;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;               /* Medium */
+      font-size: 12px;                /* Figma 기준 */
+      line-height: 1;                 /* 100% */
+      letter-spacing: 0;
+      color: #112211;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      display: inline-flex;           /* 글자 수직정렬 */
+      align-items: center;
+      justify-content: center;
+  }
+
+  .rating-btn:hover {
+      border-color: #8DD3BB;
+  }
+
+  .rating-btn.active {
+      background: #8DD3BB;
+      border-color: #8DD3BB;
+      color: #112211;
+  }
+
+  /* Checkbox Groups */
+  .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+  }
+
+  .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+
+  .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #E0E0E0;
+      border-radius: 3px;
+  }
+
+  .checkbox-item label {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      color: #112211;
+      cursor: pointer;
+  }
+
+  /* Results Section */
+  .results-section {
+      flex: 1;
+      max-width: 840px;
+      width: auto;
+  }
+
+  /* Tabs */
+  .tabs-container {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 0;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+      position: relative;
+      display: flex;           /* 추가 */
+  }
+
+  .tab {
+      flex: 1;
+      padding: 16px 24px;
+      background: transparent;
+      border: none;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 16px;
+      color: #666666;
+      cursor: pointer;
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease;
+      
+  }
+
+  .tab:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 40px;
+      width: 1px;
+      background: #E0E0E0;
+  }
+
+  .tab.active {
+      color: #112211;
+      position: relative;
+   
+  }
+
+  .tab.active::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 248px;
+      height: 0px;
+      border-width: 4px;
+      border: 2px solid rgba(141, 211, 187, 1);
+  }
+
+  .tab-title {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+  }
+
+  .tab-count {
+      font-size: 12px;
+      opacity: 0.7;
+      font-weight: 400;
+  }
+
+  /* 정렬 순서 */
+  .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+  }
+
+  .results-count {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 16px;
+      color: #112211;
+  }
+
+  .sort-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+
+  .sort-label {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      color: #112211;
+      padding-right: -70px;
+  }
+
+  .sort-select {
+      appearance: none;
+      padding: 8px 3px;
+      border: none;
+      font-family: Montserrat;
+      font-weight: 700;
+      font-size: 14px;
+      background: transparent;
+      cursor: pointer;
+      padding-right: 30px; 
+  }
+  .custom-select-wrapper { 
+      position: relative;
+      display: inline-block;
+  }       
+  .select-arrow { 
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 14px;
+      color: #112211;
+  
+  }
+
+  /* 초기화 버튼 스타일 추가 */
+  .reset-filters-btn {
+    width: 100%;
+    padding: 14px 20px;
+    margin-top: 24px;
+    background: #FFFFFF;
+    border: 1.5px solid #8DD3BB;
+    border-radius: 8px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    color: #112211;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .reset-filters-btn:hover {
+    background: #8DD3BB;
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 12px rgba(141, 211, 187, 0.3);
+  }
+
+  .reset-filters-btn:active {
+    transform: translateY(0);
+    box-shadow: 0px 2px 6px rgba(141, 211, 187, 0.2);
+  }
+
+  /* 호텔 카드 */
+  
+  .show-more-btn {
+      width: 100%;
+      padding: 16px;
+      background: #112211;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 24px;
+      margin-bottom: 200px;
+  }
+   .hotel-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+  }
+  .hotel-card {
+      display: flex;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      height: 272.5px;
+      border: 1px solid #f0f0f0;
+      width: 840px;
+  }
+
+  .hotel-image-container {
+      position: relative;
+      width: 300px;
+      height: 272.5px;
+      flex-shrink: 0;
+      overflow: hidden;
+  }
+
+  .hotel-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
+
+  .image-count {
+      position: absolute;
+      width: 72px;
+      height: 32px;
+      top: 10px;
+      left: 220px;
+      background: rgba(255, 255, 255, 0.5);
+      color: black;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      gap: 10px;
+      display: flex;          
+      align-items: center;   
+      justify-content: center; 
+  }
+
+  .hotel-content {
+      flex: 1;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      height: 272.5px;
+  }
+
+  .hotel-title {
+      font-family: ABeeZee;
+      font-family: ABeeZee;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-top: 21px;
+      margin-bottom: -50px;
+  }
+
+  .hotel-location {
+      width: 500px;
+      height: 15px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #666666;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+  }
+
+  .hotel-location img{
+      width: 10px;
+      height: 14px;
+      top: 1px;
+      left: 3px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+
+  .hotel-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+  }
+
+  .stars {
+      angle: 0 deg;
+      opacity: 1;
+      top: 1px;
+      left: 0.5px;
+      color: rgba(255, 134, 130, 1);
+      font-size: 12px;
+      letter-spacing: 1px;
+  }
+
+
+  .hotel-type {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 12px;
+      color: #666666;
+  }
+
+  .amenities {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 12px;
+      color: #666666;
+  }
+
+  .rating-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+  }
+
+  .rating-score {
+      width: 18px;
+      height: 25px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+      color: #112211;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #7bc4a8;
+      min-width: 35px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+
+
+  .rating-text {
+      font-family: Montserrat;
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;            
+      color: #666666;
+  }
+
+
+
+  .bottom-section {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+  }
+
+  .price-info {
+      text-align: right;
+      width: 157px;
+      height: 66px;
+      margin-bottom: -20px;
+      margin-top: 20px;
+      position: relative;
+  }
+
+  .price-label {
+      position: absolute;
+      right: -270px;
+      width: 157px;
+      height: 15px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      font-size: 12px;
+      color: #666666;
+      margin-bottom: 10px;
+  }
+
+  .price-amount {
+      position: absolute;
+      width: 157px;
+      height: 36px;
+      left: 300px;
+      font-size: Static/Headline Small/Size;
+      font-weight: 500;
+      font-style: Medium;
+      leading-trim: NONE;
+      line-height: Static/Headline Small/Line Height;
+      letter-spacing: Static/Headline Small/Tracking;
+      text-align: right;            
+      color: #FF6B6B;
+      margin-top: 12px;
+  }
+
+
+  .price-unit {
+      height: 36px;
+      left: 300px;
+      font-family: Static/Headline Small/Font;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: Static/Headline Small/Line Height;
+      letter-spacing: Static/Headline Small/Tracking;
+      text-align: right;
+      color: rgba(255, 134, 130, 1);
+  }
+
+
+  .price-tax {
+      position: absolute;
+      width: 157px;
+      height: 15px;
+      right: -320px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: right;
+      color: #666;
+      margin-top: 36px;
+  }
+  
+  .hotel-beeline{
+      width: 492px;
+      height: 0.5px;
+      angle: 0 deg;
+      opacity: 0.25;
+      background: rgba(17, 34, 17, 1);
+
+  }
+
+  /* 버튼 컨테이너 추가 */
+  .button-container {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+  }
+
+  .view-place-btn {
+      width: 428px;
+      height: 48px;
+      padding: 8px 16px;
+      background: #8DD3BB;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      color: #112211;
+      cursor: pointer;
+      gap: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .view-place-btn:hover {
+      background: #7bc4a8;
+  }
+
+  .wishlist-btn {
+      width: 48px;
+      height: 48px;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: #666666;
+  }
+
+  .wishlist-btn:hover {
+      background: #F9FAFB;
+  }
+  /* Newsletter Section */
+  .newsletter-section {
+      background: rgba(141, 211, 187, 1);
+      padding: 80px 104px 80px 104px;
+      position: relative;
+      height: 422px;
+      display: flex;
+      flex-direction: column;
+      margin-top: 60px;
+      z-index: 0;
+      margin-bottom: -513px;
+  }
+
+  .newsletter-content {
+      background: rgba(205, 234, 225, 1);
+      border-radius: 20px;
+      padding: 48px;
+      box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 1232px;
+      height: 305px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 40px;
+  }
+
+  .newsletter-left {
+      flex: 1;
+      max-width: 500px;
+  }
+
+  .newsletter-title {
+      font-family: 'Noto Sans', sans-serif;
+      font-weight: 900;
+      font-size: 44px;
+      line-height: 54px;
+      color: #112211;
+      margin-bottom: 24px;
+  }
+
+  .newsletter-info {
+      margin-bottom: 24px;
+  }
+
+  .newsletter-brand {
+      font-family: Acme;
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.8;
+      margin-bottom: 8px;
+  }
+
+  .newsletter-desc {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.7;
+  }
+
+  .newsletter-form {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+  }
+
+  .newsletter-input {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 100%;
+      height: 56px;
+  }
+
+  .subscribe-btn {
+      padding: 16px 24px;
+      background: #112211;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 100%;
+      cursor: pointer;
+      height: 56px;
+  }
+
+  /* 우체통 디자인 */
+  .mailbox-container {
+      position: relative;
+      width: 400px;
+      height: 305px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+  }
+
+  .mailbox-back {
+      position: absolute;
+      width: 208px;
+      height: 191px;
+      top: 47px;
+      left: 0px;
+      background: rgba(101, 181, 153, 1);
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      z-index: 5;
+  }
+
+  .mailbox-base {
+      position: absolute;
+      width: 187px;
+      height: 179px;
+      top: 59px;
+      left: 10px;
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      background: rgba(84, 104, 105, 1);
+      z-index: 10;
+  }
+
+  .mailbox-front {
+      position: absolute;
+      width: 291px;
+      height: 191px;
+      top: 47px;
+      left: 71px;
+      background: rgba(17, 34, 17, 1);
+      border-top-left-radius: 70px; 
+      border-top-right-radius: 70px; 
+      z-index: 4;
+  }
+
+  .mailbox-flag {
+      position: absolute;
+      width: 169px;
+      height: 40px;
+      top: 154px;
+      left: 231px;
+      background: rgba(255, 134, 130, 1);
+      z-index: 6;
+  }
+  .mailbox-flag2 {
+      position: absolute;
+      width: 39px;
+      height: 77px;
+      top: 154px;
+      left: 361px;
+      background: rgba(255, 134, 130, 1);
+      z-index: 6;
+  }
+
+  .mailbox-pole {
+      position: absolute;
+      width: 47px;
+      height: 188px;
+      top: 117px;
+      left: 194px;
+      background: rgba(164, 128, 109, 1);
+      z-index: 3;
+  }
+
+  .mailbox-stand-base {
+      position: absolute;
+      width: 85px;
+      height: 57px;
+      top: 212px;
+      left: 156px;
+      background: rgba(164, 128, 109, 1);
+      z-index: 3;
+  }
+
+  .mailbox-stand-front {
+      position: absolute;
+      width: 85px;
+      height: 188px;
+      top: 117px;
+      left: 156px;
+      background: rgba(223, 173, 146, 1);
+      z-index: 2;
+  }
+
+  /* Footer Content */
+  .footer-content {
+      max-width: 1232px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+      gap: 64px;
+      padding-bottom: 40px;
+  }
+
+  /* Social Icons */
+  .social-icons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+  }
+
+  /* Footer Columns */
+  .footer-links {
+      display: flex;
+      gap: 60px;
+  }
+
+  .footer-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+  }
+
+  .footer-column h4 {
+      font-family: Acme;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 8px;
+  }
+
+  .footer-column a {
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+      text-decoration: none;
+      opacity: 0.7;
+  }
+
+  .footer-column a:hover {
+      opacity: 1;
+  }
+
+  .hidden-hotels {
+      display: none;
+  }
+
+  .show-all .hidden-hotels {
+      display: flex;
+  }
+  .image-count {
+      position: absolute;
+      width: 72px;
+      height: 32px;
+      top: 10px;
+      left: 220px;
+      background: rgba(255, 255, 255, 0.5);
+      color: black;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      gap: 10px;
+      display: flex;          
+      align-items: center;   
+      justify-content: center; 
+  }
+
+  .sold-out-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #FF0000;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: Montserrat;
+      font-weight: 700;
+      font-size: 16px;
+      z-index: 10;
+      box-shadow: 0px 4px 12px rgba(255, 0, 0, 0.3);
+  }
+  /* 쿠폰 모달 스타일 */
+  .coupon-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .coupon-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .coupon-modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .coupon-modal-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #112211;
+    margin: 0;
+  }
+  
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+  
+  .modal-close-btn:hover {
+    color: #112211;
+  }
+  
+  .coupon-modal-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .coupon-count {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  .coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .coupon-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #8DD3BB 0%, #7CC5AE 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .coupon-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(141, 211, 187, 0.4);
+  }
+  
+  .coupon-badge {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .discount {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #8DD3BB;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  
+  .discount-label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .coupon-info {
+    flex: 1;
+  }
+  
+  .coupon-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    margin: 0 0 8px 0;
+  }
+  
+  .coupon-expiry {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+  
+  .coupon-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .btn-use-coupon,
+  .btn-close {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-use-coupon {
+    background: #8DD3BB;
+    color: #112211;
+  }
+  
+  .btn-use-coupon:hover {
+    background: #7CC5AE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+  }
+  
+  .btn-close {
+    background: white;
+    color: #112211;
+    border: 2px solid #e0e0e0;
+  }
+  
+  .btn-close:hover {
+    border-color: #8DD3BB;
+    color: #8DD3BB;
+  }
+  
+  /* 반응형 */
+  @media screen and (max-width: 768px) {
+    .coupon-modal {
+      width: 95%;
+      max-height: 90vh;
+    }
+  
+    .coupon-modal-header {
+      padding: 24px 20px 16px;
+    }
+  
+    .coupon-modal-header h2 {
+      font-size: 20px;
+    }
+  
+    .coupon-modal-content {
+      padding: 16px 20px;
+    }
+  
+    .coupon-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px;
+    }
+  
+    .coupon-badge {
+      align-self: flex-start;
+    }
+  
+    .coupon-modal-footer {
+      flex-direction: column;
+      padding: 16px 20px;
+    }
+  }
+
 </style>

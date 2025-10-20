@@ -28,29 +28,49 @@
 
     <!-- User Dropdown -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
-      <div class="dropdown-header">
-        <div class="dropdown-avatar"></div>
-        <div class="dropdown-info">
-          <h3>{{ displayUserName }}</h3>
-          <p>{{ userStatus }}</p>
+      <!-- 로그인된 경우 -->
+      <template v-if="isLoggedIn">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>{{ displayUserName }}</h3>
+            <p>{{ userStatus }}</p>
+          </div>
         </div>
-      </div>
-      <div class="dropdown-menu">
-        <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="/images/hotel_img/account.jpg">계정
-        </a>
-      <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-        <img src="/images/hotel_img/card.jpg">결제내역
-      </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/setting.jpg">설정
-        </a>
-        <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="/images/hotel_img/logout.jpg">로그아웃
-        </a>
-      </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToAccount">
+            <img src="/images/hotel_img/account.jpg">계정
+          </a>
+          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+            <img src="/images/hotel_img/card.jpg">결제내역
+          </a>
+          <a href="#" class="dropdown-item">
+            <img src="/images/hotel_img/setting.jpg">설정
+          </a>
+          <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+          <a href="#" class="dropdown-item" @click="handleLogout">
+            <img src="/images/hotel_img/logout.jpg">로그아웃
+          </a>
+        </div>
+      </template>
+
+      <!-- 로그인되지 않은 경우 -->
+      <template v-else>
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>Guest</h3>
+            <p>로그인이 필요합니다</p>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToLogin">
+            <img src="/images/hotel_img/account.jpg">로그인
+          </a>
+        </div>
+      </template>
     </div>
+
 
     <!-- Hidden File Inputs -->
     <input 
@@ -582,11 +602,43 @@
           </div>
         </div>
       </div>
+    <!-- 쿠폰 지급 모달 -->
+    <div v-if="showCouponModal" class="coupon-modal-overlay" @click="closeCouponModal">
+      <div class="coupon-modal" @click.stop>
+        <div class="coupon-modal-header">
+          <h2>🎉 쿠폰이 지급되었습니다!</h2>
+          <button class="modal-close-btn" @click="closeCouponModal">✕</button>
+        </div>
+
+        <div class="coupon-modal-content">
+          <p class="coupon-count">총 {{ receivedCoupons.length }}개의 쿠폰을 받았습니다</p>
+
+          <div class="coupon-list">
+            <div v-for="coupon in receivedCoupons" :key="coupon.id" class="coupon-item">
+              <div class="coupon-badge">
+                <span class="discount">{{ formatCouponDiscount(coupon.discount) }}</span>
+                <span class="discount-label">할인</span>
+              </div>
+
+              <div class="coupon-info">
+                <h3>{{ coupon.couponName }}</h3>
+                <p class="coupon-expiry">유효기간: ~ {{ formatCouponDate(coupon.lastDate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="coupon-modal-footer">
+          <button class="btn-close" @click="closeCouponModal">닫기</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
-import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI } from '@/utils/commonAxios'
+import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI,memberCouponAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelAccount',
@@ -641,6 +693,10 @@ export default {
       // 카드 추가 시 로딩 상태
       isAddingCard: false,
       
+      //쿠폰
+      showCouponModal: false,
+      receivedCoupons: [],
+
       // Modal States
       addCardModalActive: false,
       editModalActive: false,
@@ -793,6 +849,11 @@ export default {
   },
   
   methods: {
+    goToLogin() {
+      this.isDropdownActive = false;
+      this.$router.push('/login');
+    },
+
     // 사용자 정보 로드
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
@@ -1368,17 +1429,52 @@ export default {
     },
     
     // Newsletter Methods
-    subscribe() {
-      if (!this.newsletterEmail) {
-        alert('이메일을 입력해주세요.');
-        return;
+    async subscribe() {
+      // 로그인 확인
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
       }
-      
-      console.log('Subscribed:', this.newsletterEmail);
-      this.newsletterEmail = '';
-      alert('구독이 완료되었습니다.');
+
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.newsletter.email = '' // 이메일 입력창 초기화
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
+      }
     },
-    
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+
     // Utility Methods
     closeAllModals() {
       this.addCardModalActive = false;
@@ -1394,1499 +1490,1735 @@ export default {
 </script>
 
 <style scoped>
-/* ==================== 기본 설정 ==================== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.hotel-account-container {
-  font-family: 'Montserrat', system-ui, -apple-system, "Noto Sans KR", Arial, sans-serif;
-  color: #112211;
-  background: #FAFBFC;
-  min-width: 1440px;
-  max-width: 1440px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 21px 104px;
-  background: #FFFFFF;
-  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  height: 87px;
-  width: 100%;
-}
-
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1232px;
-  margin: 0 auto;
-}
-
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
-.nav-item {
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 14px;
-  line-height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #112211;
-  text-decoration: none;
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 100%;
-  color: #112211;
-}
-
-.user-avatar {
-  width: 45px;
-  height: 45px;
-  background: #D9D9D9;
-  border: 1px solid #000000;
-  border-radius: 50%;
-  position: relative;
-}
-
-.online-dot {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #112211;
-  border-radius: 50%;
-  bottom: 2px;
-  right: 2px;
-}
-
-/* User Dropdown */
-.user-dropdown {
-  position: fixed;
-  top: 82px;
-  left: 64%;
-  width: 329px;
-  background: #FFFFFF;
-  border-radius: 12px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 32px;
-  display: none;
-  z-index: 1001;
-}
-
-.user-dropdown.active {
-  display: block;
-}
-
-.dropdown-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.dropdown-avatar {
-  width: 64px;
-  height: 64px;
-  background: #D9D9D9;
-  border-radius: 50%;
-}
-
-.dropdown-info h3 {
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  margin-bottom: 4px;
-}
-
-.dropdown-info p {
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.75;
-}
-
-.dropdown-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-  padding-top: 24px;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #112211;
-  text-decoration: none;
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 100%;
-  padding: 4px 0;
-}
-
-/* ==================== 메인 컨테이너 ==================== */
-.container {
-  max-width: 1232px;
-  width: 1232px;
-  margin: 0 auto 80px;
-  padding: 0;
-}
-
-/* ==================== 커버 이미지 ==================== */
-.cover {
-  width: 100%;
-  height: 350px;
-  angle: 0 deg;
-  opacity: 1;
-  margin-top: 150px;
-  display: flex;
-  position: relative;
-  border-radius: 12px;
-}
-
-.cover-img {
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-.upload {
-  position: absolute;
-  top: 270px;
-  right: 20px;
-  width: 180px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 4px solid #8DD3BB;
-  border-radius: 4px;
-  background: #8DD3BB;
-  cursor: pointer;
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 14px;
-  color: #112211;
-  z-index: 1;
-}
-
-.upload img {
-  width: 16px;
-  height: 13.013124465942383px;
-  angle: 0 deg;
-  opacity: 1;
-  top: 1.49px;
-  border-width: 0.05px;
-}
-
-.upload:hover {
-  background: #7cc5a8;
-  border-color: #7cc5a8;
-}
-
-/* ==================== 프로필 섹션 ==================== */
-.profile {
-  margin-top: -58px;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
-
-.profile .avatar-container {
-  position: relative;
-  display: inline-block;
-}
-
-.profile .avatar {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #FF8682;
-  box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
-  display: block;
-  margin: 0 auto;
-  position: relative;
-  z-index: 10;
-}
-
-.avatar-edit {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  left: 80px;
-  bottom: 0px;
-  gap: 10px;
-  angle: 0 deg;
-  opacity: 1;
-  border-radius: 45px;
-  background: #FF8682;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  z-index: 11;
-}
-
-.avatar-edit img {
-  width: 17.437562942504883px;
-  height: 17.437328338623047px;
-  angle: 0 deg;
-  opacity: 1;
-  top: 3.28px;
-  left: 3.28px;
-  border-width: 2.06px;
-}
-
-.avatar-edit:hover {
-  background: #7cc5a8;
-}
-
-.name {
-  margin-top: 10px;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 24px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  text-align: center;
-}
-
-.email {
-  padding-top: 10px;
-  font-family: Montserrat;
-  font-weight: 400;
-  font-style: Regular;
-  font-size: 16px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  text-align: center;
-  color: #112211;
-}
-
-/* ==================== 탭 메뉴 ==================== */
-.tabs {
-  width: 1232px;
-  height: 80px;
-  margin: 24px auto 0;
-  display: flex;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
-  overflow: hidden;
-}
-
-.tab {
-  flex: 1;
-  padding: 16px 24px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 16px;
-  color: #6b7280;
-  cursor: pointer;
-  border: none;
-  display: flex;
-  align-items: center;
-  background: transparent;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-/* 탭 사이 구분선 */
-.tab-beeline {
-  width: 0px;
-  height: 48.00000000000004px;
-  angle: -90 deg;
-  opacity: 1;
-  border-width: 1px;
-  border: 1px solid #D7E2EE;
-  margin-top: 16px;
-}
-
-.tab:hover {
-  color: #112211;
-  background: #f9f9f9;
-}
-
-/* 클릭(활성) 상태일 때 밑줄 */
-.tab.active {
-  color: #112211;
-}
-
-.tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 20px;
-  width: 215px;
-  height: 0px;
-  border: 4px solid #8DD3BB;
-}
-
-/* ==================== 패널 시스템 ==================== */
-.panels .panel {
-  margin-bottom: 100px;
-}
-
-/* ==================== Account 섹션 ==================== */
-.account-title {
-  font-family: Acme;
-  font-weight: 400;
-  font-style: Regular;
-  font-size: 32px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #112211;
-  margin: 32px 0 24px;
-  text-align: left;
-}
-
-/* ==================== 카드 컴포넌트 ==================== */
-.card {
-  max-width: 1232px;
-  margin: 0 auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
-  margin-bottom: 50px;
-}
-
-.payment-title {
-  width: 130px;
-  height: 41px;
-  angle: 0 deg;
-  opacity: 1;
-  font-family: Acme;
-  font-weight: 400;
-  font-style: Regular;
-  font-size: 32px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  margin: 32px 0 24px;
-}
-
-.content-body {
-  width: 1232px;
-  height: auto;
-  angle: 0 deg;
-  opacity: 1;
-  border-radius: 16px;
-  display: flex;
-  justify-content: space-between;
-  flex-direction: column;
-  padding: 8px 8px;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.row:first-child {
-  border-top: 0;
-}
-
-.meta {
-  font-family: Montserrat;
-  font-weight: 400;
-  font-style: Regular;
-  font-size: 16px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #112211;
-  margin-bottom: 8px;
-}
-
-.value {
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 20px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #112211;
-}
-
-.btn {
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  border: 1px solid #bbf7d0;
-  color: #065f46;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-/* ==================== 예약내역 스타일 ==================== */
-.booking-wrap {
-  max-width: 1232px;
-  height: auto;
-  margin-bottom: 100px;
-}
-
-.booking-title {
-  font-family: Noto Sans;
-  font-weight: 900;
-  font-style: Display Black;
-  font-size: 32px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  margin: 32px 0 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sort-container {
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.custom-select-wrapper {
-  position: relative;
-}
-
-.sort-select {
-  appearance: none;
-  border: none;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 14px;
-  leading-trim: NONE;
-  line-height: normal;
-  letter-spacing: 0%;
-  text-align: left;
-  margin-right: -30px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.select-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 14px;
-  color: #112211;
-  right: 1px;
-  top: 22px;
-}
-
-.booking-sub {
-  width: 1232px;
-  height: 56px;
-  border-radius: 12px;
-  padding: 16px 24px;
-  gap: 12px;
-  angle: 0 deg;
-  opacity: 1;
-  display: flex;
-  align-items: center;
-  color: #111827;
-  margin-bottom: 12px;
-  background: #FFFFFF;
-  box-shadow: 0px 4px 16px 0px #1122110D;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 16px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-}
-
-.booking-sub img {
-  width: 21px;
-  height: 16.5px;
-  angle: 0 deg;
-  opacity: 1;
-  top: 3.75px;
-}
-
-.booking-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.booking-card {
-  width: 1232px;
-  height: 144px;
-  border-radius: 16px;
-  padding: 32px 24px;
-  background: #FFFFFF;
-  box-shadow: 0px 4px 16px 0px #1122110D;
-  display: grid;
-  grid-template-columns: 80px 1fr 1fr 1fr auto;
-  align-items: center;
-  gap: 16px;
-}
-
-/* 로고 */
-.bc-logo {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  border: 0.5px solid #8DD3BB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-}
-
-.bc-logo img {
-  width: 70px;
-  height: 70px;
-}
-
-/* 날짜 */
-.bc-dates {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.bc-date-section .label {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-
-.bc-date-section .val {
-  width: 98px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.bc-separator {
-  width: 20px;
-  height: 0px;
-  angle: 0 deg;
-  opacity: 1;
-  border: 1px solid black;
-}
-
-.bc-beeline {
-  width: 0px;
-  height: 48.00000000000004px;
-  angle: -90 deg;
-  opacity: 1;
-  border-width: 1px;
-  border: 1px solid #D7E2EE;
-}
-
-/* 시간 */
-.bc-times {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.bc-time-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.bc-time-info .label {
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 12px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #112211;
-}
-
-.bc-time-info .val {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-style: Medium;
-  font-size: 16px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  color: #111827;
-}
-
-.bc-guest {
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-}
-
-.time-icon {
-  width: 32px;
-  height: 32px;
-  angle: 0 deg;
-  opacity: 1;
-  border-radius: 4px;
-}
-
-/* 버튼 */
-.bc-actions {
-  width: 216px;
-  height: 48px;
-  angle: 0 deg;
-  opacity: 1;
-  gap: 16px;
-  display: flex;
-}
-
-.bc-btn {
-  width: 152px;
-  height: 100%;
-  angle: 0 deg;
-  opacity: 1;
-  gap: 4px;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  background: #8DD3BB;
-  border: none;
-  font-family: Montserrat;
-  font-weight: 500;
-  font-style: Medium;
-  font-size: 14px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-}
-
-.bc-next {
-  width: 48px;
-  height: 100%;
-  angle: 0 deg;
-  opacity: 1;
-  gap: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: 1px solid #8DD3BB;
-  border-radius: 4px;
-}
-
-.bc-next img {
-  width: 4.5px;
-  height: 9px;
-  angle: 0 deg;
-  opacity: 1;
-  top: 3.5px;
-  left: 6px;
-  border-width: 1.5px;
-}
-
-.bc-next:hover {
-  background-color: #8DD3BB;
-}
-
-/* ==================== 결제수단 스타일 ==================== */
-.billing {
-  max-width: 1232px;
-  margin: 0 auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
-}
-
-.billing .head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  font-weight: 800;
-  font-size: 20px;
-}
-
-/* ==================== 그리드 ==================== */
-.billing .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 378px);
-  grid-auto-rows: 212px;
-  gap: 16px;
-  padding: 24px;
-}
-
-/* ==================== 신용카드 ==================== */
-.credit-card {
-  width: 378px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-self: center;
-  padding: 20px;
-  border-radius: 16px;
-  background: #8DD3BB;
-}
-
-.cc-top {
-  width: 346px;
-  height: 61.5px;
-  angle: 0 deg;
-  opacity: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cc-number {
-  width: 71px;
-  height: 39px;
-  angle: 0 deg;
-  opacity: 1;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 32px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  vertical-align: middle;
-  color: #112211;
-}
-
-.cc-star {
-  width: 200px;
-  height: 29px;
-  angle: 0 deg;
-  opacity: 1;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 24px;
-  leading-trim: NONE;
-  letter-spacing: 0%;
-}
-
-.cc-bottom {
-  width: 346px;
-  height: 61.5px;
-  angle: 0 deg;
-  opacity: 1;
-  gap: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.cc-meta {
-  width: 62px;
-  height: 15px;
-  angle: 0 deg;
-  opacity: 1;
-  font-family: Montserrat;
-  font-weight: 500;
-  font-style: Medium;
-  font-size: 12px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  vertical-align: middle;
-  color: #112211;
-}
-
-.cc-meta-bold {
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 20px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  vertical-align: middle;
-  color: #112211;
-}
-
-.cc-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cc-brand img {
-  width: 51.77358627319336px;
-  height: 32.51381301879883px;
-  angle: 0 deg;
-  opacity: 1;
-}
-
-/* 삭제 버튼 */
-.cc-delete {
-  align-self: flex-start;
-}
-
-.cc-delete img {
-  width: 24px;
-  height: 24px;
-  angle: 0 deg;
-  opacity: 1;
-  cursor: pointer;
-}
-
-/* ==================== 카드 추가 버튼 ==================== */
-.add-card {
-  width: 378px;
-  height: 212px;
-  gap: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  align-self: center;
-  border-radius: 16px;
-  background: #fff;
-  border-radius: 16px;
-  border-width: 2px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px dashed #8DD3BB;
-}
-
-.add-card:hover {
-  background: #f3f4f6;
-}
-
-.add-card .plus {
-  width: 48px;
-  height: 48px;
-  angle: 0 deg;
-  opacity: 1;
-  top: 8px;
-  left: 8px;
-  border: 2px solid #8DD3BB;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  font-weight: 100;
-  color: #8DD3BB;
-  padding-bottom: 8px;
-}
-
-.new-card {
-  width: 96px;
-  height: 15px;
-  angle: 0 deg;
-  opacity: 0.75;
-  font-family: Montserrat;
-  font-weight: 500;
-  font-style: Medium;
-  font-size: 12px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-  vertical-align: middle;
-}
-
-/* ==================== 파일 입력 스타일 ==================== */
-.file-input {
-  display: none;
-}
-
-/* ==================== 모달 스타일 ==================== */
-.modal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 3000;
-}
-
-.modal.open {
-  display: block;
-}
-
-.modal .backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: saturate(120%) blur(2px);
-}
-
-.modal .card {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 640px;
-  max-width: calc(100% - 40px);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20);
-  padding: 28px;
-}
-
-.modal .title {
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 18px;
-}
-
-.modal .close {
-  position: absolute;
-  right: 18px;
-  top: 14px;
-  font-size: 20px;
-  line-height: 1;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  color: #111827;
-  opacity: 0.7;
-}
-
-.modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/*카드 모달*/
-.card-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
-}
-
-.card-modal.active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-full {
-  width: 640px;
-  height: 686.2418823242188px;
-  border-radius: 12px;
-  background: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  width: 512px;
-  height: 590px;
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-/* Header */
-.modal-header {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-/* Title */
-.modal-title {
-  font-family: Noto Sans, sans-serif;
-  font-weight: 700;
-  font-size: 32px;
-  margin: 16px 0 24px;
-  color: #112211;
-}
-
-/* Form */
-.form-group {
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.form-label {
-  position: absolute;
-  top: -8px;
-  left: 12px;
-  background: #FFFFFF;
-  padding: 0 4px;
-  font-family: Montserrat, sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: #112211;
-  z-index: 1;
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-family: Montserrat, sans-serif;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
-/* Card Number + VISA */
-.card-input-wrapper {
-  position: relative;
-}
-
-.card-input-wrapper input {
-  padding-right: 50px;
-  height: 56px;
-}
-
-.card-logo {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 20px;
-}
-
-/* Checkbox */
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: Montserrat, sans-serif;
-  font-size: 14px;
-  color: #112211;
-  margin-bottom: 20px;
-  padding-left: 0;
-}
-
-.checkbox-group label {
-  position: static;
-  background: none;
-  padding: 0;
-}
-
-/* Button */
-.save-card-btn {
-  width: 100%;
-  height: 48px;
-  padding: 8px 16px;
-  gap: 4px;
-  background: #8dd3bb;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat, sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-  color: #112211;
-  cursor: pointer;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-style: SemiBold;
-  font-size: 14px;
-  leading-trim: NONE;
-  line-height: 100%;
-  letter-spacing: 0%;
-}
-
-/* ==================== 폼 요소 스타일 ==================== */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: 13px;
-  color: #374151;
-  padding-bottom: 3px;
-}
-
-.input,
-.select {
-  height: 44px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  background: #ffffff;
-}
-
-.input:focus,
-.select:focus {
-  border-color: #86efac;
-  box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.35);
-}
-
-.submit {
-  height: 44px;
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-  background: #A7DCC6;
-  font-weight: 700;
-  color: #0f3f2e;
-}
-
-/* Newsletter Section */
-.newsletter-section {
-  background: rgba(141, 211, 187, 1);
-  padding: 80px 104px 80px 104px;
-  position: relative;
-  width: 100%;
-  height: 422px;
-  display: flex;
-  flex-direction: column;
-  margin-top: 60px;
-  z-index: 0;
-  margin-bottom: -513px;
-}
-
-.newsletter-content {
-  background: rgba(205, 234, 225, 1);
-  border-radius: 20px;
-  padding: 48px;
-  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 1232px;
-  height: 305px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-  margin-bottom: 40px;
-}
-
-.newsletter-left {
-  flex: 1;
-  max-width: 500px;
-}
-
-.newsletter-title {
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 900;
-  font-size: 44px;
-  line-height: 54px;
-  color: #112211;
-  margin-bottom: 24px;
-}
-
-.newsletter-info {
-  margin-bottom: 24px;
-}
-
-.newsletter-brand {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.8;
-  margin-bottom: 8px;
-}
-
-.newsletter-desc {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.7;
-}
-
-.newsletter-form {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.newsletter-input {
-  flex: 1;
-  padding: 16px;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 100%;
-  height: 56px;
-}
-
-.subscribe-btn {
-  padding: 16px 24px;
-  background: #112211;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 100%;
-  cursor: pointer;
-  height: 56px;
-}
-
-/* 우체통 디자인 */
-.mailbox-container {
-  position: relative;
-  width: 400px;
-  height: 305px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.mailbox-back {
-  position: absolute;
-  width: 208px;
-  height: 191px;
-  top: 47px;
-  left: 0px;
-  background: rgba(101, 181, 153, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 5;
-}
-
-.mailbox-base {
-  position: absolute;
-  width: 187px;
-  height: 179px;
-  top: 59px;
-  left: 10px;
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  background: rgba(84, 104, 105, 1);
-  z-index: 10;
-}
-
-.mailbox-front {
-  position: absolute;
-  width: 291px;
-  height: 191px;
-  top: 47px;
-  left: 71px;
-  background: rgba(17, 34, 17, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 4;
-}
-
-.mailbox-flag {
-  position: absolute;
-  width: 169px;
-  height: 40px;
-  top: 154px;
-  left: 231px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
-
-.mailbox-flag2 {
-  position: absolute;
-  width: 39px;
-  height: 77px;
-  top: 154px;
-  left: 361px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
-
-.mailbox-pole {
-  position: absolute;
-  width: 47px;
-  height: 188px;
-  top: 117px;
-  left: 194px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
-
-.mailbox-stand-base {
-  position: absolute;
-  width: 85px;
-  height: 57px;
-  top: 212px;
-  left: 156px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
-
-.mailbox-stand-front {
-  position: absolute;
-  width: 85px;
-  height: 188px;
-  top: 117px;
-  left: 156px;
-  background: rgba(223, 173, 146, 1);
-  z-index: 2;
-}
-
-/* Footer Content */
-.footer-content {
-  width: 1232px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  position: relative;
-  z-index: 1;
-  gap: 64px;
-  padding-bottom: 40px;
-}
-
-/* Social Icons */
-.social-icons {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-/* Footer Columns */
-.footer-links {
-  display: flex;
-  gap: 60px;
-}
-
-.footer-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.footer-column h4 {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  margin-bottom: 8px;
-}
-
-.footer-column a {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 100%;
-  color: #112211;
-  text-decoration: none;
-  opacity: 0.7;
-}
-
-.footer-column a:hover {
-  opacity: 1;
-}
-/* 비활성화된 버튼 스타일 */
-.btn-disabled {
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.btn:disabled {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* 로딩 메시지 */
-.loading-message {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-family: Montserrat;
-  font-size: 16px;
-  color: #6b7280;
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .hotel-account-container {
+    font-family: 'Montserrat', system-ui, -apple-system, "Noto Sans KR", Arial, sans-serif;
+    color: #112211;
+    background: #FAFBFC;
+    min-width: 1440px;
+    max-width: 1440px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 21px 104px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 87px;
+    width: 100%;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1232px;
+    margin: 0 auto;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .nav-item {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    line-height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #112211;
+    text-decoration: none;
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+  }
+
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    background: #D9D9D9;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .online-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #112211;
+    border-radius: 50%;
+    bottom: 2px;
+    right: 2px;
+  }
+
+  /* User Dropdown */
+  .user-dropdown {
+    position: fixed;
+    top: 82px;
+    left: 64%;
+    width: 329px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 32px;
+    display: none;
+    z-index: 1001;
+  }
+
+  .user-dropdown.active {
+    display: block;
+  }
+
+  .dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dropdown-avatar {
+    width: 64px;
+    height: 64px;
+    background: #D9D9D9;
+    border-radius: 50%;
+  }
+
+  .dropdown-info h3 {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    margin-bottom: 4px;
+  }
+
+  .dropdown-info p {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.75;
+  }
+
+  .dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+    padding-top: 24px;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #112211;
+    text-decoration: none;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 100%;
+    padding: 4px 0;
+  }
+
+  /* ==================== 메인 컨테이너 ==================== */
+  .container {
+    max-width: 1232px;
+    width: 1232px;
+    margin: 0 auto 80px;
+    padding: 0;
+  }
+
+  /* ==================== 커버 이미지 ==================== */
+  .cover {
+    width: 100%;
+    height: 350px;
+    angle: 0 deg;
+    opacity: 1;
+    margin-top: 150px;
+    display: flex;
+    position: relative;
+    border-radius: 12px;
+  }
+
+  .cover-img {
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  .upload {
+    position: absolute;
+    top: 270px;
+    right: 20px;
+    width: 180px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 4px solid #8DD3BB;
+    border-radius: 4px;
+    background: #8DD3BB;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    color: #112211;
+    z-index: 1;
+  }
+
+  .upload img {
+    width: 16px;
+    height: 13.013124465942383px;
+    angle: 0 deg;
+    opacity: 1;
+    top: 1.49px;
+    border-width: 0.05px;
+  }
+
+  .upload:hover {
+    background: #7cc5a8;
+    border-color: #7cc5a8;
+  }
+
+  /* ==================== 프로필 섹션 ==================== */
+  .profile {
+    margin-top: -58px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .profile .avatar-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .profile .avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #FF8682;
+    box-shadow: 0 10px 30px rgba(17, 34, 17, 0.08);
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .avatar-edit {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    left: 80px;
+    bottom: 0px;
+    gap: 10px;
+    angle: 0 deg;
+    opacity: 1;
+    border-radius: 45px;
+    background: #FF8682;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 11;
+  }
+
+  .avatar-edit img {
+    width: 17.437562942504883px;
+    height: 17.437328338623047px;
+    angle: 0 deg;
+    opacity: 1;
+    top: 3.28px;
+    left: 3.28px;
+    border-width: 2.06px;
+  }
+
+  .avatar-edit:hover {
+    background: #7cc5a8;
+  }
+
+  .name {
+    margin-top: 10px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 24px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-align: center;
+  }
+
+  .email {
+    padding-top: 10px;
+    font-family: Montserrat;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-align: center;
+    color: #112211;
+  }
+
+  /* ==================== 탭 메뉴 ==================== */
+  .tabs {
+    width: 1232px;
+    height: 80px;
+    margin: 24px auto 0;
+    display: flex;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+    overflow: hidden;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 16px 24px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 16px;
+    color: #6b7280;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  /* 탭 사이 구분선 */
+  .tab-beeline {
+    width: 0px;
+    height: 48.00000000000004px;
+    angle: -90 deg;
+    opacity: 1;
+    border-width: 1px;
+    border: 1px solid #D7E2EE;
+    margin-top: 16px;
+  }
+
+  .tab:hover {
+    color: #112211;
+    background: #f9f9f9;
+  }
+
+  /* 클릭(활성) 상태일 때 밑줄 */
+  .tab.active {
+    color: #112211;
+  }
+
+  .tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    width: 215px;
+    height: 0px;
+    border: 4px solid #8DD3BB;
+  }
+
+  /* ==================== 패널 시스템 ==================== */
+  .panels .panel {
+    margin-bottom: 100px;
+  }
+
+  /* ==================== Account 섹션 ==================== */
+  .account-title {
+    font-family: Acme;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 32px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
+    margin: 32px 0 24px;
+    text-align: left;
+  }
+
+  /* ==================== 카드 컴포넌트 ==================== */
+  .card {
+    max-width: 1232px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+    margin-bottom: 50px;
+  }
+
+  .payment-title {
+    width: 130px;
+    height: 41px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Acme;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 32px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    margin: 32px 0 24px;
+  }
+
+  .content-body {
+    width: 1232px;
+    height: auto;
+    angle: 0 deg;
+    opacity: 1;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 8px 8px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 24px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .row:first-child {
+    border-top: 0;
+  }
+
+  .meta {
+    font-family: Montserrat;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
+    margin-bottom: 8px;
+  }
+
+  .value {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 20px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #065f46;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* ==================== 예약내역 스타일 ==================== */
+  .booking-wrap {
+    max-width: 1232px;
+    height: auto;
+    margin-bottom: 100px;
+  }
+
+  .booking-title {
+    font-family: Noto Sans;
+    font-weight: 900;
+    font-style: Display Black;
+    font-size: 32px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    margin: 32px 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sort-container {
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .custom-select-wrapper {
+    position: relative;
+  }
+
+  .sort-select {
+    appearance: none;
+    border: none;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    leading-trim: NONE;
+    line-height: normal;
+    letter-spacing: 0%;
+    text-align: left;
+    margin-right: -30px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .select-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 14px;
+    color: #112211;
+    right: 1px;
+    top: 22px;
+  }
+
+  .booking-sub {
+    width: 1232px;
+    height: 56px;
+    border-radius: 12px;
+    padding: 16px 24px;
+    gap: 12px;
+    angle: 0 deg;
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    color: #111827;
+    margin-bottom: 12px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px 0px #1122110D;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+  }
+
+  .booking-sub img {
+    width: 21px;
+    height: 16.5px;
+    angle: 0 deg;
+    opacity: 1;
+    top: 3.75px;
+  }
+
+  .booking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .booking-card {
+    width: 1232px;
+    height: 144px;
+    border-radius: 16px;
+    padding: 32px 24px;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 16px 0px #1122110D;
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr auto;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* 로고 */
+  .bc-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    border: 0.5px solid #8DD3BB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .bc-logo img {
+    width: 70px;
+    height: 70px;
+  }
+
+  /* 날짜 */
+  .bc-dates {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .bc-date-section .label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  .bc-date-section .val {
+    width: 98px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .bc-separator {
+    width: 20px;
+    height: 0px;
+    angle: 0 deg;
+    opacity: 1;
+    border: 1px solid black;
+  }
+
+  .bc-beeline {
+    width: 0px;
+    height: 48.00000000000004px;
+    angle: -90 deg;
+    opacity: 1;
+    border-width: 1px;
+    border: 1px solid #D7E2EE;
+  }
+
+  /* 시간 */
+  .bc-times {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bc-time-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bc-time-info .label {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
+  }
+
+  .bc-time-info .val {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #111827;
+  }
+
+  .bc-guest {
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .time-icon {
+    width: 32px;
+    height: 32px;
+    angle: 0 deg;
+    opacity: 1;
+    border-radius: 4px;
+  }
+
+  /* 버튼 */
+  .bc-actions {
+    width: 216px;
+    height: 48px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 16px;
+    display: flex;
+  }
+
+  .bc-btn {
+    width: 152px;
+    height: 100%;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 4px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    background: #8DD3BB;
+    border: none;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 14px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+  }
+
+  .bc-next {
+    width: 48px;
+    height: 100%;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid #8DD3BB;
+    border-radius: 4px;
+  }
+
+  .bc-next img {
+    width: 4.5px;
+    height: 9px;
+    angle: 0 deg;
+    opacity: 1;
+    top: 3.5px;
+    left: 6px;
+    border-width: 1.5px;
+  }
+
+  .bc-next:hover {
+    background-color: #8DD3BB;
+  }
+
+  /* ==================== 결제수단 스타일 ==================== */
+  .billing {
+    max-width: 1232px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(17, 34, 17, 0.05);
+  }
+
+  .billing .head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 800;
+    font-size: 20px;
+  }
+
+  /* ==================== 그리드 ==================== */
+  .billing .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 378px);
+    grid-auto-rows: 212px;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  /* ==================== 신용카드 ==================== */
+  .credit-card {
+    width: 378px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-self: center;
+    padding: 20px;
+    border-radius: 16px;
+    background: #8DD3BB;
+  }
+
+  .cc-top {
+    width: 346px;
+    height: 61.5px;
+    angle: 0 deg;
+    opacity: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cc-number {
+    width: 71px;
+    height: 39px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 32px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    color: #112211;
+  }
+
+  .cc-star {
+    width: 200px;
+    height: 29px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 24px;
+    leading-trim: NONE;
+    letter-spacing: 0%;
+  }
+
+  .cc-bottom {
+    width: 346px;
+    height: 61.5px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .cc-meta {
+    width: 62px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    color: #112211;
+  }
+
+  .cc-meta-bold {
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 20px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    color: #112211;
+  }
+
+  .cc-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cc-brand img {
+    width: 51.77358627319336px;
+    height: 32.51381301879883px;
+    angle: 0 deg;
+    opacity: 1;
+  }
+
+  /* 삭제 버튼 */
+  .cc-delete {
+    align-self: flex-start;
+  }
+
+  .cc-delete img {
+    width: 24px;
+    height: 24px;
+    angle: 0 deg;
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  /* ==================== 카드 추가 버튼 ==================== */
+  .add-card {
+    width: 378px;
+    height: 212px;
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    align-self: center;
+    border-radius: 16px;
+    background: #fff;
+    border-radius: 16px;
+    border-width: 2px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px dashed #8DD3BB;
+  }
+
+  .add-card:hover {
+    background: #f3f4f6;
+  }
+
+  .add-card .plus {
+    width: 48px;
+    height: 48px;
+    angle: 0 deg;
+    opacity: 1;
+    top: 8px;
+    left: 8px;
+    border: 2px solid #8DD3BB;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 100;
+    color: #8DD3BB;
+    padding-bottom: 8px;
+  }
+
+  .new-card {
+    width: 96px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 0.75;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+  }
+
+  /* ==================== 파일 입력 스타일 ==================== */
+  .file-input {
+    display: none;
+  }
+
+  /* ==================== 모달 스타일 ==================== */
+  .modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 3000;
+  }
+
+  .modal.open {
+    display: block;
+  }
+
+  .modal .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: saturate(120%) blur(2px);
+  }
+
+  .modal .card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 640px;
+    max-width: calc(100% - 40px);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20);
+    padding: 28px;
+  }
+
+  .modal .title {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 18px;
+  }
+
+  .modal .close {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    font-size: 20px;
+    line-height: 1;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: #111827;
+    opacity: 0.7;
+  }
+
+  .modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /*카드 모달*/
+  .card-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+  }
+
+  .card-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-full {
+    width: 640px;
+    height: 686.2418823242188px;
+    border-radius: 12px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    width: 512px;
+    height: 590px;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  /* Header */
+  .modal-header {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+
+  /* Title */
+  .modal-title {
+    font-family: Noto Sans, sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    margin: 16px 0 24px;
+    color: #112211;
+  }
+
+  /* Form */
+  .form-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .form-label {
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    background: #FFFFFF;
+    padding: 0 4px;
+    font-family: Montserrat, sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #112211;
+    z-index: 1;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: Montserrat, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+  }
+
+  /* Card Number + VISA */
+  .card-input-wrapper {
+    position: relative;
+  }
+
+  .card-input-wrapper input {
+    padding-right: 50px;
+    height: 56px;
+  }
+
+  .card-logo {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+  }
+
+  /* Checkbox */
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: Montserrat, sans-serif;
+    font-size: 14px;
+    color: #112211;
+    margin-bottom: 20px;
+    padding-left: 0;
+  }
+
+  .checkbox-group label {
+    position: static;
+    background: none;
+    padding: 0;
+  }
+
+  /* Button */
+  .save-card-btn {
+    width: 100%;
+    height: 48px;
+    padding: 8px 16px;
+    gap: 4px;
+    background: #8dd3bb;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #112211;
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 14px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+  }
+
+  /* ==================== 폼 요소 스타일 ==================== */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .label {
+    font-size: 13px;
+    color: #374151;
+    padding-bottom: 3px;
+  }
+
+  .input,
+  .select {
+    height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: #ffffff;
+  }
+
+  .input:focus,
+  .select:focus {
+    border-color: #86efac;
+    box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.35);
+  }
+
+  .submit {
+    height: 44px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #A7DCC6;
+    font-weight: 700;
+    color: #0f3f2e;
+  }
+
+  /* Newsletter Section */
+  .newsletter-section {
+    background: rgba(141, 211, 187, 1);
+    padding: 80px 104px 80px 104px;
+    position: relative;
+    width: 100%;
+    height: 422px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 60px;
+    z-index: 0;
+    margin-bottom: -513px;
+  }
+
+  .newsletter-content {
+    background: rgba(205, 234, 225, 1);
+    border-radius: 20px;
+    padding: 48px;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1232px;
+    height: 305px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 40px;
+  }
+
+  .newsletter-left {
+    flex: 1;
+    max-width: 500px;
+  }
+
+  .newsletter-title {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 900;
+    font-size: 44px;
+    line-height: 54px;
+    color: #112211;
+    margin-bottom: 24px;
+  }
+
+  .newsletter-info {
+    margin-bottom: 24px;
+  }
+
+  .newsletter-brand {
+    font-family: Acme;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .newsletter-desc {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.7;
+  }
+
+  .newsletter-form {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .newsletter-input {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 100%;
+    height: 56px;
+  }
+
+  .subscribe-btn {
+    padding: 16px 24px;
+    background: #112211;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 100%;
+    cursor: pointer;
+    height: 56px;
+  }
+
+  /* 우체통 디자인 */
+  .mailbox-container {
+    position: relative;
+    width: 400px;
+    height: 305px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .mailbox-back {
+    position: absolute;
+    width: 208px;
+    height: 191px;
+    top: 47px;
+    left: 0px;
+    background: rgba(101, 181, 153, 1);
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    z-index: 5;
+  }
+
+  .mailbox-base {
+    position: absolute;
+    width: 187px;
+    height: 179px;
+    top: 59px;
+    left: 10px;
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    background: rgba(84, 104, 105, 1);
+    z-index: 10;
+  }
+
+  .mailbox-front {
+    position: absolute;
+    width: 291px;
+    height: 191px;
+    top: 47px;
+    left: 71px;
+    background: rgba(17, 34, 17, 1);
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    z-index: 4;
+  }
+
+  .mailbox-flag {
+    position: absolute;
+    width: 169px;
+    height: 40px;
+    top: 154px;
+    left: 231px;
+    background: rgba(255, 134, 130, 1);
+    z-index: 6;
+  }
+
+  .mailbox-flag2 {
+    position: absolute;
+    width: 39px;
+    height: 77px;
+    top: 154px;
+    left: 361px;
+    background: rgba(255, 134, 130, 1);
+    z-index: 6;
+  }
+
+  .mailbox-pole {
+    position: absolute;
+    width: 47px;
+    height: 188px;
+    top: 117px;
+    left: 194px;
+    background: rgba(164, 128, 109, 1);
+    z-index: 3;
+  }
+
+  .mailbox-stand-base {
+    position: absolute;
+    width: 85px;
+    height: 57px;
+    top: 212px;
+    left: 156px;
+    background: rgba(164, 128, 109, 1);
+    z-index: 3;
+  }
+
+  .mailbox-stand-front {
+    position: absolute;
+    width: 85px;
+    height: 188px;
+    top: 117px;
+    left: 156px;
+    background: rgba(223, 173, 146, 1);
+    z-index: 2;
+  }
+
+  /* Footer Content */
+  .footer-content {
+    width: 1232px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+    gap: 64px;
+    padding-bottom: 40px;
+  }
+
+  /* Social Icons */
+  .social-icons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  /* Footer Columns */
+  .footer-links {
+    display: flex;
+    gap: 60px;
+  }
+
+  .footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-column h4 {
+    font-family: Acme;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    margin-bottom: 8px;
+  }
+
+  .footer-column a {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+    text-decoration: none;
+    opacity: 0.7;
+  }
+
+  .footer-column a:hover {
+    opacity: 1;
+  }
+  /* 비활성화된 버튼 스타일 */
+  .btn-disabled {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn:disabled {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* 로딩 메시지 */
+  .loading-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-family: Montserrat;
+    font-size: 16px;
+    color: #6b7280;
+  }
+  /* 쿠폰 모달 스타일 */
+  .coupon-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .coupon-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .coupon-modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .coupon-modal-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #112211;
+    margin: 0;
+  }
+
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .modal-close-btn:hover {
+    color: #112211;
+  }
+
+  .coupon-modal-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .coupon-count {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .coupon-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #8DD3BB 0%, #7CC5AE 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .coupon-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(141, 211, 187, 0.4);
+  }
+
+  .coupon-badge {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .discount {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #8DD3BB;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .discount-label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .coupon-info {
+    flex: 1;
+  }
+
+  .coupon-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    margin: 0 0 8px 0;
+  }
+
+  .coupon-expiry {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+
+  .coupon-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-use-coupon,
+  .btn-close {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-use-coupon {
+    background: #8DD3BB;
+    color: #112211;
+  }
+
+  .btn-use-coupon:hover {
+    background: #7CC5AE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+  }
+
+  .btn-close {
+    background: white;
+    color: #112211;
+    border: 2px solid #e0e0e0;
+  }
+
+  .btn-close:hover {
+    border-color: #8DD3BB;
+    color: #8DD3BB;
+  }
+
+  /* 반응형 */
+  @media screen and (max-width: 768px) {
+    .coupon-modal {
+      width: 95%;
+      max-height: 90vh;
+    }
+
+    .coupon-modal-header {
+      padding: 24px 20px 16px;
+    }
+
+    .coupon-modal-header h2 {
+      font-size: 20px;
+    }
+
+    .coupon-modal-content {
+      padding: 16px 20px;
+    }
+
+    .coupon-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .coupon-badge {
+      align-self: flex-start;
+    }
+
+    .coupon-modal-footer {
+      flex-direction: column;
+      padding: 16px 20px;
+    }
+  }
+
 </style>

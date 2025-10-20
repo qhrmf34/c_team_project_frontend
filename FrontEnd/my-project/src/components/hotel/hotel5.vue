@@ -25,31 +25,50 @@
       </nav>
     </header>
 
-    <!-- Dropdown - 기존과 동일 -->
     <div class="user-dropdown" :class="{ active: isDropdownActive }" ref="userDropdown">
-      <div class="dropdown-header">
-        <div class="dropdown-avatar"></div>
-        <div class="dropdown-info">
-          <h3>{{ displayUserName }}</h3>
-          <p>{{ userStatus }}</p>
+      <!-- 로그인된 경우 -->
+      <template v-if="isLoggedIn">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>{{ displayUserName }}</h3>
+            <p>{{ userStatus }}</p>
+          </div>
         </div>
-      </div>
-      <div class="dropdown-menu">
-        <a href="#" class="dropdown-item" @click="goToAccount">
-          <img src="/images/hotel_img/account.jpg">계정
-        </a>
-        <a href="#" class="dropdown-item" @click="goToPaymentHistory">
-          <img src="/images/hotel_img/card.jpg">결제내역
-        </a>
-        <a href="#" class="dropdown-item">
-          <img src="/images/hotel_img/setting.jpg">설정
-        </a>
-        <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
-        <a href="#" class="dropdown-item" @click="handleLogout">
-          <img src="/images/hotel_img/logout.jpg">로그아웃
-        </a>
-      </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToAccount">
+            <img src="/images/hotel_img/account.jpg">계정
+          </a>
+          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+            <img src="/images/hotel_img/card.jpg">결제내역
+          </a>
+          <a href="#" class="dropdown-item">
+            <img src="/images/hotel_img/setting.jpg">설정
+          </a>
+          <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
+          <a href="#" class="dropdown-item" @click="handleLogout">
+            <img src="/images/hotel_img/logout.jpg">로그아웃
+          </a>
+        </div>
+      </template>
+
+      <!-- 로그인되지 않은 경우 -->
+      <template v-else>
+        <div class="dropdown-header">
+          <div class="dropdown-avatar"></div>
+          <div class="dropdown-info">
+            <h3>Guest</h3>
+            <p>로그인이 필요합니다</p>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item" @click="goToLogin">
+            <img src="/images/hotel_img/account.jpg">로그인
+          </a>
+        </div>
+      </template>
     </div>
+
 
     <!-- ✅ Loading -->
     <div v-if="isLoading" class="loading-container">
@@ -296,11 +315,43 @@
           </div>
         </div>
       </div>
+    <!-- 쿠폰 지급 모달 -->
+    <div v-if="showCouponModal" class="coupon-modal-overlay" @click="closeCouponModal">
+      <div class="coupon-modal" @click.stop>
+        <div class="coupon-modal-header">
+          <h2>🎉 쿠폰이 지급되었습니다!</h2>
+          <button class="modal-close-btn" @click="closeCouponModal">✕</button>
+        </div>
+
+        <div class="coupon-modal-content">
+          <p class="coupon-count">총 {{ receivedCoupons.length }}개의 쿠폰을 받았습니다</p>
+
+          <div class="coupon-list">
+            <div v-for="coupon in receivedCoupons" :key="coupon.id" class="coupon-item">
+              <div class="coupon-badge">
+                <span class="discount">{{ formatCouponDiscount(coupon.discount) }}</span>
+                <span class="discount-label">할인</span>
+              </div>
+
+              <div class="coupon-info">
+                <h3>{{ coupon.couponName }}</h3>
+                <p class="coupon-expiry">유효기간: ~ {{ formatCouponDate(coupon.lastDate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="coupon-modal-footer">
+          <button class="btn-close" @click="closeCouponModal">닫기</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
-import { authUtils, ticketAPI, paymentAPI, adminAPI } from '@/utils/commonAxios'
+import { authUtils, ticketAPI, paymentAPI, adminAPI, memberCouponAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 import JsBarcode from 'jsbarcode'
 
@@ -312,7 +363,8 @@ export default {
       email: '',
       userInfo: null,
       isLoggedIn: false,
-      
+      showCouponModal: false,
+      receivedCoupons: [],
       // ✅ 티켓 데이터
       ticket: null,
       isLoading: true,
@@ -361,6 +413,11 @@ export default {
   },
   
   methods: {
+    goToLogin() {
+      this.isDropdownActive = false;
+      this.$router.push('/login');
+    },
+
     // 티켓 로드
     async loadTicket() {
       try {
@@ -585,12 +642,52 @@ export default {
       }
     },
     
-    subscribe() {
-      if (this.email) {
-        console.log('Subscribed:', this.email)
-        this.email = ''
+    async subscribe() {
+      // 로그인 확인
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
+      }
+
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.newsletter.email = '' // 이메일 입력창 초기화
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
       }
     },
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+    },
+
     
     goToHotel() {
       if (this.isLoggedIn) {
@@ -638,1163 +735,1398 @@ export default {
 <style scoped>
 
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 21px 104px;
-            background: #FFFFFF;
-            box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            height: 87px;
-            width: 100%;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1232px;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-item {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #112211;
-            text-decoration: none;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: #D9D9D9;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .online-dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #112211;
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-        }
-        
-        /* User Dropdown */
-        .user-dropdown {
-            position: fixed;
-            top: 82px;
-            left: 64%;
-            width: 329px;
-            background: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 32px;
-            display: none;
-            z-index: 1001;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .dropdown-avatar {
-            width: 64px;
-            height: 64px;
-            background: #D9D9D9;
-            border-radius: 50%;
-        }
-
-        .dropdown-info h3 {
-            font-family: Montserrat;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 100%;
-            color: #112211;
-            margin-bottom: 4px;
-        }
-
-        .dropdown-info p {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 100%;
-            color: #112211;
-            opacity: 0.75;
-        }
-
-        .dropdown-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            border-top: 0.5px solid rgba(17, 34, 17, 0.25);
-            padding-top: 24px;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #112211;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-size: 14px;
-            line-height: 100%;
-            padding: 4px 0;
-        }
-
-        /* Breadcrumb */
-        .breadcrumb {
-            width: 100%;
-            height: 24px;
-            gap: 8px;
-            background: #F8F9FA;
-            margin-top: 135px;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            color: #666666;
-            display: flex;
-            align-items: center;
-            margin-left: 104px;
-            margin-bottom: 30px;
-        }     
-
-        .breadcrumb a {
-            color: #666666;
-            text-decoration: none;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .breadcrumb a:hover {
-            color: #112211;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 20px 104px;
-            max-width: 1440px;
-            width: 100%;
-        }
-
-        /* Hotel Header */
-        .hotel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-radius: 12px;
-            gap: 32px;
-            margin-bottom: 30px;
-        }
-
-        /* 왼쪽 호텔 정보 */
-        .hotel-info {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
-        }
-
-        .hotel-title {
-            font-family: 'ABeeZee', sans-serif;
-            font-weight: 400;
-            font-size: 20px;
-            color: #112211;
-            display: flex;
-            align-items: center;
-            margin-top: 20px;
-            margin-bottom: 12px;
-        }
-
-        .hotel-location-line {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #666666;
-        }
-        .hotel-location-line img{
-            width: 11.25px;
-            height: 15.749412536621094px;
-            top: 1.13px;
-            left: 3.38px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-
-        /* 오른쪽 가격 & 버튼 */
-        .hotel-actions {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .hotel-price {
-            text-align: right;
-        }
-
-        .price-amount {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            font-size: 32px;
-            color: rgba(255, 134, 130, 1);
-        }
-
-        .price-unit {
-            font-size: 24px;
-            color: rgba(255, 134, 130, 1);
-        }
-
-        .hotel-buttons {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .action-btn {
-            background: none;
-            border: 1px solid #8DD3BB;
-            border-radius: 4px;
-            color: #112211;
-            cursor: pointer;
-            width: 48px;
-            height: 48px;
-            gap: 10px;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            font-size: 12px;
-            display: flex;
-            align-items: center;    
-            justify-content: center;
-            
-        }
-        
-        .action-btn img{
-            width: 15.001760482788086px;
-            height: 16.24186897277832px;
-            top: 1.88px;
-            left: 2.5px;
-            angle: 0 deg;
-            opacity: 1;
-            border-width: 0.05px;
-        }
-        
-        .action-btn-download{
-            width: 150px;
-            height: 48px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 4px;
-            border-radius: 4px;
-            padding: 8px 16px;
-            background: rgba(141, 211, 187, 1);
-            border: none;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            cursor: pointer;
-
-        }
-
-        /* Ticket styles from first code */
-        .ticket-container {
-            display: flex;
-            justify-content: center;
-            margin: 40px 0;
-        }
-
-        .ticket {
-            display: flex;
-            width: 1231px;
-            height: 309px;
-            overflow: hidden;
-            margin: 0 auto; 
-        }
-        /* 왼쪽 날짜 구역 */
-        .ticket-left {
-            width: 246px;
-            height: 100%;
-            background: #e5f2ed;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-            font-weight: bold;
-            color: #333;
-            border-radius: 12px 0 0 12px;
-        }
-
-        .ticket-left-updown{
-            width: 188px;
-            height: 58px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 4px;
-            padding-left: 20px;
-        }
-        
-        .left-label{
-            width: 188px;
-            height: 39px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 30px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-        .left-check{
-            width: 70px;
-            height: 15px;
-            angle: 0 deg;
-            opacity: 0.6;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            text-align: left;
-        }
-
-        .left-image{
-            width: 60px;
-            height: 92px;
-            angle: -0 deg;
-            opacity: 1;
-            gap: 8px;
-            border-radius: 4px;
-            padding-left: 20px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-        .left-image img{
-          width: 36px;
-          height: 100%;
-        }
-
-        /* 중앙 메인 구역 */
-        .ticket-center {
-            width: 610px;
-            height: 309px;
-            angle: 0 deg;
-            opacity: 1;
-            position: relative;
-            border-radius: 0 12px 12px 0;
-            background-color: white;
-        }
-        .top-bar {
-            width: 100%;
-            height: 96px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 46px;
-            border-radius: 0px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #8DD3BB;
-        }
-        .top-bar > div {
-            margin: 0 14px; /* 각 요소에 좌우 여백 */
-        }
-        .guest {
-            display: flex;
-            align-items: center;
-        }
-        .guest img {
-            width: 48px;
-            height: 48px;
-            angle: 0 deg;
-            opacity: 1;
-            border: 1px solid #FFFFFF;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .guest span{
-            width: 141px;
-            height: 25px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Acme;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-
-        .center-bedroom{
-            width: 228px;
-            height: 36px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Acme;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            text-align: right;
-
-        }
-
-        .info-grid {
-            width: 610px;
-            height: 83px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 32px;
-            padding: 24px;
-            display: flex;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 108px;
-            height: 35px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 8px;
-
-        }
-        .info-item-img{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            angle: 0 deg;
-            opacity: 1;
-            border-radius: 4px;
-        }
-        .info-item-content {
-            width: 68px;
-            height: 35px;
-            angle: 0 deg;
-            opacity: 1;
-        }
-
-        .info-item-check{
-            width: 34px;
-            height: 15px;
-            angle: 0 deg;
-            opacity: 0.6;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-        }
-
-        .info-item-time{
-            width: 68px;
-            height: 20px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-
-        }
-
-        .info-check{
-            width: 50px;
-            height: 15px;
-            angle: 0 deg;
-            opacity: 0.6;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-
-        }
-
-        .info-item-time{
-            width: 68px;
-            height: 20px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 16px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-
-        }
-
-        .ticket-number{
-            height: 130px;
-            width: 610px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .ticket-air{
-            width: 45px;
-            height: 39px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 32px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            padding-left: 30px;
-        }
-        .ticket-num{
-            width: 60px;
-            height: 15px;
-            angle: 0 deg;
-            opacity: 0.6;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 12px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            margin-top: 10px;
-        }
-
-
-        .barcode {
-            width: 248px;
-            height: 100%;
-            angle: 0 deg;
-            opacity: 1;
-            display: flex;
-            flex-direction: column;   
-            justify-content: flex-end; 
-            align-items: center; 
-        }
-
-        .barcode img{
-            height: 81px;
-       }
-
-        /* 오른쪽 호텔 로고 (독립 카드) */
-        .ticket-right {
-            width: 375px;
-            height: 100%;
-            background: white;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-left: 2px;
-        }
-        .ticket-right img{
-            width: 161px;
-            height: 161px;
-            angle: 0 deg;
-            opacity: 1;
-            top: 74px;
-            left: 107px;
-        }
-
-        /* Terms and Conditions Section */
-        .terms-section {
-            width: 1232px;
-            height: 549px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 34px;  
-            margin: 60px auto;
-        }
-
-        .terms-title {
-            width: 100%;
-            height: 29px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 8px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 600;
-            font-style: SemiBold;
-            font-size: 24px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 32px;
-        }
-
-        .terms-payment {
-            width: 1232px;
-            height: 272px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 16px;
-
-        }
-
-        .section-title {
-            width: 103px;
-            height: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 16px;
-            margin-top: 32px;
-        }
-
-        .section-title:first-child {
-            margin-top: 0;
-        }
-
-        .terms-text {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #112211;
-            margin-bottom: 16px;
-        }
-
-        .terms-list {
-            margin: 16px 0;
-            padding-left: 20px;
-        }
-
-        .terms-list li {
-            font-family: Montserrat;
-            font-weight: 400;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #112211;
-            margin-bottom: 8px;
-        }
-
-        .contact-info {
-            width: 1232px;
-            height: 180px;
-            angle: 0 deg;
-            opacity: 1;
-            gap: 16px;
-            margin-top: 40px;
-        }
-
-        .contact-title {
-            width: 112px;
-            height: 24px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 500;
-            font-style: Medium;
-            font-size: 20px;
-            leading-trim: NONE;
-            line-height: 100%;
-            letter-spacing: 0%;
-            color: #112211;
-            margin-bottom: 12px;
-        }
-
-        .contact-details {
-            width: 100%;
-            height: 140px;
-            angle: 0 deg;
-            opacity: 1;
-            font-family: Montserrat;
-            font-weight: 400;
-            font-style: Regular;
-            font-size: 14px;
-            leading-trim: NONE;
-            line-height: 20px;
-            letter-spacing: 0%;
-            color: #112211;
-        }
-
-        .contact-link {
-            color: rgba(17, 34, 17, 1);
-;
-            text-decoration: none;
-        }
-
-        .contact-link:hover {
-            text-decoration: underline;
-        }
-
-/* Newsletter Section */
-.newsletter-section {
-  background: rgba(141, 211, 187, 1);
-  padding: 80px 104px 80px 104px;
-  position: relative;
-  width: 100%;
-  height: 422px;
-  display: flex;
-  flex-direction: column;
-  margin-top: 60px;
-  z-index: 0;
-  margin-bottom: -513px;
-}
-
-.newsletter-content {
-  background: rgba(205, 234, 225, 1);
-  border-radius: 20px;
-  padding: 48px;
-  box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 1232px;
-  height: 305px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-  margin-bottom: 40px;
-}
-
-.newsletter-left {
-  flex: 1;
-  max-width: 500px;
-}
-
-.newsletter-title {
-  font-family: 'Noto Sans', sans-serif;
-  font-weight: 900;
-  font-size: 44px;
-  line-height: 54px;
-  color: #112211;
-  margin-bottom: 24px;
-}
-
-.newsletter-info {
-  margin-bottom: 24px;
-}
-
-.newsletter-brand {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 20px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.8;
-  margin-bottom: 8px;
-}
-
-.newsletter-desc {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  opacity: 0.7;
-}
-
-.newsletter-form {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.newsletter-input {
-  flex: 1;
-  padding: 16px;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 100%;
-  height: 56px;
-}
-
-.subscribe-btn {
-  padding: 16px 24px;
-  background: #112211;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 4px;
-  font-family: Montserrat;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 100%;
-  cursor: pointer;
-  height: 56px;
-}
-
-/* 우체통 디자인 */
-.mailbox-container {
-  position: relative;
-  width: 400px;
-  height: 305px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.mailbox-back {
-  position: absolute;
-  width: 208px;
-  height: 191px;
-  top: 47px;
-  left: 0px;
-  background: rgba(101, 181, 153, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 5;
-}
-
-.mailbox-base {
-  position: absolute;
-  width: 187px;
-  height: 179px;
-  top: 59px;
-  left: 10px;
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  background: rgba(84, 104, 105, 1);
-  z-index: 10;
-}
-
-.mailbox-front {
-  position: absolute;
-  width: 291px;
-  height: 191px;
-  top: 47px;
-  left: 71px;
-  background: rgba(17, 34, 17, 1);
-  border-top-left-radius: 70px;
-  border-top-right-radius: 70px;
-  z-index: 4;
-}
-
-.mailbox-flag {
-  position: absolute;
-  width: 169px;
-  height: 40px;
-  top: 154px;
-  left: 231px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
-
-.mailbox-flag2 {
-  position: absolute;
-  width: 39px;
-  height: 77px;
-  top: 154px;
-  left: 361px;
-  background: rgba(255, 134, 130, 1);
-  z-index: 6;
-}
-
-.mailbox-pole {
-  position: absolute;
-  width: 47px;
-  height: 188px;
-  top: 117px;
-  left: 194px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
-
-.mailbox-stand-base {
-  position: absolute;
-  width: 85px;
-  height: 57px;
-  top: 212px;
-  left: 156px;
-  background: rgba(164, 128, 109, 1);
-  z-index: 3;
-}
-
-.mailbox-stand-front {
-  position: absolute;
-  width: 85px;
-  height: 188px;
-  top: 117px;
-  left: 156px;
-  background: rgba(223, 173, 146, 1);
-  z-index: 2;
-}
-
-/* Footer Content */
-.footer-content {
-  max-width: 1232px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  position: relative;
-  z-index: 1;
-  gap: 64px;
-  padding-bottom: 40px;
-}
-
-/* Social Icons */
-.social-icons {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-/* Footer Columns */
-.footer-links {
-  display: flex;
-  gap: 60px;
-}
-
-.footer-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.footer-column h4 {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 100%;
-  color: #112211;
-  margin-bottom: 8px;
-}
-
-.footer-column a {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 100%;
-  color: #112211;
-  text-decoration: none;
-  opacity: 0.7;
-}
-
-.footer-column a:hover {
-  opacity: 1;
-}
-/* ✅ Loading & Error 스타일 */
-.loading-container, .error-container {
-  max-width: 600px;
-  margin: 200px auto;
-  text-align: center;
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #8DD3BB;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-message {
-  color: #e74c3c;
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-.btn-back {
-  padding: 12px 32px;
-  background: #8DD3BB;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-}
-
-.btn-back:hover {
-  background: #7bc4ad;
-}
-
-/* ✅ 환불 섹션 스타일 */
-.refund-section {
-  margin: 40px auto;
-  max-width: 1231px;
-  text-align: center;
-  padding: 30px;
-  background: #fff5f5;
-  border-radius: 12px;
-  border: 1px solid #ffcccc;
-}
-
-.refund-btn {
-  width: 200px;
-  height: 56px;
-  background: #ff5252;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 auto;
-}
-
-.refund-btn:hover {
-  background: #e04848;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
-}
-
-.refund-btn:active {
-  transform: translateY(0);
-}
-
-.refund-notice {
-  margin-top: 15px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  color: #666;
-  font-style: italic;
-}
-
-.refunded-notice {
-  padding: 20px;
-  background: #ffe0e0;
-  border: 2px solid #ff5252;
-  border-radius: 8px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #d32f2f;
-}
-
-/* 바코드 SVG 스타일 */
-.barcode-svg {
-  width: 100%;
-  height: auto;
-  margin: 0px 20px 20px 0px;
-}
-
-/* 프로필 이미지 스타일 개선 */
-.guest img {
-  width: 48px;
-  height: 48px;
-  border: 2px solid #FFFFFF;
-  border-radius: 50%;
-  margin-right: 10px;
-  object-fit: cover;
-}
-
-/*호텔 이미지 스타일 */
-.ticket-right img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0 12px 12px 0;
-}
+  /* Header */
+  .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 21px 104px;
+      background: #FFFFFF;
+      box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      height: 87px;
+      width: 100%;
+  }
+
+  nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1232px;
+      margin: 0 auto;
+  }
+
+  .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+  }
+
+  .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+  }
+
+  .nav-item {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #112211;
+      text-decoration: none;
+  }
+
+  .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+  }
+
+  .user-avatar {
+      width: 45px;
+      height: 45px;
+      background: #D9D9D9;
+      border: 1px solid #000000;
+      border-radius: 50%;
+      position: relative;
+  }
+
+  .online-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #112211;
+      border-radius: 50%;
+      bottom: 2px;
+      right: 2px;
+  }
+  
+  /* User Dropdown */
+  .user-dropdown {
+      position: fixed;
+      top: 82px;
+      left: 64%;
+      width: 329px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      display: none;
+      z-index: 1001;
+  }
+
+  .user-dropdown.active {
+      display: block;
+  }
+
+  .dropdown-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+  }
+
+  .dropdown-avatar {
+      width: 64px;
+      height: 64px;
+      background: #D9D9D9;
+      border-radius: 50%;
+  }
+
+  .dropdown-info h3 {
+      font-family: Montserrat;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 100%;
+      color: #112211;
+      margin-bottom: 4px;
+  }
+
+  .dropdown-info p {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 100%;
+      color: #112211;
+      opacity: 0.75;
+  }
+
+  .dropdown-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-top: 0.5px solid rgba(17, 34, 17, 0.25);
+      padding-top: 24px;
+  }
+
+  .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #112211;
+      text-decoration: none;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 100%;
+      padding: 4px 0;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+      width: 100%;
+      height: 24px;
+      gap: 8px;
+      background: #F8F9FA;
+      margin-top: 135px;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      color: #666666;
+      display: flex;
+      align-items: center;
+      margin-left: 104px;
+      margin-bottom: 30px;
+  }     
+
+  .breadcrumb a {
+      color: #666666;
+      text-decoration: none;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .breadcrumb a:hover {
+      color: #112211;
+  }
+
+  /* Main Content */
+  .main-content {
+      flex: 1;
+      padding: 20px 104px;
+      max-width: 1440px;
+      width: 100%;
+  }
+
+  /* Hotel Header */
+  .hotel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-radius: 12px;
+      gap: 32px;
+      margin-bottom: 30px;
+  }
+
+  /* 왼쪽 호텔 정보 */
+  .hotel-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+  }
+
+  .hotel-title {
+      font-family: 'ABeeZee', sans-serif;
+      font-weight: 400;
+      font-size: 20px;
+      color: #112211;
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+      margin-bottom: 12px;
+  }
+
+  .hotel-location-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #666666;
+  }
+  .hotel-location-line img{
+      width: 11.25px;
+      height: 15.749412536621094px;
+      top: 1.13px;
+      left: 3.38px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+
+  /* 오른쪽 가격 & 버튼 */
+  .hotel-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      flex-shrink: 0;
+  }
+
+  .hotel-price {
+      text-align: right;
+  }
+
+  .price-amount {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 32px;
+      color: rgba(255, 134, 130, 1);
+  }
+
+  .price-unit {
+      font-size: 24px;
+      color: rgba(255, 134, 130, 1);
+  }
+
+  .hotel-buttons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+
+  .action-btn {
+      background: none;
+      border: 1px solid #8DD3BB;
+      border-radius: 4px;
+      color: #112211;
+      cursor: pointer;
+      width: 48px;
+      height: 48px;
+      gap: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      display: flex;
+      align-items: center;    
+      justify-content: center;
+      
+  }
+  
+  .action-btn img{
+      width: 15.001760482788086px;
+      height: 16.24186897277832px;
+      top: 1.88px;
+      left: 2.5px;
+      angle: 0 deg;
+      opacity: 1;
+      border-width: 0.05px;
+  }
+  
+  .action-btn-download{
+      width: 150px;
+      height: 48px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 4px;
+      border-radius: 4px;
+      padding: 8px 16px;
+      background: rgba(141, 211, 187, 1);
+      border: none;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      cursor: pointer;
+
+  }
+
+  /* Ticket styles from first code */
+  .ticket-container {
+      display: flex;
+      justify-content: center;
+      margin: 40px 0;
+  }
+
+  .ticket {
+      display: flex;
+      width: 1231px;
+      height: 309px;
+      overflow: hidden;
+      margin: 0 auto; 
+  }
+  /* 왼쪽 날짜 구역 */
+  .ticket-left {
+      width: 246px;
+      height: 100%;
+      background: #e5f2ed;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      font-weight: bold;
+      color: #333;
+      border-radius: 12px 0 0 12px;
+  }
+
+  .ticket-left-updown{
+      width: 188px;
+      height: 58px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 4px;
+      padding-left: 20px;
+  }
+  
+  .left-label{
+      width: 188px;
+      height: 39px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 30px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+  .left-check{
+      width: 70px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: left;
+  }
+
+  .left-image{
+      width: 60px;
+      height: 92px;
+      angle: -0 deg;
+      opacity: 1;
+      gap: 8px;
+      border-radius: 4px;
+      padding-left: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+  }
+  .left-image img{
+    width: 36px;
+    height: 100%;
+  }
+
+  /* 중앙 메인 구역 */
+  .ticket-center {
+      width: 610px;
+      height: 309px;
+      angle: 0 deg;
+      opacity: 1;
+      position: relative;
+      border-radius: 0 12px 12px 0;
+      background-color: white;
+  }
+  .top-bar {
+      width: 100%;
+      height: 96px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 46px;
+      border-radius: 0px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #8DD3BB;
+  }
+  .top-bar > div {
+      margin: 0 14px; /* 각 요소에 좌우 여백 */
+  }
+  .guest {
+      display: flex;
+      align-items: center;
+  }
+  .guest img {
+      width: 48px;
+      height: 48px;
+      angle: 0 deg;
+      opacity: 1;
+      border: 1px solid #FFFFFF;
+      border-radius: 50%;
+      margin-right: 10px;
+  }
+  .guest span{
+      width: 141px;
+      height: 25px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+
+  .center-bedroom{
+      width: 228px;
+      height: 36px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Acme;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      text-align: right;
+
+  }
+
+  .info-grid {
+      width: 610px;
+      height: 83px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 32px;
+      padding: 24px;
+      display: flex;
+  }
+
+  .info-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 108px;
+      height: 35px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 8px;
+
+  }
+  .info-item-img{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      angle: 0 deg;
+      opacity: 1;
+      border-radius: 4px;
+  }
+  .info-item-content {
+      width: 68px;
+      height: 35px;
+      angle: 0 deg;
+      opacity: 1;
+  }
+
+  .info-item-check{
+      width: 34px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+  }
+
+  .info-item-time{
+      width: 68px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+  }
+
+  .info-check{
+      width: 50px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+  }
+
+  .info-item-time{
+      width: 68px;
+      height: 20px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 16px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+
+  }
+
+  .ticket-number{
+      height: 130px;
+      width: 610px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+
+  .ticket-air{
+      width: 45px;
+      height: 39px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 32px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      padding-left: 30px;
+  }
+  .ticket-num{
+      width: 60px;
+      height: 15px;
+      angle: 0 deg;
+      opacity: 0.6;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 12px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      margin-top: 10px;
+  }
+
+
+  .barcode {
+      width: 248px;
+      height: 100%;
+      angle: 0 deg;
+      opacity: 1;
+      display: flex;
+      flex-direction: column;   
+      justify-content: flex-end; 
+      align-items: center; 
+  }
+
+  .barcode img{
+      height: 81px;
+  }
+
+  /* 오른쪽 호텔 로고 (독립 카드) */
+  .ticket-right {
+      width: 375px;
+      height: 100%;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-left: 2px;
+  }
+  .ticket-right img{
+      width: 161px;
+      height: 161px;
+      angle: 0 deg;
+      opacity: 1;
+      top: 74px;
+      left: 107px;
+  }
+
+  /* Terms and Conditions Section */
+  .terms-section {
+      width: 1232px;
+      height: 549px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 34px;  
+      margin: 60px auto;
+  }
+
+  .terms-title {
+      width: 100%;
+      height: 29px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 8px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 600;
+      font-style: SemiBold;
+      font-size: 24px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 32px;
+  }
+
+  .terms-payment {
+      width: 1232px;
+      height: 272px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 16px;
+
+  }
+
+  .section-title {
+      width: 103px;
+      height: 24px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 16px;
+      margin-top: 32px;
+  }
+
+  .section-title:first-child {
+      margin-top: 0;
+  }
+
+  .terms-text {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #112211;
+      margin-bottom: 16px;
+  }
+
+  .terms-list {
+      margin: 16px 0;
+      padding-left: 20px;
+  }
+
+  .terms-list li {
+      font-family: Montserrat;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #112211;
+      margin-bottom: 8px;
+  }
+
+  .contact-info {
+      width: 1232px;
+      height: 180px;
+      angle: 0 deg;
+      opacity: 1;
+      gap: 16px;
+      margin-top: 40px;
+  }
+
+  .contact-title {
+      width: 112px;
+      height: 24px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 500;
+      font-style: Medium;
+      font-size: 20px;
+      leading-trim: NONE;
+      line-height: 100%;
+      letter-spacing: 0%;
+      color: #112211;
+      margin-bottom: 12px;
+  }
+
+  .contact-details {
+      width: 100%;
+      height: 140px;
+      angle: 0 deg;
+      opacity: 1;
+      font-family: Montserrat;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      leading-trim: NONE;
+      line-height: 20px;
+      letter-spacing: 0%;
+      color: #112211;
+  }
+
+  .contact-link {
+    color: rgba(17, 34, 17, 1);
+    text-decoration: none;
+  }
+
+  .contact-link:hover {
+      text-decoration: underline;
+  }
+
+  /* Newsletter Section */
+  .newsletter-section {
+    background: rgba(141, 211, 187, 1);
+    padding: 80px 104px 80px 104px;
+    position: relative;
+    width: 100%;
+    height: 422px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 60px;
+    z-index: 0;
+    margin-bottom: -513px;
+  }
+
+  .newsletter-content {
+    background: rgba(205, 234, 225, 1);
+    border-radius: 20px;
+    padding: 48px;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1232px;
+    height: 305px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 40px;
+  }
+
+  .newsletter-left {
+    flex: 1;
+    max-width: 500px;
+  }
+
+  .newsletter-title {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 900;
+    font-size: 44px;
+    line-height: 54px;
+    color: #112211;
+    margin-bottom: 24px;
+  }
+
+  .newsletter-info {
+    margin-bottom: 24px;
+  }
+
+  .newsletter-brand {
+    font-family: Acme;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .newsletter-desc {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    opacity: 0.7;
+  }
+
+  .newsletter-form {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .newsletter-input {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 100%;
+    height: 56px;
+  }
+
+  .subscribe-btn {
+    padding: 16px 24px;
+    background: #112211;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 100%;
+    cursor: pointer;
+    height: 56px;
+  }
+
+  /* 우체통 디자인 */
+  .mailbox-container {
+    position: relative;
+    width: 400px;
+    height: 305px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .mailbox-back {
+    position: absolute;
+    width: 208px;
+    height: 191px;
+    top: 47px;
+    left: 0px;
+    background: rgba(101, 181, 153, 1);
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    z-index: 5;
+  }
+
+  .mailbox-base {
+    position: absolute;
+    width: 187px;
+    height: 179px;
+    top: 59px;
+    left: 10px;
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    background: rgba(84, 104, 105, 1);
+    z-index: 10;
+  }
+
+  .mailbox-front {
+    position: absolute;
+    width: 291px;
+    height: 191px;
+    top: 47px;
+    left: 71px;
+    background: rgba(17, 34, 17, 1);
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    z-index: 4;
+  }
+
+  .mailbox-flag {
+    position: absolute;
+    width: 169px;
+    height: 40px;
+    top: 154px;
+    left: 231px;
+    background: rgba(255, 134, 130, 1);
+    z-index: 6;
+  }
+
+  .mailbox-flag2 {
+    position: absolute;
+    width: 39px;
+    height: 77px;
+    top: 154px;
+    left: 361px;
+    background: rgba(255, 134, 130, 1);
+    z-index: 6;
+  }
+
+  .mailbox-pole {
+    position: absolute;
+    width: 47px;
+    height: 188px;
+    top: 117px;
+    left: 194px;
+    background: rgba(164, 128, 109, 1);
+    z-index: 3;
+  }
+
+  .mailbox-stand-base {
+    position: absolute;
+    width: 85px;
+    height: 57px;
+    top: 212px;
+    left: 156px;
+    background: rgba(164, 128, 109, 1);
+    z-index: 3;
+  }
+
+  .mailbox-stand-front {
+    position: absolute;
+    width: 85px;
+    height: 188px;
+    top: 117px;
+    left: 156px;
+    background: rgba(223, 173, 146, 1);
+    z-index: 2;
+  }
+
+  /* Footer Content */
+  .footer-content {
+    max-width: 1232px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+    gap: 64px;
+    padding-bottom: 40px;
+  }
+
+  /* Social Icons */
+  .social-icons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  /* Footer Columns */
+  .footer-links {
+    display: flex;
+    gap: 60px;
+  }
+
+  .footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-column h4 {
+    font-family: Acme;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 100%;
+    color: #112211;
+    margin-bottom: 8px;
+  }
+
+  .footer-column a {
+    font-family: Montserrat;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 100%;
+    color: #112211;
+    text-decoration: none;
+    opacity: 0.7;
+  }
+
+  .footer-column a:hover {
+    opacity: 1;
+  }
+  /* ✅ Loading & Error 스타일 */
+  .loading-container, .error-container {
+    max-width: 600px;
+    margin: 200px auto;
+    text-align: center;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #8DD3BB;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .error-message {
+    color: #e74c3c;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .btn-back {
+    padding: 12px 32px;
+    background: #8DD3BB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+  }
+
+  .btn-back:hover {
+    background: #7bc4ad;
+  }
+
+  /* ✅ 환불 섹션 스타일 */
+  .refund-section {
+    margin: 40px auto;
+    max-width: 1231px;
+    text-align: center;
+    padding: 30px;
+    background: #fff5f5;
+    border-radius: 12px;
+    border: 1px solid #ffcccc;
+  }
+
+  .refund-btn {
+    width: 200px;
+    height: 56px;
+    background: #ff5252;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 auto;
+  }
+
+  .refund-btn:hover {
+    background: #e04848;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+  }
+
+  .refund-btn:active {
+    transform: translateY(0);
+  }
+
+  .refund-notice {
+    margin-top: 15px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+  }
+
+  .refunded-notice {
+    padding: 20px;
+    background: #ffe0e0;
+    border: 2px solid #ff5252;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #d32f2f;
+  }
+
+  /* 바코드 SVG 스타일 */
+  .barcode-svg {
+    width: 100%;
+    height: auto;
+    margin: 0px 20px 20px 0px;
+  }
+
+  /* 프로필 이미지 스타일 개선 */
+  .guest img {
+    width: 48px;
+    height: 48px;
+    border: 2px solid #FFFFFF;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+  }
+
+  /*호텔 이미지 스타일 */
+  .ticket-right img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0 12px 12px 0;
+  }
+  /* 쿠폰 모달 스타일 */
+  .coupon-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .coupon-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .coupon-modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .coupon-modal-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #112211;
+    margin: 0;
+  }
+
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .modal-close-btn:hover {
+    color: #112211;
+  }
+
+  .coupon-modal-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .coupon-count {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .coupon-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #8DD3BB 0%, #7CC5AE 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .coupon-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(141, 211, 187, 0.4);
+  }
+
+  .coupon-badge {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .discount {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #8DD3BB;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .discount-label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .coupon-info {
+    flex: 1;
+  }
+
+  .coupon-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    margin: 0 0 8px 0;
+  }
+
+  .coupon-expiry {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+
+  .coupon-modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-use-coupon,
+  .btn-close {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-use-coupon {
+    background: #8DD3BB;
+    color: #112211;
+  }
+
+  .btn-use-coupon:hover {
+    background: #7CC5AE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+  }
+
+  .btn-close {
+    background: white;
+    color: #112211;
+    border: 2px solid #e0e0e0;
+  }
+
+  .btn-close:hover {
+    border-color: #8DD3BB;
+    color: #8DD3BB;
+  }
+
+  /* 반응형 */
+  @media screen and (max-width: 768px) {
+    .coupon-modal {
+      width: 95%;
+      max-height: 90vh;
+    }
+
+    .coupon-modal-header {
+      padding: 24px 20px 16px;
+    }
+
+    .coupon-modal-header h2 {
+      font-size: 20px;
+    }
+
+    .coupon-modal-content {
+      padding: 16px 20px;
+    }
+
+    .coupon-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .coupon-badge {
+      align-self: flex-start;
+    }
+
+    .coupon-modal-footer {
+      flex-direction: column;
+      padding: 16px 20px;
+    }
+  }
 
 </style>
