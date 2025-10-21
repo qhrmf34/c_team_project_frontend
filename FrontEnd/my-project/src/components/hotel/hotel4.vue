@@ -88,7 +88,7 @@
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">{{ roomInfo?.roomName || 'Superior room' }}</h1>
+              <h1 class="hotel-title">{{ formattedRoomName }}</h1>
               <div class="hotel-location">
                 <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
@@ -199,7 +199,7 @@
                 <img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">{{ hotelInfo?.hotelName || '호텔' }}</div>
-                  <div class="summary-title2">{{ roomInfo?.roomName || '객실' }}</div>
+                  <div class="summary-title2">{{ formattedRoomName }}</div>
 
                   <div class="rating">
                     <span class="rating-score">{{ hotelInfo?.averageRating?.toFixed(1) || '0.0' }}</span>
@@ -253,7 +253,7 @@
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">{{ roomInfo?.roomName || 'Superior room' }}</h1>
+              <h1 class="hotel-title">{{ formattedRoomName }}</h1>
               <div class="hotel-location">
                 <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
@@ -476,7 +476,7 @@
                 <img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel"/>
                 <div class="summary-hotel-info">
                   <div class="summary-title1">{{ hotelInfo?.hotelName || '호텔' }}</div>
-                  <div class="summary-title2">{{ roomInfo?.roomName || '객실' }}</div>
+                  <div class="summary-title2">{{ formattedRoomName }}</div>
                   
                   <div class="rating">
                     <span class="rating-score">{{ hotelInfo?.averageRating?.toFixed(1) || '0.0' }}</span>
@@ -752,6 +752,21 @@ export default {
         return formatMemberName(this.userInfo);
       }
       return 'Guest';
+    },
+    // 침대 정보가 포함된 객실명 생성
+    formattedRoomName() {
+      if (!this.roomInfo) return 'Superior room';
+      
+      const bedInfo = [];
+      if (this.roomInfo.roomDoubleBed > 0) {
+        bedInfo.push(`${this.roomInfo.roomDoubleBed} 더블 베드`);
+      }
+      if (this.roomInfo.roomSingleBed > 0) {
+        bedInfo.push(`${this.roomInfo.roomSingleBed} 싱글 베드`);
+      }
+      
+      const bedText = bedInfo.length > 0 ? ` - ${bedInfo.join(' or ')}` : '';
+      return `${this.roomInfo.roomName}${bedText}`;
     },
     
     userStatus() {

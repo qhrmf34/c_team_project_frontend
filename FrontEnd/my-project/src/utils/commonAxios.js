@@ -441,7 +441,9 @@ export const hotelAPI = {
    * 객실 상세 정보 조회
    */
   async getRoomDetail(roomId) {
+    console.log('🔍 API 호출: getRoomDetail', roomId); // 디버깅용
     const response = await apiClient.get(`/api/admin/rooms/${roomId}/detail`);
+    console.log('📦 API 응답:', response.data); // 디버깅용
     return response.data;
   },
   // 호텔 검색
