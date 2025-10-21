@@ -293,10 +293,22 @@ export const paymentMethodAPI = {
 // 예약 API
 export const reservationAPI = {
   /**
-   * 내 예약 목록 조회
+   * 내 예약 목록 조회 (페이지네이션 지원)
    */
-  async getMyReservations() {
-    const response = await apiClient.get('/api/reservations/my');
+  async getMyReservations(params = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset);
+    }
+    if (params.size !== undefined) {
+      queryParams.append('size', params.size);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/reservations/my?${queryString}` : '/api/reservations/my';
+    
+    const response = await apiClient.get(url);
     return response.data;
   }
 }

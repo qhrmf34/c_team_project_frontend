@@ -94,7 +94,7 @@
       <div class="favourites-tabs">
         <div class="select-tab-btn" :class="{ active: activeTab === 'flights' }" @click="switchTab('flights')">
           Reservations
-          <span class="tab-count">0 marked</span>
+          <span class="tab-count">{{reservationTotalCount}} marked</span>
         </div>
 
         <div class="select-line"></div>
@@ -180,8 +180,21 @@
                   </div>
                 </div>
               </div>
-            
             </div>
+               <!--Show More 버튼 -->
+            <button v-show="!isLoadingReservations && reservations.length > 0 && hasMoreReservations" 
+                    class="show-more-btn" 
+                    @click="loadMoreReservations"
+                    type="button"
+                    :disabled="isLoadingReservations">
+              {{ isLoadingReservations ? 'Loading...' : `Show more results (${reservations.length}/${reservationTotalCount})` }}
+            </button>
+            <button v-show="!isLoadingReservations && reservations.length > reservationPageSize && !hasMoreReservations" 
+                    class="show-more-btn" 
+                    @click="showLessReservations"
+                    type="button">
+              Show less results
+            </button>
           </section>
         </main>
       </div>
@@ -247,13 +260,19 @@
               </div>
             </div>
           
-            <!-- ✅ 수정: Show More / Show Less 버튼 -->
-            <button v-if="hasMoreHotels" class="show-more-btn" @click="loadMoreHotels"
-              :disabled="isLoading">
+            <!-- 찜 목록 Show More 버튼 -->
+            <button v-show="!isLoading && hotels.length > 0 && hasMoreHotels" 
+                    class="show-more-btn" 
+                    @click="loadMoreHotels"
+                    :disabled="isLoading"
+                    type="button">
               {{ isLoading ? 'Loading...' : `Show more results (${hotels.length}/${totalCount})` }}
             </button>
-
-            <button v-else-if="hotels.length > pageSize" class="show-more-btn" @click="showLess">
+            
+            <button v-show="!isLoading && hotels.length > pageSize && !hasMoreHotels" 
+                    class="show-more-btn" 
+                    @click="showLess"
+                    type="button">
               Show less results
             </button>
           </section>
@@ -396,7 +415,10 @@ export default {
 
       showCouponModal: false,
       receivedCoupons: [],
-
+      // 예약 페이지네이션
+      reservationCurrentOffset: 0,
+      reservationPageSize: 3,
+      reservationTotalCount: 0,
       // 페이지네이션
       currentOffset: 0,
       pageSize: 3,
@@ -428,7 +450,9 @@ export default {
     hasMoreHotels() {
       return this.hotels.length < this.totalCount;
     },
-
+    hasMoreReservations() {
+      return this.reservations.length < this.reservationTotalCount;
+    },
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         return formatMemberName(this.userInfo);
@@ -475,6 +499,18 @@ export default {
       return reservation.paymentStatus === 'DONE' || reservation.reservationsStatus === true;
     },
     
+    async showLessReservations() {
+      this.isLoadingReservations = true;
+      try {
+        // 예약 목록을 첫 페이지(offset: 0)로 재설정하여 로드
+        await this.loadReservations(); 
+      } catch (error) {
+        console.error('예약 Show less 중 오류:', error);
+      } finally {
+        this.isLoadingReservations = false;
+      }
+    },
+    
     /**
      * 예약 상태 텍스트 반환
      */
@@ -504,13 +540,20 @@ export default {
      */
     async loadReservations() {
       this.isLoadingReservations = true;
-      
+
       try {
-        const response = await reservationAPI.getMyReservations();
-        
+        const params = {
+          offset: 0,
+          size: this.reservationPageSize
+        };
+
+        const response = await reservationAPI.getMyReservations(params);
+
         if (response.code === 200) {
-          this.reservations = response.data;
-          this.reservationsCount = this.reservations.length;
+          const data = response.data;
+          this.reservations = data.reservations;
+          this.reservationTotalCount = data.totalCount;
+          this.reservationCurrentOffset = this.reservationPageSize;
         }
       } catch (error) {
         console.error('예약 목록 로드 중 오류:', error);
@@ -520,6 +563,34 @@ export default {
       }
     },
 
+    /**
+     * 예약 더 보기
+     */
+    async loadMoreReservations() {
+      if (this.isLoadingReservations || !this.hasMoreReservations) return;
+    
+      this.isLoadingReservations = true;
+    
+      try {
+        const params = {
+          offset: this.reservationCurrentOffset,
+          size: this.reservationPageSize
+        };
+      
+        const response = await reservationAPI.getMyReservations(params);
+      
+        if (response.code === 200) {
+          const data = response.data;
+          this.reservations.push(...data.reservations);
+          this.reservationCurrentOffset += this.reservationPageSize;
+        }
+      } catch (error) {
+        console.error('예약 추가 로드 중 오류:', error);
+        alert('예약 추가 로드 중 오류가 발생했습니다.');
+      } finally {
+        this.isLoadingReservations = false;
+      }
+    },
     /**
      * 결제 화면으로 이동
      */
@@ -568,6 +639,8 @@ export default {
      * 처음 3개만 로드
      */
     async loadWishlistHotels() {
+      if (this.isLoading) return;
+      
       this.isLoading = true;
 
       try {
@@ -578,14 +651,9 @@ export default {
 
         const response = await hotelAPI.getWishlistHotels(params);
 
-        console.log('✅ 찜 목록 응답:', response); // 디버깅용
-
         if (response.code === 200) {
           const data = response.data;
 
-          console.log('✅ 받은 호텔 데이터:', data.hotels); // 디버깅용
-
-          // ✅ WishlistHotelDto 직접 사용
           this.hotels = data.hotels.map(hotel => ({
             id: hotel.hotelId,
             title: hotel.hotelName,
@@ -597,21 +665,18 @@ export default {
             type: this.convertHotelType(hotel.hotelType),
             hotelType: hotel.hotelType,
             amenitiesCount: hotel.amenitiesCount || 0,
-            rating: hotel.hotelRating || 0, // ✅ 숫자 그대로 저장
+            rating: hotel.hotelRating || 0,
             ratingText: this.getRatingText(hotel.hotelRating),
             reviewCount: hotel.reviewCount || 0,
             wishlisted: true,
             cityName: hotel.cityName
           }));
 
-          console.log('✅ 변환된 호텔 데이터:', this.hotels); // 디버깅용
-
           this.totalCount = data.totalCount;
-          this.currentOffset = this.pageSize;
+          this.currentOffset = this.hotels.length;
         }
       } catch (error) {
-        console.error('❌ 찜한 호텔 목록 로드 중 오류:', error);
-        console.error('❌ 에러 상세:', error.response);
+        console.error('찜한 호텔 목록 로드 중 오류:', error);
         alert('찜한 호텔 목록을 불러올 수 없습니다.');
       } finally {
         this.isLoading = false;
@@ -619,26 +684,44 @@ export default {
     },
     
     /**
-     * 더 많은 호텔 로드
+     * 찜 목록 더 보기
      */
     async loadMoreHotels() {
       if (this.isLoading || !this.hasMoreHotels) return;
-      
+
       this.isLoading = true;
-      
+
       try {
         const params = {
           offset: this.currentOffset,
           size: this.pageSize
         };
+
         const response = await hotelAPI.getWishlistHotels(params);
-        
+
         if (response.code === 200) {
           const data = response.data;
-          
-          const newHotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+
+          const newHotels = data.hotels.map(hotel => ({
+            id: hotel.hotelId,
+            title: hotel.hotelName,
+            image: this.getImageUrl(hotel.hotelImage),
+            imageCount: hotel.imageCount || 0,
+            price: hotel.minPrice || 0,
+            location: `${hotel.cityName || ''}, ${hotel.countryName || ''}`,
+            stars: hotel.hotelStar || 0,
+            type: this.convertHotelType(hotel.hotelType),
+            hotelType: hotel.hotelType,
+            amenitiesCount: hotel.amenitiesCount || 0,
+            rating: hotel.hotelRating || 0,
+            ratingText: this.getRatingText(hotel.hotelRating),
+            reviewCount: hotel.reviewCount || 0,
+            wishlisted: true,
+            cityName: hotel.cityName
+          }));
+
           this.hotels.push(...newHotels);
-          this.currentOffset += this.pageSize;
+          this.currentOffset = this.hotels.length;
         }
       } catch (error) {
         console.error('추가 로드 중 오류:', error);
@@ -647,25 +730,47 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     /**
      * Show less (처음으로 초기화)
      */
     async showLess() {
+      if (this.isLoading) return;
+
       this.isLoading = true;
-      
+
       try {
-        await this.loadWishlistHotels();
-        
-        this.$nextTick(() => {
-          const resultsSection = document.querySelector('.results-section');
-          if (resultsSection) {
-            resultsSection.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        });
+        const params = {
+          offset: 0,
+          size: this.pageSize
+        };
+
+        const response = await hotelAPI.getWishlistHotels(params);
+
+        if (response.code === 200) {
+          const data = response.data;
+
+          this.hotels = data.hotels.map(hotel => ({
+            id: hotel.hotelId,
+            title: hotel.hotelName,
+            image: this.getImageUrl(hotel.hotelImage),
+            imageCount: hotel.imageCount || 0,
+            price: hotel.minPrice || 0,
+            location: `${hotel.cityName || ''}, ${hotel.countryName || ''}`,
+            stars: hotel.hotelStar || 0,
+            type: this.convertHotelType(hotel.hotelType),
+            hotelType: hotel.hotelType,
+            amenitiesCount: hotel.amenitiesCount || 0,
+            rating: hotel.hotelRating || 0,
+            ratingText: this.getRatingText(hotel.hotelRating),
+            reviewCount: hotel.reviewCount || 0,
+            wishlisted: true,
+            cityName: hotel.cityName
+          }));
+
+          this.totalCount = data.totalCount;
+          this.currentOffset = this.hotels.length;
+        }
       } catch (error) {
         console.error('Show less 중 오류:', error);
       } finally {
@@ -788,9 +893,10 @@ export default {
     switchTab(tabName) {
       this.activeTab = tabName;
       
-      if (tabName === 'flights' && this.reservations.length === 0) {
+      // 처음 한 번만 로드
+      if (tabName === 'flights' && this.reservations.length === 0 && !this.isLoadingReservations) {
         this.loadReservations();
-      } else if (tabName === 'places' && this.hotels.length === 0) {
+      } else if (tabName === 'places' && this.hotels.length === 0 && !this.isLoading) {
         this.loadWishlistHotels();
       }
     },
@@ -911,7 +1017,6 @@ export default {
     max-width: 1440px;
     min-height: 100vh;
     margin: 0 auto;
-    overflow-x: scroll;
     display: flex;
     flex-direction: column;
     align-items: center;
