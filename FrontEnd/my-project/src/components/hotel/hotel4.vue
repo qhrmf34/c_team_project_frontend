@@ -78,9 +78,9 @@
     <div class="screen" :class="{ active: currentScreen === 1 }">
       <main class="main-content">
         <div class="breadcrumb">
-          <a href="#" @click="goToHotel">{{ hotelInfo?.countryName || 'Turkey' }}</a>
+          <a href="#" @click.prevent="searchByCountry(hotelInfo.countryName)">{{ hotelInfo?.countryName || 'Turkey' }}</a>
           <span>></span>
-          <a href="#" @click="goToHotel">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
+          <a href="#" @click.prevent="searchByCity(hotelInfo.cityName)">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
           <span>></span>
           <span>{{ hotelInfo?.hotelName || '호텔' }}</span>
         </div>
@@ -246,9 +246,9 @@
     <div class="screen" :class="{ active: currentScreen === 2 }">
       <main class="main-content">
         <div class="breadcrumb">
-          <a href="#" @click="goToHotel">{{ hotelInfo?.countryName || 'Turkey' }}</a>
+          <a href="#" @click.prevent="searchByCountry(hotelInfo.countryName)">{{ hotelInfo?.countryName || 'Turkey' }}</a>
           <span>></span>
-          <a href="#" @click="goToHotel">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
+          <a href="#" @click.prevent="searchByCity(hotelInfo.cityName)">{{ hotelInfo?.cityName || 'Istanbul' }}</a>
           <span>></span>
           <span>{{ hotelInfo?.hotelName || '호텔' }}</span>
         </div>
@@ -889,6 +889,36 @@ export default {
     goToLogin() {
       this.isDropdownActive = false;
       this.$router.push('/login');
+    },
+    searchByCountry(countryName) {
+      this.$router.push({
+        path: '/hoteltwo',
+        query: { 
+          destination: countryName,
+          checkIn: this.getToday(),
+          checkOut: this.getTomorrow()
+        }
+      });
+    },
+    searchByCity(cityName) {
+      this.$router.push({
+        path: '/hoteltwo',
+        query: { 
+          destination: cityName,
+          checkIn: this.getToday(),
+          checkOut: this.getTomorrow()
+        }
+      });
+    },
+    getToday() {
+      const today = new Date();
+      return today.toLocaleDateString('en-CA'); // ISO형식 YYYY-MM-DD
+    },
+
+    getTomorrow() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toLocaleDateString('en-CA');
     },
 
     // 결제 버튼 클릭 시 모달 열기

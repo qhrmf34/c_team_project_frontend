@@ -1651,15 +1651,15 @@ export default {
   
     getToday() {
       const today = new Date();
-      return today.toISOString().split('T')[0];
+      return today.toLocaleDateString('en-CA'); 
     },
-  
+    
     getTomorrow() {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow.toISOString().split('T')[0];
+      return tomorrow.toLocaleDateString('en-CA');
     },
-    
+
     getImageUrl(imagePath) {
       if (!imagePath) return '/images/hotel_img/hotel1.jpg';
       if (imagePath.startsWith('http')) return imagePath;

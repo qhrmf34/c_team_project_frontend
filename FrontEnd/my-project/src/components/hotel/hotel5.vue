@@ -88,9 +88,9 @@
     <!-- ✅ Ticket Content -->
     <div v-else-if="ticket">
       <!-- Breadcrumb -->
-      <div class="breadcrumb">
-        <a href="#" style="color: rgba(255, 134, 130, 1);">{{ ticket.countryName }}</a> > 
-        <a href="#" style="color: rgba(255, 134, 130, 1);">{{ ticket.cityName }}</a> > 
+      <div class="breadcrumb">     
+        <a href="#" @click.prevent="searchByCountry(ticket.countryName)" style="color: rgba(255, 134, 130, 1);">{{ ticket.countryName }}</a> > 
+        <a href="#" @click.prevent="searchByCity(ticket.cityName)" style="color: rgba(255, 134, 130, 1);">{{ ticket.cityName }}</a> > 
         <span>{{ ticket.hotelName }}</span>
       </div>
 
@@ -421,7 +421,39 @@ export default {
       this.isDropdownActive = false;
       this.$router.push('/login');
     },
+    searchByCountry(countryName) {
+      this.$router.push({
+        path: '/hoteltwo',
+        query: { 
+          destination: countryName,
+          checkIn: this.getToday(),
+          checkOut: this.getTomorrow()
+        }
+      });
+    },
+  
 
+    searchByCity(cityName) {
+      this.$router.push({
+        path: '/hoteltwo',
+        query: { 
+          destination: cityName,
+          checkIn: this.getToday(),
+          checkOut: this.getTomorrow()
+        }
+      });
+    },
+
+    getToday() {
+      const today = new Date();
+      return today.toLocaleDateString('en-CA'); 
+    },
+    
+    getTomorrow() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toLocaleDateString('en-CA');
+    },
     // 티켓 로드
     async loadTicket() {
       try {
