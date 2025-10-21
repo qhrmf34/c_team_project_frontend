@@ -31,8 +31,11 @@
           </a>
           <span>|</span>
           <div class="user-profile" @click="toggleDropdown">
-            <div class="user-avatar">
-              <div class="online-dot"></div>
+          <div class="user-avatar" :style="{ backgroundImage: `url(${profileImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
+          </div>
+            <div class="online-dot">
+              <img src="/images/hotel_account_img/dot.jpg"/>
+              <div class="online-dot-back"></div>
             </div>
             <span>{{ displayUserName }}</span>
           </div>
@@ -45,8 +48,8 @@
       <!-- 로그인된 경우 -->
       <template v-if="isLoggedIn">
         <div class="dropdown-header">
-          <div class="dropdown-avatar"></div>
-          <div class="dropdown-info">
+        <div class="dropdown-avatar" :style="{ backgroundImage: `url(${profileImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }"></div>          
+        <div class="dropdown-info">
             <h3>{{ displayUserName }}</h3>
             <p>{{ userStatus }}</p>
           </div>
@@ -71,7 +74,7 @@
       <!-- 로그인되지 않은 경우 -->
       <template v-else>
         <div class="dropdown-header">
-          <div class="dropdown-avatar"></div>
+        <div class="dropdown-avatar" :style="{ backgroundImage: `url(${profileImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }"></div>          
           <div class="dropdown-info">
             <h3>Guest</h3>
             <p>로그인이 필요합니다</p>
@@ -390,7 +393,7 @@
 </template>
 
 <script>
-import { authUtils, hotelAPI, adminAPI, memberCouponAPI, reservationAPI } from '@/utils/commonAxios'
+import { authUtils, hotelAPI, adminAPI, memberCouponAPI, reservationAPI, memberImageAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -412,7 +415,7 @@ export default {
       // 사용자 정보
       userInfo: null,
       isLoggedIn: false,
-
+      profileImageUrl: '/images/hotel_account_img/member.jpg',
       showCouponModal: false,
       receivedCoupons: [],
       // 예약 페이지네이션
@@ -947,14 +950,33 @@ export default {
 
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
+    
       if (this.isLoggedIn) {
         this.userInfo = authUtils.getUserInfo();
         console.log('사용자 정보:', this.userInfo);
+        this.loadProfileImage();
       } else {
         this.userInfo = null;
+        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
+    async loadProfileImage() {
+      try {
+        const response = await memberImageAPI.getProfileImage();
+        if (response.code === 200 && response.data.imagePath) {
+          const imagePath = response.data.imagePath;
+          if (imagePath.startsWith('http')) {
+            this.profileImageUrl = imagePath;
+          } else {
+            this.profileImageUrl = `http://localhost:8089/uploads${imagePath}`;
+          }
+        }
+      } catch (error) {
+        console.error('프로필 이미지 로드 실패:', error);
+        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
+      }
+    },
+
     
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
@@ -1099,15 +1121,26 @@ export default {
     position: relative;
   }
 
-  .online-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #112211;
-    border-radius: 50%;
-    bottom: 2px;
-    right: 2px;
+  .online-dot{
+    display: flex;
   }
+  .online-dot img{
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      margin: 7px 0 0 -18px;
+      z-index: 2;
+  }
+  .online-dot-back{
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      margin: 10px 0 0 -15px;
+      background-color: black;
+      z-index: 1;
+      border-radius: 50%;
+  }
+
 
   /* User Dropdown */
   .user-dropdown {
