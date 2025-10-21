@@ -541,7 +541,7 @@ export const hotelAPI = {
   
   // ========== 찜하기 관련 ==========
   
-  // 찜한 호텔 목록 조회 (페이지네이션 지원)
+  // 찜 목록 조회 (WishlistHotelDto 사용)
   async getWishlistHotels(params = {}) {
     const queryParams = new URLSearchParams();
     
@@ -553,12 +553,12 @@ export const hotelAPI = {
     }
     
     const queryString = queryParams.toString();
-    const url = queryString ? `/api/carts?${queryString}` : '/api/carts';
+    const url = queryString ? `/api/carts/wishlist?${queryString}` : '/api/carts/wishlist';
     
     const response = await apiClient.get(url);
     return response.data;
   },
-  
+
   // 전체 찜한 호텔 조회 (페이지네이션 없음)
   async getAllWishlistHotels() {
     const response = await apiClient.get('/api/carts/all');

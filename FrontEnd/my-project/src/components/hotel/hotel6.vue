@@ -122,16 +122,17 @@
 
             <!-- 예약 목록 -->
             <div v-else class="hotel-cards">
+              <!-- 예약 목록 카드 -->
               <div v-for="reservation in reservations" :key="reservation.reservationId" 
                 class="hotel-card">
                 <div class="hotel-image-container">
                   <img :src="getImageUrl(reservation.hotelImage)" :alt="reservation.hotelName" class="hotel-image">
-                  <div class="reservation-status" :class="{ paid: reservation.reservationsStatus }">
-                    {{ reservation.reservationsStatus ? '결제완료' : '미결제' }}
+                  <div class="reservation-status" :class="getReservationStatusClass(reservation)">
+                    {{ getReservationStatusText(reservation) }}
                   </div>
                 </div>
                 <div class="hotel-content">
-                  <h3 class="hotel-title">{{reservation.hotelName}} - {{ reservation.roomName }}</h3>
+                  <h3 class="hotel-title">{{ reservation.hotelName }} - {{ reservation.roomName }}</h3>
                   <div class="price-info">
                     <div class="price-label-total">Total Price</div>
                     <div class="price-amount">{{ formatPrice(reservation.basePayment) }}</div>
@@ -154,22 +155,32 @@
                   <div class="hotel-beeline"></div>
                   <div class="bottom-section">
                     <div class="button-container">
+                      <!-- 결제 완료 (날짜 지났어도 결제완료가 우선) -->
                       <button 
-                        v-if="!reservation.reservationsStatus"
-                        class="view-place-btn payment-btn" 
-                        @click="goToPayment(reservation)">
-                        결제하기
-                      </button>
-                      <button 
-                        v-else
+                        v-if="isPaymentCompleted(reservation)"
                         class="view-place-btn completed-btn" 
                         disabled>
                         결제완료
+                      </button>
+                      <!-- 체크인 날짜가 지난 경우 (미결제) -->
+                      <button 
+                        v-else-if="isReservationExpired(reservation)"
+                        class="view-place-btn expired-btn" 
+                        disabled>
+                        예약 마감
+                      </button>
+                      <!-- 미결제 -->
+                      <button 
+                        v-else
+                        class="view-place-btn payment-btn" 
+                        @click="goToPayment(reservation)">
+                        결제하기
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+            
             </div>
           </section>
         </main>
@@ -444,7 +455,50 @@ export default {
       this.isDropdownActive = false;
       this.$router.push('/login');
     },
-
+    /**
+     * 예약이 만료되었는지 확인 (체크인 날짜가 지났는지)
+     */
+    isReservationExpired(reservation) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const checkInDate = new Date(reservation.checkInDate);
+      checkInDate.setHours(0, 0, 0, 0);
+      
+      return checkInDate < today;
+    },
+    /**
+     * 예약이 결제 완료되었는지 확인
+     */
+    isPaymentCompleted(reservation) {
+      // paymentStatus가 'DONE'이거나 reservationsStatus가 true면 결제 완료
+      return reservation.paymentStatus === 'DONE' || reservation.reservationsStatus === true;
+    },
+    
+    /**
+     * 예약 상태 텍스트 반환
+     */
+    getReservationStatusText(reservation) {
+      if (this.isPaymentCompleted(reservation)) {
+        return '결제완료';
+      }
+      if (this.isReservationExpired(reservation)) {
+        return '예약 마감';
+      }
+      return '미결제';
+    },
+    /**
+     * 예약 상태에 따른 CSS 클래스 반환
+     */
+    getReservationStatusClass(reservation) {
+      if (this.isPaymentCompleted(reservation)) {
+        return 'completed';
+      }
+      if (this.isReservationExpired(reservation)) {
+        return 'expired';
+      }
+      return 'unpaid';
+    },
     /**
      * 예약 목록 로드
      */
@@ -515,25 +569,49 @@ export default {
      */
     async loadWishlistHotels() {
       this.isLoading = true;
-      
+
       try {
         const params = {
           offset: 0,
           size: this.pageSize
         };
-        
+
         const response = await hotelAPI.getWishlistHotels(params);
-        
+
+        console.log('✅ 찜 목록 응답:', response); // 디버깅용
+
         if (response.code === 200) {
           const data = response.data;
-          
-          this.hotels = data.hotels.map(hotel => this.convertHotelData(hotel));
+
+          console.log('✅ 받은 호텔 데이터:', data.hotels); // 디버깅용
+
+          // ✅ WishlistHotelDto 직접 사용
+          this.hotels = data.hotels.map(hotel => ({
+            id: hotel.hotelId,
+            title: hotel.hotelName,
+            image: this.getImageUrl(hotel.hotelImage),
+            imageCount: hotel.imageCount || 0,
+            price: hotel.minPrice || 0,
+            location: `${hotel.cityName || ''}, ${hotel.countryName || ''}`,
+            stars: hotel.hotelStar || 0,
+            type: this.convertHotelType(hotel.hotelType),
+            hotelType: hotel.hotelType,
+            amenitiesCount: hotel.amenitiesCount || 0,
+            rating: hotel.hotelRating || 0, // ✅ 숫자 그대로 저장
+            ratingText: this.getRatingText(hotel.hotelRating),
+            reviewCount: hotel.reviewCount || 0,
+            wishlisted: true,
+            cityName: hotel.cityName
+          }));
+
+          console.log('✅ 변환된 호텔 데이터:', this.hotels); // 디버깅용
+
           this.totalCount = data.totalCount;
           this.currentOffset = this.pageSize;
-          
         }
       } catch (error) {
-        console.error('찜한 호텔 목록 로드 중 오류:', error);
+        console.error('❌ 찜한 호텔 목록 로드 중 오류:', error);
+        console.error('❌ 에러 상세:', error.response);
         alert('찜한 호텔 목록을 불러올 수 없습니다.');
       } finally {
         this.isLoading = false;
@@ -1907,8 +1985,6 @@ export default {
     height: 32px;
     top: 10px;
     left: 10px;
-    background: rgba(255, 107, 107, 0.9);
-    color: white;
     padding: 4px 8px;
     border-radius: 8px;
     font-family: Montserrat;
@@ -1920,40 +1996,65 @@ export default {
     justify-content: center;
     z-index: 10;
   }
-
-  .reservation-status.paid {
-    background: rgba(141, 211, 187, 0.9);
+  
+  /* 미결제 - 빨강 */
+  .reservation-status.unpaid {
+    background: rgba(255, 107, 107, 0.9);
+    color: white;
+  }
+  
+  /* 결제완료 - 초록 */
+  .reservation-status.completed {
+    background: #4A90E2;
     color: #112211;
   }
-
-  /* 결제 버튼 스타일 */
+  
+  /* 예약마감 - 회색 */
+  .reservation-status.expired {
+    background: rgba(128, 128, 128, 0.9);
+    color: white;
+  }
+  
+  /* 결제하기 버튼 - 빨강 */
   .payment-btn {
     background: #FF6B6B !important;
     color: white !important;
   }
-
+  
   .payment-btn:hover {
     background: #ff5252 !important;
   }
-
+  
+  /* 결제완료 버튼 - 파랑 */
   .completed-btn {
-    background: #8DD3BB !important;
+    background: #4A90E2 !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+    color: white !important;
+  }
+  
+  .completed-btn:hover {
+    background: #4A90E2 !important;
+  }
+  
+  /* 예약마감 버튼 - 회색 */
+  .expired-btn {
+    background: #999999 !important;
     cursor: not-allowed !important;
     opacity: 0.7;
-    color: #112211 !important;
+    color: white !important;
   }
-
-  .completed-btn:hover {
-    background: #8DD3BB !important;
+  
+  .expired-btn:hover {
+    background: #999999 !important;
   }
-
+  
   /* 날짜 범위 표시 */
   .date-range {
     font-family: Montserrat;
     font-weight: 500;
     font-size: 12px;
     color: #666666;
-    margin-left: 8px;
   }
   /* 반응형 */
   @media screen and (max-width: 768px) {
