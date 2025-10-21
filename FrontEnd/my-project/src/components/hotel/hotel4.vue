@@ -88,12 +88,15 @@
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">{{ formattedRoomName }}</h1>
+              <div class="hotel-title-total">
+                <h1 class="hotel-title">{{ formattedRoomName }}</h1>
+                <span class="hotel-title-price">{{ formatPrice(baseFare) }}/night</span>
+              </div>
               <div class="hotel-location">
                 <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
-                  <span class="hotel-locatin-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
-                  <div class="hotel-location-hotelmap">{{ hotelInfo?.address || '주소' }}</div>
+                  <span class="hotel-location-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
+                  <div class="hotel-location-hotelmap"><img src="/images/hotel_img/map.jpg"/> {{ hotelInfo?.address || '주소' }}</div>
                 </span>
               </div>
             
@@ -253,12 +256,15 @@
         <div class="booking-container">
           <div class="left-section">
             <div class="hotel-info">
-              <h1 class="hotel-title">{{ formattedRoomName }}</h1>
+              <div class="hotel-title-total">
+                <h1 class="hotel-title">{{ formattedRoomName }}</h1>
+                <span class="hotel-title-price">{{ formatPrice(baseFare) }}/night</span>
+              </div>
               <div class="hotel-location">
                 <span><img :src="getImageUrl(hotelInfo?.images?.[0])" alt="hotel" /></span>
                 <span class="hotel-location-map">
-                  <span class="hotel-locatin-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
-                  <div class="hotel-location-hotelmap">{{ hotelInfo?.address || '주소' }}</div>
+                  <span class="hotel-location-hotel">{{ hotelInfo?.hotelName || '호텔' }}</span>
+                  <div class="hotel-location-hotelmap"><img src="/images/hotel_img/map.jpg"/> {{ hotelInfo?.address || '주소' }}</div>
                 </span>
               </div>
             
@@ -2043,24 +2049,41 @@ export default {
       box-shadow: 0px 4px 16px 0px #1122110D;
       margin-bottom: 40px;
   }
-
-  .hotel-title {
-      width: 742px;
-      height: 33px;
-      justify-content: space-between;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Noto Sans;
-      font-weight: 700;
-      font-style: Bold;
-      font-size: 24px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      color: #112211;
-      margin-bottom: 20px;
+  .hotel-title-total{
+    width: 742px;
+    height: 33px;
+    display: flex;
+    justify-content: space-between;
+        margin-bottom: 20px;
   }
+  .hotel-title {
 
+    font-family: Noto Sans;
+    font-weight: 700;
+    font-style: Bold;
+    font-size: 24px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
+
+  }
+  .hotel-title-price{
+    width: 176px;
+    height: 32px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Static/Headline Small/Font;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: Static/Headline Small/Size;
+    leading-trim: NONE;
+    line-height: Static/Headline Small/Line Height;
+    letter-spacing: Static/Headline Small/Tracking;
+    text-align: right;
+    color: #FF8682;
+
+  }
   .hotel-location {
       width: 742px;
       height: 95px;
@@ -2110,6 +2133,12 @@ export default {
       leading-trim: NONE;
       line-height: 100%;
       letter-spacing: 0%;
+      margin-top: 10px;
+  }
+  .hotel-location-hotelmap img{
+    width: 10px;
+    height: 13px;
+    
   }
 
   /* Date Selection */
@@ -2823,6 +2852,7 @@ export default {
       line-height: 100%;
       letter-spacing: 0%;
   }
+
 
   /* Newsletter Section */
   .newsletter-section {
