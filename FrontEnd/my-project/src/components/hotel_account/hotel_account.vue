@@ -220,7 +220,7 @@
         <!-- History Panel -->
         <section v-show="activeTab === 'history'" class="panel">
           <div class="booking-title">
-            예약내역
+            결제내역
             <div class="sort-container">
               <div class="custom-select-wrapper">
                 <select class="sort-select" v-model="sortOption">
@@ -237,71 +237,112 @@
             <img src="/images/hotel_account_img/bedroom.jpg" alt="bedroom"/>
             객실
           </div>
-          <div class="booking-wrap">
-            <div class="booking-list">
-              <div 
-                v-for="booking in sortedBookings" 
-                :key="booking.id" 
-                class="booking-card"
-              >
-                <div class="bc-logo">
-                  <img src="/images/hotel_account_img/cvk.jpg" alt="hotel logo">
+
+
+        <!-- ✅ 로딩 상태 -->
+        <div v-if="isLoadingReservations" class="loading-message">
+          <p>예약 내역을 불러오는 중...</p>
+        </div>
+
+        <!-- ✅ 예약 내역이 없을 때 -->
+        <div v-else-if="bookings.length === 0" class="empty-message">
+          <p>예약 내역이 없습니다.</p>
+        </div>
+
+        <!-- ✅ 예약 목록 -->
+        <div v-else class="booking-wrap">
+          <div class="booking-list">
+            <div 
+              v-for="booking in sortedBookings" 
+              :key="booking.reservationId" 
+              class="booking-card"
+            >
+            
+              <div class="bc-logo">
+                <img :src="getImageUrl(booking.hotelImage)" alt="hotel logo">
+              </div>
+
+              <!-- 날짜 -->
+              <div class="bc-dates">
+                <div class="bc-date-section">
+                  <div class="label">Check-In</div>
+                  <div class="val">{{ formatBookingDate(booking.checkInDate) }}</div>
                 </div>
-                
-                <!-- 날짜 -->
-                <div class="bc-dates">
-                  <div class="bc-date-section">
-                    <div class="label">Check-In</div>
-                    <div class="val">{{ booking.checkIn }}</div>
-                  </div>
-                  <div class="bc-separator"></div>
-                  <div class="bc-date-section">
-                    <div class="label">Check Out</div>
-                    <div class="val">{{ booking.checkOut }}</div>
-                  </div>
-                  <div class="bc-beeline"></div>
+                <div class="bc-separator"></div>
+                <div class="bc-date-section">
+                  <div class="label">Check Out</div>
+                  <div class="val">{{ formatBookingDate(booking.checkOutDate) }}</div>
                 </div>
-                
-                <!-- 시간 -->
-                <div class="bc-times">
-                  <div class="bc-time-info">
-                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
-                    <div>
-                      <div class="label">체크인</div>
-                      <div class="val">{{ booking.checkInTime }}</div>
-                    </div>
-                  </div>
-                  <div class="bc-time-info">
-                    <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
-                    <div>
-                      <div class="label">체크아웃</div>
-                      <div class="val">{{ booking.checkOutTime }}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- 방번호 -->
-                <div class="bc-guest">
-                  <div class="bc-time-info">
-                    <img class="time-icon" src="/images/hotel_account_img/room.jpg" alt="room">
-                    <div>
-                      <div class="label">방번호</div>
-                      <div class="val">{{ booking.roomNumber }}</div>
-                    </div>
+                <div class="bc-beeline"></div>
+              </div>
+
+              <!-- 시간 -->
+              <div class="bc-times">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
+                  <div>
+                    <div class="label">체크인</div>
+                    <div class="val">12:00pm</div>
                   </div>
                 </div>
-                
-                <!-- 버튼 -->
-                <div class="bc-actions">
-                  <button class="bc-btn" @click="downloadTicket(booking)">Download Ticket</button>
-                  <div class="bc-next" @click="viewBookingDetails(booking)">
-                    <img src="/images/hotel_account_img/right.jpg" alt="arrow"/>
+                <div class="bc-time-info">
+                  <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
+                  <div>
+                    <div class="label">체크아웃</div>
+                    <div class="val">11:30am</div>
                   </div>
+                </div>
+              </div>
+
+              <!-- 방번호 -->
+              <div class="bc-guest">
+                <div class="bc-time-info">
+                  <img class="time-icon" src="/images/hotel_account_img/room.jpg" alt="room">
+                  <div>
+                    <div class="label">방번호</div>
+                    <div class="val">{{ booking.roomNumber || 'On arrival' }}</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 버튼 -->
+              <div class="bc-actions">
+                <button 
+                  class="bc-btn" 
+                  @click="downloadTicket(booking)"
+                  :disabled="!canDownloadTicket(booking)"
+                  :title="getDownloadButtonTitle(booking)"
+                >
+                  Download Ticket
+                </button>
+                <div class="bc-next" @click="viewBookingDetails(booking)">
+                  <img src="/images/hotel_account_img/right.jpg" alt="arrow"/>
                 </div>
               </div>
             </div>
           </div>
-        </section>
+
+          <!-- ✅ 페이지네이션 -->
+          <div v-if="totalPages > 1" class="pagination">
+            <button 
+              @click="loadPreviousPage" 
+              :disabled="currentPage === 0"
+              class="pagination-btn"
+            >
+              이전
+            </button>
+            <span class="pagination-info">
+              {{ currentPage + 1 }} / {{ totalPages }}
+            </span>
+            <button 
+              @click="loadNextPage" 
+              :disabled="currentPage >= totalPages - 1"
+              class="pagination-btn"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      </section>
 
         <!-- Payments Panel -->
         <section v-show="activeTab === 'payments'" class="panel">
@@ -641,7 +682,7 @@
 </template>
 
 <script>
-import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI,memberCouponAPI } from '@/utils/commonAxios'
+import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI, memberCouponAPI, reservationAPI, ticketAPI } from '@/utils/commonAxios'
 
 export default {
   name: 'HotelAccount',
@@ -658,36 +699,17 @@ export default {
       // 실제 사용자 정보 (API에서 가져옴)
       actualUserInfo: null,
       
-      // Booking Data (예시 데이터)
+      // Booking Data
       sortOption: 'upcoming',
-      bookings: [
-        {
-          id: 1,
-          checkIn: 'Thur, Dec 8',
-          checkOut: 'Fri, Dec 9',
-          checkInTime: '12:00pm',
-          checkOutTime: '11:30am',
-          roomNumber: 'On arrival'
-        },
-        {
-          id: 2,
-          checkIn: 'Mon, Dec 12',
-          checkOut: 'Wed, Dec 14',
-          checkInTime: '3:00pm',
-          checkOutTime: '11:00am',
-          roomNumber: '201'
-        },
-        {
-          id: 3,
-          checkIn: 'Fri, Dec 16',
-          checkOut: 'Sun, Dec 18',
-          checkInTime: '2:00pm',
-          checkOutTime: '12:00pm',
-          roomNumber: 'On arrival'
-        }
-      ],
+      bookings: [], // ✅ 중복 제거 - 하나만 남김
       
-      // Payment Cards - 빈 배열로 초기화 (실제 데이터는 API에서 가져옴)
+      // 페이지네이션
+      isLoadingReservations: false,
+      currentPage: 0,
+      pageSize: 3,
+      totalCount: 0,
+      
+      // Payment Cards
       paymentCards: [],
       
       // 카드 로딩 상태
@@ -705,11 +727,11 @@ export default {
       editModalActive: false,
       passwordModalActive: false,
       
-      // New Card Data - cardPassword로 변경
+      // New Card Data
       newCard: {
         number: '',
         expiry: '',
-        cardPassword: '', // cvc에서 cardPassword로 변경
+        cardPassword: '',
         name: '',
         country: 'KR',
         saveInfo: false
@@ -738,17 +760,18 @@ export default {
   },
   
   computed: {
-    // 표시할 사용자 이름 계산 (소셜 로그인 개선)
+    totalPages() {
+      return Math.ceil(this.totalCount / this.pageSize);
+    },
+    
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
         const { provider, firstName, lastName, email } = this.userInfo;
         
-        // 소셜 로그인의 경우 firstName만 사용
         if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
           return firstName || email?.split('@')[0] || 'Social User';
         }
         
-        // local 로그인의 경우 firstName + lastName 사용
         if (provider === 'local') {
           if (firstName && lastName) {
             return `${firstName} ${lastName}`;
@@ -760,11 +783,9 @@ export default {
         }
       }
       
-      // 로그인하지 않은 경우 기본 이름
       return 'Guest';
     },
     
-    // 사용자 상태 표시
     userStatus() {
       if (this.isLoggedIn && this.userInfo?.provider) {
         const providerNames = {
@@ -778,7 +799,6 @@ export default {
       return this.isLoggedIn ? 'Online' : 'Offline';
     },
     
-    // 계정 타입 확인
     isLocalAccount() {
       return this.userInfo?.provider === 'local';
     },
@@ -787,7 +807,6 @@ export default {
       return ['google', 'kakao', 'naver'].includes(this.userInfo?.provider);
     },
     
-    // 실제 사용자 정보 표시
     displayUserInfo() {
       if (!this.actualUserInfo) return {};
       
@@ -798,7 +817,6 @@ export default {
         provider: this.actualUserInfo.provider || 'local'
       };
       
-      // local 계정의 경우 firstName + lastName 조합
       if (this.isLocalAccount && this.actualUserInfo.lastName) {
         info.name = `${this.actualUserInfo.firstName} ${this.actualUserInfo.lastName}`;
       }
@@ -806,16 +824,21 @@ export default {
       return info;
     },
     
-    // 정렬된 예약 목록
     sortedBookings() {
       const bookings = [...this.bookings];
       switch (this.sortOption) {
         case 'recent':
-          return bookings.reverse();
+          return bookings.sort((a, b) => 
+            new Date(b.checkInDate) - new Date(a.checkInDate)
+          );
         case 'oldest':
-          return bookings;
+          return bookings.sort((a, b) => 
+            new Date(a.checkInDate) - new Date(b.checkInDate)
+          );
         case 'hotel':
-          return bookings.sort((a, b) => a.hotelName?.localeCompare(b.hotelName) || 0);
+          return bookings.sort((a, b) => 
+            a.hotelName.localeCompare(b.hotelName)
+          );
         default:
           return bookings;
       }
@@ -827,9 +850,10 @@ export default {
     document.addEventListener('keydown', this.handleEscapeKey);
     await this.loadUserInfo();
     await this.loadUserProfile();
-    await this.loadPaymentMethods(); // 결제수단 로드 추가
+    await this.loadPaymentMethods();
     await this.loadMemberImages();
-    // 쿼리 파라미터로 탭 설정
+    await this.loadReservations(); // ✅ 예약 내역 로드
+    
     if (this.$route.query.tab) {
       this.activeTab = this.$route.query.tab;
     }
@@ -840,14 +864,12 @@ export default {
     document.removeEventListener('keydown', this.handleEscapeKey);
   },
   
-  // 라우터 변경 시에도 사용자 정보 다시 확인
   watch: {
     '$route'(to) {
       this.loadUserInfo();
-      // 쿼리 파라미터가 변경되면 탭도 변경
-       if (to.query.tab) {
-      this.activeTab = to.query.tab;
-    }
+      if (to.query.tab) {
+        this.activeTab = to.query.tab;
+      }
     }
   },
   
@@ -857,7 +879,6 @@ export default {
       this.$router.push('/login');
     },
 
-    // 사용자 정보 로드
     loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
       
@@ -866,12 +887,10 @@ export default {
         console.log('사용자 정보:', this.userInfo);
       } else {
         this.userInfo = null;
-        // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
         this.$router.push('/login');
       }
     },
     
-    // 서버에서 실제 사용자 프로필 정보 가져오기
     async loadUserProfile() {
       if (!this.isLoggedIn) return;
       
@@ -890,88 +909,101 @@ export default {
         this.isLoading = false;
       }
     },
+    
     async loadMemberImages() {
       if (!this.isLoggedIn) return;
 
       try {
-        // 프로필 이미지 조회
         const profileResponse = await memberImageAPI.getProfileImage();
         if (profileResponse && profileResponse.data && profileResponse.data.imagePath) {
           this.profileAvatar = this.getImageUrl(profileResponse.data.imagePath);
         }
 
-        // 배경 이미지 조회
         const backgroundResponse = await memberImageAPI.getBackgroundImage();
         if (backgroundResponse && backgroundResponse.data && backgroundResponse.data.imagePath) {
           this.coverImage = this.getImageUrl(backgroundResponse.data.imagePath);
         }
       } catch (error) {
         console.error('이미지 로드 실패:', error);
-        // 실패 시 기본 이미지 유지
       }
     },
-    //계정에서 결제내역 클릭
+    
     goToPaymentHistory() {
       this.activeTab = 'history';
       this.isDropdownActive = false; 
     },
+    // ✅ 티켓 다운로드 가능 여부
+    canDownloadTicket(booking) {
+      if (!booking.paymentId) return false;
+      if (!booking.reservationsStatus) return false;
+      
+      const status = booking.paymentStatus?.toString().toLowerCase();
+      return status === 'paid';
+    },
+    // ✅ 버튼 툴팁 메시지
+    getDownloadButtonTitle(booking) {
+      if (!booking.paymentId) return '결제 정보가 없습니다';
+      if (!booking.reservationsStatus) return '예약이 확정되지 않았습니다';
+      
+      const status = booking.paymentStatus?.toString().toLowerCase();
+      if (status === 'refunded') return '환불된 예약입니다';
+      if (status === 'failed') return '결제 실패한 예약입니다';
+      if (status === 'paid') return '티켓 다운로드';
+      
+      return '티켓을 다운로드할 수 없습니다';
+    },
     getImageUrl(imagePath) {
       if (!imagePath) {
-        return '';
+        return '/images/hotel_img/hotel1.jpg';
       }
 
-      // HTTP/HTTPS 절대 경로
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         return imagePath;
       }
 
-      // 정적 이미지 (/images/)
       if (imagePath.startsWith('/images/')) {
         return imagePath;
       }
 
-      // 서버 업로드 이미지 (/member/)
       return adminAPI.getImageUrl(imagePath);
     },
-    // 결제수단 목록 로드
-    async loadPaymentMethods() {
-    if (!this.isLoggedIn) return;
     
-    try {
-      this.isLoadingCards = true;
-      const response = await paymentMethodAPI.getMyPaymentMethods();
+    async loadPaymentMethods() {
+      if (!this.isLoggedIn) return;
       
-      if (response && response.data) {
-        // 서버에서 받은 데이터를 화면용 형식으로 변환
-        this.paymentCards = response.data.map(card => ({
-          id: card.id,
-          lastFour: card.cardLastFour || '****', // 서버에서 직접 제공하는 마지막 4자리
-          expiryDate: '**/**', // 보안상 숨김
-          cardCompany: card.cardCompany || '카드사', // 카드사 정보
-          cardType: card.cardType || 'VISA', // 카드 타입 (VISA, MasterCard 등)
-          tossKey: card.tossKey,
-          createdAt: card.createdAt
-        }));
+      try {
+        this.isLoadingCards = true;
+        const response = await paymentMethodAPI.getMyPaymentMethods();
+        
+        if (response && response.data) {
+          this.paymentCards = response.data.map(card => ({
+            id: card.id,
+            lastFour: card.cardLastFour || '****',
+            expiryDate: '**/**',
+            cardCompany: card.cardCompany || '카드사',
+            cardType: card.cardType || 'VISA',
+            tossKey: card.tossKey,
+            createdAt: card.createdAt
+          }));
+        }
+      } catch (error) {
+        console.error('결제수단 로드 실패:', error);
+        if (error.response?.status !== 404) {
+          alert('결제수단을 불러오는데 실패했습니다.');
+        }
+      } finally {
+        this.isLoadingCards = false;
       }
-    } catch (error) {
-      console.error('결제수단 로드 실패:', error);
-      if (error.response?.status !== 404) {
-        alert('결제수단을 불러오는데 실패했습니다.');
-      }
-    } finally {
-      this.isLoadingCards = false;
-    }
-  },
-    // 카드 타입에 따른 이미지 반환
+    },
+    
     getCardImage(cardType) {
       return paymentMethodAPI.getCardTypeImage(cardType);
     },
+    
     getKoreanCardCompany(cardCompany) {
       return paymentMethodAPI.getKoreanCardCompany(cardCompany);
     },
-
     
-    // Dropdown Methods
     toggleDropdown() {
       this.isDropdownActive = !this.isDropdownActive;
     },
@@ -990,7 +1022,6 @@ export default {
       }
     },
     
-    // 로그아웃 처리
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
@@ -1008,12 +1039,10 @@ export default {
       }
     },
     
-    // 계정 페이지로 이동 (이미 계정 페이지이므로 아무것도 하지 않음)
     goToAccount() {
       // 이미 계정 페이지임
     },
     
-    // 호텔 페이지로 이동
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -1023,7 +1052,6 @@ export default {
       }
     },
     
-    // 찜목록 페이지로 이동
     goToFavourites() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelsix');
@@ -1033,13 +1061,11 @@ export default {
       }
     },
     
-    // Image Upload Methods
     async handleCoverImageChange(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       try {
-        // 파일 유효성 검사
         if (!file.type.startsWith('image/')) {
           alert('이미지 파일만 업로드 가능합니다.');
           return;
@@ -1050,7 +1076,6 @@ export default {
           return;
         }
 
-        // 서버 업로드
         const response = await memberImageAPI.uploadBackgroundImage(file);
 
         if (response && response.data && response.data.imagePath) {
@@ -1069,7 +1094,6 @@ export default {
       if (!file) return;
 
       try {
-        // 파일 유효성 검사
         if (!file.type.startsWith('image/')) {
           alert('이미지 파일만 업로드 가능합니다.');
           return;
@@ -1080,7 +1104,6 @@ export default {
           return;
         }
 
-        // 서버 업로드
         const response = await memberImageAPI.uploadProfileImage(file);
 
         if (response && response.data && response.data.imagePath) {
@@ -1094,9 +1117,7 @@ export default {
       }
     },
     
-    // Edit Modal Methods (수정됨)
     openEditModal(type) {
-      // 소셜 로그인 계정의 경우 이름 변경 불가
       if (this.isSocialAccount) {
         alert('소셜 로그인 계정은 정보를 변경할 수 없습니다.');
         return;
@@ -1149,7 +1170,6 @@ export default {
       this.editValue = '';
     },
     
-    // 정보 수정 저장 (서버 API 연동)
     async saveEdit() {
       if (!this.editValue.trim()) {
         alert('값을 입력해주세요.');
@@ -1159,10 +1179,8 @@ export default {
       try {
         const updateData = {};
         
-        // 타입별로 업데이트 데이터 설정
         switch (this.editType) {
           case 'name':
-            // local 계정의 경우 이름을 firstName, lastName으로 분리
             if (this.isLocalAccount) {
               const nameParts = this.editValue.trim().split(' ');
               updateData.firstName = nameParts[0];
@@ -1177,14 +1195,11 @@ export default {
             break;
         }
         
-        // 서버에 업데이트 요청
         const response = await memberAPI.updateProfile(updateData);
         
         if (response && response.data) {
-          // 성공 시 실제 사용자 정보 다시 로드
           await this.loadUserProfile();
           
-          // localStorage 정보도 업데이트 (필요한 경우)
           if (this.editType === 'name' && this.isLocalAccount) {
             const userInfo = authUtils.getUserInfo();
             userInfo.firstName = updateData.firstName;
@@ -1203,7 +1218,6 @@ export default {
       }
     },
     
-    // Password Modal Methods (local 계정만 가능)
     openPasswordModal() {
       if (this.isSocialAccount) {
         alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
@@ -1234,7 +1248,6 @@ export default {
         const response = await memberAPI.accountForgot(this.currentPassword);
         
         if (response && response.code === 200) {
-          // 비밀번호 확인 성공 - 2단계로 이동
           this.passwordStep = 2;
         }
       } catch (error) {
@@ -1270,10 +1283,8 @@ export default {
         if (response && response.code === 200) {
           this.closePasswordModal();
           alert('비밀번호가 성공적으로 변경되었습니다.');
-          // 서버 API 호출하여 토큰을 블랙리스트에 등록
           await authUtils.logout();
           
-          // 사용자 정보 다시 로드
           this.loadUserInfo();
 
           this.$router.push('/login');
@@ -1291,7 +1302,6 @@ export default {
       }
     },
 
-    // Payment Card Methods - 실제 API 연동
     openAddCardModal() {
       this.addCardModalActive = true;
       this.resetNewCard();
@@ -1302,27 +1312,23 @@ export default {
       this.resetNewCard();
     },
 
-    // 카드 추가 처리 - 실제 API 연동
     async addNewCard() {
       if (!this.validateCardForm()) return;
       
       try {
         this.isAddingCard = true;
         
-        // 프론트엔드 데이터를 서버 형식으로 변환 (이메일 제거)
         const cardData = {
-          cardNumber: this.newCard.number.replace(/\s/g, ''), // 공백 제거
+          cardNumber: this.newCard.number.replace(/\s/g, ''),
           cardExpirationMonth: this.newCard.expiry.split('/')[0],
           cardExpirationYear: this.newCard.expiry.split('/')[1],
-          cardPassword: this.newCard.cardPassword, // 카드 비밀번호 앞 2자리
+          cardPassword: this.newCard.cardPassword,
           customerName: this.newCard.name
         };
 
-        // 서버에 카드 등록 요청
         const response = await paymentMethodAPI.registerPaymentMethod(cardData);
         
         if (response && response.data) {
-          // 성공 시 카드 목록 다시 로드
           await this.loadPaymentMethods();
           this.closeAddCardModal();
           alert('카드가 성공적으로 등록되었습니다.');
@@ -1344,7 +1350,6 @@ export default {
       }
     },
 
-    // 카드 삭제 - 실제 API 연동
     async deleteCard(cardId) {
       if (!confirm('정말로 이 카드를 삭제하시겠습니까?')) {
         return;
@@ -1354,7 +1359,6 @@ export default {
         const response = await paymentMethodAPI.deletePaymentMethod(cardId);
         
         if (response) {
-          // 성공 시 카드 목록 다시 로드
           await this.loadPaymentMethods();
           alert('카드가 삭제되었습니다.');
         }
@@ -1371,13 +1375,11 @@ export default {
       }
     },
 
-    // 카드 정보 유효성 검사 강화 (수정됨)
     validateCardForm() {
-      // API 서비스의 유효성 검사 사용 (cardPassword로 변경)
       const validation = paymentMethodAPI.validateCardInfo({
         cardNumber: this.newCard.number,
         expiry: this.newCard.expiry,
-        cardPassword: this.newCard.cardPassword, // 파라미터명 통일
+        cardPassword: this.newCard.cardPassword,
         name: this.newCard.name
       });
 
@@ -1389,65 +1391,147 @@ export default {
       return true;
     },
     
-    // 새 카드 데이터 초기화
     resetNewCard() {
       this.newCard = {
         number: '',
         expiry: '',
-        cardPassword: '', // cvc에서 cardPassword로 변경
+        cardPassword: '',
         name: '',
-        country: 'KR', // 한국으로 기본값 설정
+        country: 'KR',
         saveInfo: false
       };
     },
     
-    // 카드 번호 포맷팅 개선
     formatCardNumber() {
       this.newCard.number = paymentMethodAPI.formatCardNumber(this.newCard.number);
     },
 
-    // 만료일 포맷팅 개선  
     formatExpiryDate() {
       this.newCard.expiry = paymentMethodAPI.formatExpiryDate(this.newCard.expiry);
     },
 
-    // 카드 비밀번호 입력 제한 (2자리)
     formatCardPassword() {
       this.newCard.cardPassword = this.newCard.cardPassword.replace(/\D/g, '').substring(0, 2);
     },
 
-    // 카드 소유자명 포맷팅 (숫자 제거)
     formatCardName() {
       this.newCard.name = this.newCard.name.replace(/[0-9]/g, '');
     },
     
-    // Booking Methods
-    downloadTicket(booking) {
-      console.log('Downloading ticket for booking:', booking.id);
-      alert('티켓 다운로드가 시작됩니다.');
+    // ✅ 예약 내역 로드
+    async loadReservations() {
+      if (!this.isLoggedIn) return;
+      
+      try {
+        this.isLoadingReservations = true;
+        
+        const response = await reservationAPI.getMyReservationHistory({
+          offset: this.currentPage * this.pageSize,
+          size: this.pageSize
+        });
+        
+        if (response && response.data) {
+          this.bookings = response.data.reservations || [];
+          this.totalCount = response.data.totalCount || 0;
+        }
+        
+      } catch (error) {
+        console.error('예약 내역 로드 실패:', error);
+        alert('예약 내역을 불러오는데 실패했습니다.');
+      } finally {
+        this.isLoadingReservations = false;
+      }
     },
     
+    async loadNextPage() {
+      if (this.currentPage < this.totalPages - 1) {
+        this.currentPage++;
+        await this.loadReservations();
+      }
+    },
+    
+    async loadPreviousPage() {
+      if (this.currentPage > 0) {
+        this.currentPage--;
+        await this.loadReservations();
+      }
+    },
+    
+    formatBookingDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+    },
+    
+    // ✅ 티켓 다운로드 (adminAPI 사용)
+    async downloadTicket(booking) {
+      console.log('다운로드 시도:', booking);
+      
+      if (!booking.paymentId) {
+        alert('결제 정보가 없습니다.');
+        return;
+      }
+      
+      try {
+        const response = await ticketAPI.getTicketByPaymentId(booking.paymentId);
+        
+        console.log('티켓 응답:', response);
+        
+        if (response.code === 200 && response.data.ticketImagePath) {
+          const imageUrl = adminAPI.getImageUrl(response.data.ticketImagePath);
+          
+          const imageResponse = await fetch(imageUrl);
+          const blob = await imageResponse.blob();
+          
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `ticket_${response.data.barcode}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+          
+          console.log('✅ 티켓 다운로드 완료');
+        } else {
+          alert('티켓 이미지를 찾을 수 없습니다.');
+        }
+      } catch (error) {
+        console.error('티켓 다운로드 실패:', error);
+        alert('티켓 다운로드에 실패했습니다.');
+      }
+    },
+    
+    // ✅ 티켓 상세 보기 (중복 제거)
     viewBookingDetails(booking) {
-      console.log('Viewing details for booking:', booking.id);
+      if (!booking.paymentId) {
+        alert('결제 정보가 없습니다.');
+        return;
+      }
+      
+      this.$router.push({
+        path: '/hotelfive',
+        query: { paymentId: booking.paymentId }
+      });
     },
     
-    // Newsletter Methods
     async subscribe() {
-      // 로그인 확인
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.')
         this.$router.push('/login')
         return
       }
 
-      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
       try {
         const response = await memberCouponAPI.subscribeAndReceiveCoupons()
         
         if (response.code === 200) {
           this.receivedCoupons = response.data || []
           this.showCouponModal = true
-          this.newsletter.email = '' // 이메일 입력창 초기화
+          this.newsletterEmail = ''
         }
       } catch (error) {
         console.error('쿠폰 지급 실패:', error)
@@ -1477,8 +1561,7 @@ export default {
       const d = new Date(date)
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
     },
-
-    // Utility Methods
+    
     closeAllModals() {
       this.addCardModalActive = false;
       this.editModalActive = false;
@@ -2026,8 +2109,8 @@ export default {
     leading-trim: NONE;
     line-height: normal;
     letter-spacing: 0%;
-    text-align: left;
-    margin-right: -30px;
+    text-align: right;
+    margin-right: 15px;
     background: transparent;
     cursor: pointer;
   }
@@ -3197,6 +3280,53 @@ export default {
   .btn-close:hover {
     border-color: #8DD3BB;
     color: #8DD3BB;
+  }
+
+  /* 페이지네이션 스타일 */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    padding: 20px 0;
+  }
+
+  .pagination-btn {
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: #FF8682;
+    color: white;
+    border-color: #FF8682;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pagination-info {
+    font-size: 16px;
+    color: #333;
+  }
+
+  .empty-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+  }
+
+  .loading-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
   }
 
   /* 반응형 */

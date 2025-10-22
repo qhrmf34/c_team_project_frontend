@@ -310,6 +310,25 @@ export const reservationAPI = {
     
     const response = await apiClient.get(url);
     return response.data;
+  },
+    /**
+   * 내 결제 내역 조회 (HotelAccount용 )
+   */
+  async getMyReservationHistory(params = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset);
+    }
+    if (params.size !== undefined) {
+      queryParams.append('size', params.size);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/reservations/history?${queryString}` : '/api/reservations/history';
+    
+    const response = await apiClient.get(url);
+    return response.data;
   }
 }
 // 결제 API 추가
@@ -619,6 +638,21 @@ export const ticketAPI = {
    */
   async getTicketByPaymentId(paymentId) {
     const response = await apiClient.get(`/api/tickets/payment/${paymentId}`);
+    return response.data;
+  },
+    /**
+   * 티켓 이미지 업로드
+   */
+  async uploadTicketImage(ticketId, formData) {
+    const response = await apiClient.post(
+      `/api/tickets/${ticketId}/upload-image`, 
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
     return response.data;
   }
 }

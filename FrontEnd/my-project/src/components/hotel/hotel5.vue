@@ -357,6 +357,7 @@
 import { authUtils, ticketAPI, paymentAPI, adminAPI, memberCouponAPI, memberImageAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 import JsBarcode from 'jsbarcode'
+import html2canvas from 'html2canvas'
 
 export default {
   name: 'HotelFive',
@@ -369,10 +370,10 @@ export default {
       showCouponModal: false,
       receivedCoupons: [],
       profileImageUrl: '/images/hotel_account_img/member.jpg',
-      // ✅ 티켓 데이터
       ticket: null,
       isLoading: true,
-      error: null
+      error: null,
+      isUploadingImage: false
     }
   },
   
@@ -380,8 +381,11 @@ export default {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo();
     
-    // ✅ 티켓 로드
     await this.loadTicket();
+    
+    if (this.ticket && !this.ticket.ticketImagePath) {
+      await this.captureAndUploadTicket();
+    }
   },
   
   beforeUnmount() {
@@ -421,6 +425,7 @@ export default {
       this.isDropdownActive = false;
       this.$router.push('/login');
     },
+    
     searchByCountry(countryName) {
       this.$router.push({
         path: '/hoteltwo',
@@ -431,8 +436,7 @@ export default {
         }
       });
     },
-  
-
+    
     searchByCity(cityName) {
       this.$router.push({
         path: '/hoteltwo',
@@ -443,10 +447,10 @@ export default {
         }
       });
     },
-
+    
     getToday() {
       const today = new Date();
-      return today.toLocaleDateString('en-CA'); 
+      return today.toLocaleDateString('en-CA');
     },
     
     getTomorrow() {
@@ -454,7 +458,7 @@ export default {
       tomorrow.setDate(tomorrow.getDate() + 1);
       return tomorrow.toLocaleDateString('en-CA');
     },
-    // 티켓 로드
+    
     async loadTicket() {
       try {
         this.isLoading = true;
@@ -469,7 +473,6 @@ export default {
         if (response.code === 200) {
           this.ticket = response.data;
 
-          // 바코드 생성 - DOM 렌더링 완전히 대기
           await this.$nextTick();
           setTimeout(() => {
             this.generateBarcode();
@@ -486,8 +489,6 @@ export default {
       }
     },
     
-
-    // 바코드 생성
     generateBarcode() {
       if (!this.ticket || !this.ticket.barcode) {
         console.log('티켓 또는 바코드 정보 없음:', this.ticket);
@@ -515,7 +516,62 @@ export default {
         console.error('바코드 생성 실패:', error);
       }
     },
-    // ✅ 날짜 포맷
+    
+    // ✅ 티켓 캡처 및 업로드
+    async captureAndUploadTicket() {
+      if (this.isUploadingImage) return;
+      
+      try {
+        this.isUploadingImage = true;
+        
+        await this.$nextTick();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const ticketElement = this.$refs.ticketElement;
+        if (!ticketElement) {
+          console.error('티켓 요소를 찾을 수 없습니다');
+          return;
+        }
+        
+        console.log('티켓 캡처 시작');
+        
+        const canvas = await html2canvas(ticketElement, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false
+        });
+        
+        console.log('Canvas 생성 완료');
+        
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        
+        console.log('Blob 생성 완료, 크기:', blob.size);
+        
+        const formData = new FormData();
+        formData.append('file', blob, `ticket_${this.ticket.barcode}.png`);
+        formData.append('barcode', this.ticket.barcode);
+        
+        console.log('서버에 업로드 시작');
+        
+        const response = await ticketAPI.uploadTicketImage(
+          this.ticket.ticketId, 
+          formData
+        );
+        
+        if (response.code === 200) {
+          this.ticket.ticketImagePath = response.data.imagePath;
+          console.log('✅ 티켓 이미지 업로드 완료:', response.data.imagePath);
+        }
+        
+      } catch (error) {
+        console.error('티켓 이미지 업로드 실패:', error);
+      } finally {
+        this.isUploadingImage = false;
+      }
+    },
+    
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -525,55 +581,61 @@ export default {
       return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
     },
     
-    // ✅ 이미지 URL
+    // ✅ 이미지 URL (기본 이미지 처리 추가)
     getImageUrl(imagePath) {
-      if (!imagePath) return '/images/hotel_img/default.jpg';
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg'; // ✅ 기본 이미지
       if (imagePath.startsWith('http')) return imagePath;
       if (imagePath.startsWith('/images/')) return imagePath;
       return adminAPI.getImageUrl(imagePath);
     },
     
-    // ✅ 가격 포맷
     formatPrice(price) {
       if (!price) return '₩0';
       return '₩' + Math.floor(price).toLocaleString('ko-KR');
     },
     
-    // ✅ 카카오톡 공유
-    async shareTicket() {
-      if (!window.Kakao) {
-        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
-        return;
-      }
+    // ✅ 카카오톡 공유 (티켓 이미지만 공유)
+// ✅ 카카오톡 공유 (adminAPI 사용)
+async shareTicket() {
+  if (!window.Kakao) {
+    alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+    return;
+  }
 
-      if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY);
-      }
+  if (!window.Kakao.isInitialized()) {
+    window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY);
+  }
 
-      const ticketUrl = `${window.location.origin}/hotelfive?paymentId=${this.$route.query.paymentId}`;
+  // ✅ 티켓 이미지가 없으면 먼저 생성
+  if (!this.ticket.ticketImagePath) {
+    alert('티켓 이미지를 생성하는 중입니다. 잠시 후 다시 시도해주세요.');
+    await this.captureAndUploadTicket();
+    return;
+  }
 
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: `${this.ticket.hotelName} 예약 티켓`,
-          description: `${this.ticket.roomName}\n체크인: ${this.formatDate(this.ticket.checkInDate)}`,
-          imageUrl: this.getImageUrl(this.ticket.hotelImage),
-          link: {
-            mobileWebUrl: ticketUrl,
-            webUrl: ticketUrl,
-          },
+  // ✅ adminAPI 사용
+  const ticketImageUrl = `${window.location.origin}/uploads${this.ticket.ticketImagePath}`;
+  
+  console.log('공유할 티켓 이미지:', ticketImageUrl);
+
+  try {
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `${this.ticket.hotelName} 예약 티켓`,
+        description: `체크인: ${this.formatDate(this.ticket.checkInDate)} | 체크아웃: ${this.formatDate(this.ticket.checkOutDate)}`,
+        imageUrl: ticketImageUrl,
+        link: {
+          mobileWebUrl: ticketImageUrl,
+          webUrl: ticketImageUrl,
         },
-        buttons: [
-          {
-            title: '티켓 보기',
-            link: {
-              mobileWebUrl: ticketUrl,
-              webUrl: ticketUrl,
-            },
-          },
-        ],
-      });
-    },
+      }
+    });
+  } catch (error) {
+    console.error('카카오톡 공유 실패:', error);
+    alert('카카오톡 공유에 실패했습니다.');
+  }
+},
     
     // ✅ 환불 요청
     async requestRefund() {
@@ -608,38 +670,95 @@ export default {
       }
     },
     
-    async downloadTicket() {
-      try {
-        const ticketElement = this.$refs.ticketElement
-        
-        if (!window.html2canvas) {
-          const script = document.createElement('script')
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-          script.onload = () => this.captureTicket(ticketElement)
-          document.head.appendChild(script)
-        } else {
-          this.captureTicket(ticketElement)
-        }
-      } catch (error) {
-        console.error('티켓 다운로드 중 오류:', error)
-        alert('티켓 다운로드에 실패했습니다.')
-      }
-    },
-    
-    captureTicket(ticketElement) {
-      window.html2canvas(ticketElement, {
-        backgroundColor: null,
+    // ✅ 티켓 다운로드 (수정)
+// ✅ 티켓 다운로드 (adminAPI 사용)
+async downloadTicket() {
+  try {
+    if (this.ticket.ticketImagePath) {
+      // ✅ adminAPI 사용
+      const imageUrl = adminAPI.getImageUrl(this.ticket.ticketImagePath);
+      
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `hotel-ticket-${this.ticket.barcode}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      console.log('✅ 티켓 다운로드 완료');
+    } else {
+      // 이미지가 없으면 현재 화면 캡처
+      const ticketElement = this.$refs.ticketElement;
+      
+      const canvas = await html2canvas(ticketElement, {
+        backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         allowTaint: false
-      }).then(canvas => {
-        const link = document.createElement('a')
-        link.download = `hotel-ticket-${new Date().getTime()}.png`
-        link.href = canvas.toDataURL()
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      })
+      });
+      
+      canvas.toBlob((blob) => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `hotel-ticket-${this.ticket.barcode}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      });
+    }
+  } catch (error) {
+    console.error('티켓 다운로드 중 오류:', error);
+    alert('티켓 다운로드에 실패했습니다.');
+  }
+},
+    
+    async subscribe() {
+      if (!this.isLoggedIn) {
+        alert('로그인이 필요한 서비스입니다.')
+        this.$router.push('/login')
+        return
+      }
+
+      try {
+        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
+        
+        if (response.code === 200) {
+          this.receivedCoupons = response.data || []
+          this.showCouponModal = true
+          this.email = ''
+        }
+      } catch (error) {
+        console.error('쿠폰 지급 실패:', error)
+        
+        if (error.response?.status === 404) {
+          alert('현재 지급 가능한 쿠폰이 없습니다.')
+        } else if (error.response?.status === 401) {
+          alert('로그인이 필요한 서비스입니다.')
+          this.$router.push('/login')
+        } else {
+          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
+        }
+      }
+    },
+
+    closeCouponModal() {
+      this.showCouponModal = false
+      this.receivedCoupons = []
+    },
+
+    formatCouponDiscount(discount) {
+      return `${discount}%`
+    },
+
+    formatCouponDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
     },
     
     loadUserInfo() {
@@ -654,6 +773,7 @@ export default {
         this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
+    
     async loadProfileImage() {
       try {
         const response = await memberImageAPI.getProfileImage();
@@ -698,53 +818,6 @@ export default {
       }
     },
     
-    async subscribe() {
-      // 로그인 확인
-      if (!this.isLoggedIn) {
-        alert('로그인이 필요한 서비스입니다.')
-        this.$router.push('/login')
-        return
-      }
-
-      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
-      try {
-        const response = await memberCouponAPI.subscribeAndReceiveCoupons()
-        
-        if (response.code === 200) {
-          this.receivedCoupons = response.data || []
-          this.showCouponModal = true
-          this.newsletter.email = '' // 이메일 입력창 초기화
-        }
-      } catch (error) {
-        console.error('쿠폰 지급 실패:', error)
-        
-        if (error.response?.status === 404) {
-          alert('현재 지급 가능한 쿠폰이 없습니다.')
-        } else if (error.response?.status === 401) {
-          alert('로그인이 필요한 서비스입니다.')
-          this.$router.push('/login')
-        } else {
-          alert(error.response?.data?.message || '쿠폰 지급 중 오류가 발생했습니다.')
-        }
-      }
-    },
-
-    closeCouponModal() {
-      this.showCouponModal = false
-      this.receivedCoupons = []
-    },
-
-    formatCouponDiscount(discount) {
-      return `${discount}%`
-    },
-
-    formatCouponDate(date) {
-      if (!date) return ''
-      const d = new Date(date)
-      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-    },
-
-    
     goToHotel() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelone');
@@ -762,7 +835,7 @@ export default {
         this.$router.push('/login');
       }
     },
-    
+
     goToAccount() {
       if (this.isLoggedIn) {
         this.$router.push('/hotelaccount');
