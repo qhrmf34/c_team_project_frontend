@@ -1522,7 +1522,7 @@ export default {
           if (imagePath.startsWith('http')) {
             this.profileImageUrl = imagePath;
           } else {
-            this.profileImageUrl = `http://localhost:8089/uploads${imagePath}`;
+            this.profileImageUrl = adminAPI.getImageUrl(this.imagePath);
           }
         }
       } catch (error) {

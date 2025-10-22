@@ -153,7 +153,7 @@
                   </div>
                   <div class="info-item-content">
                     <div class="info-check">체크인</div>          
-                    <div class="info-item-time">12:00pm</div>
+                    <div class="info-item-time">{{ticket.checkInTime}}pm</div>
                   </div>
                 </div>
 
@@ -163,7 +163,7 @@
                   </div>
                   <div class="info-item-content">
                     <div class="info-check">체크아웃</div>  
-                    <div class="info-item-time">11:30am</div>
+                    <div class="info-item-time">{{ticket.checkOutTime}}am</div>
                   </div>
                 </div>
 
@@ -670,52 +670,51 @@ async shareTicket() {
       }
     },
     
-    // ✅ 티켓 다운로드 (수정)
-// ✅ 티켓 다운로드 (adminAPI 사용)
-async downloadTicket() {
-  try {
-    if (this.ticket.ticketImagePath) {
-      // ✅ adminAPI 사용
-      const imageUrl = adminAPI.getImageUrl(this.ticket.ticketImagePath);
-      
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `hotel-ticket-${this.ticket.barcode}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      
-      console.log('✅ 티켓 다운로드 완료');
-    } else {
-      // 이미지가 없으면 현재 화면 캡처
-      const ticketElement = this.$refs.ticketElement;
-      
-      const canvas = await html2canvas(ticketElement, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        allowTaint: false
-      });
-      
-      canvas.toBlob((blob) => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `hotel-ticket-${this.ticket.barcode}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      });
-    }
-  } catch (error) {
-    console.error('티켓 다운로드 중 오류:', error);
-    alert('티켓 다운로드에 실패했습니다.');
-  }
-},
+    // ✅ 티켓 다운로드 (adminAPI 사용)
+    async downloadTicket() {
+      try {
+        if (this.ticket.ticketImagePath) {
+          // ✅ adminAPI 사용
+          const imageUrl = adminAPI.getImageUrl(this.ticket.ticketImagePath);
+
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `hotel-ticket-${this.ticket.barcode}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+
+          console.log('✅ 티켓 다운로드 완료');
+        } else {
+          // 이미지가 없으면 현재 화면 캡처
+          const ticketElement = this.$refs.ticketElement;
+
+          const canvas = await html2canvas(ticketElement, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: false
+          });
+
+          canvas.toBlob((blob) => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `hotel-ticket-${this.ticket.barcode}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          });
+        }
+      } catch (error) {
+        console.error('티켓 다운로드 중 오류:', error);
+        alert('티켓 다운로드에 실패했습니다.');
+      }
+    },
     
     async subscribe() {
       if (!this.isLoggedIn) {
@@ -782,7 +781,7 @@ async downloadTicket() {
           if (imagePath.startsWith('http')) {
             this.profileImageUrl = imagePath;
           } else {
-            this.profileImageUrl = `http://localhost:8089/uploads${imagePath}`;
+            this.profileImageUrl = adminAPI.getImageUrl(this.imagePath);
           }
         }
       } catch (error) {

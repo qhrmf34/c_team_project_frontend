@@ -663,7 +663,7 @@ export default {
           if (imagePath.startsWith('http')) {
             this.profileImageUrl = imagePath;
           } else {
-            this.profileImageUrl = `http://localhost:8089/uploads${imagePath}`;
+            this.profileImageUrl = adminAPI.getImageUrl(this.imagePath);
           }
         }
       } catch (error) {
@@ -822,7 +822,7 @@ export default {
         
         this.priceRange = {
           min: 0,                    
-          max: finalMax,
+          max: maxPrice,
           dynamicMin: 0,             
           dynamicMax: finalMax
         };

@@ -62,7 +62,7 @@
               </div>
               <div class="info-item-content">
                 <div class="info-check">체크인</div>          
-                <div class="info-item-time">12:00pm</div>
+                <div class="info-item-time">{{ticketData.checkInTime}}pm</div>
               </div>
             </div>
 
@@ -72,7 +72,7 @@
               </div>
               <div class="info-item-content">
                 <div class="info-check">체크아웃</div>  
-                <div class="info-item-time">11:30am</div>
+                <div class="info-item-time">{{ticketData.checkoutTime}}am</div>
               </div>
             </div>
 
@@ -84,7 +84,7 @@
                 <div class="info-check">방번호</div>   
                 <div class="info-item-time">{{ ticketData.roomNumber }}</div>
               </div>
-            </div>
+            </div> 
           </div>
 
           <div class="ticket-number">

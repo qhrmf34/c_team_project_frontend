@@ -282,14 +282,14 @@
                   <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                   <div>
                     <div class="label">체크인</div>
-                    <div class="val">12:00pm</div>
+                    <div class="val">{{formatBookingTime(booking.checkinTime)}}</div>
                   </div>
                 </div>
                 <div class="bc-time-info">
                   <img class="time-icon" src="/images/hotel_account_img/check.jpg" alt="check">
                   <div>
                     <div class="label">체크아웃</div>
-                    <div class="val">11:30am</div>
+                    <div class="val">{{formatBookingTime(booking.checkoutTime)}}</div>
                   </div>
                 </div>
               </div>
@@ -1465,6 +1465,20 @@ export default {
                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       
       return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+    },
+    formatBookingTime(time) {
+      if (!time) return '12:00pm';
+    
+      const [hourStr, minuteStr] = time.split(':');
+      let hour = parseInt(hourStr);
+      const minute = minuteStr || '00';
+      const suffix = hour >= 12 ? 'pm' : 'am';
+    
+      if (hour === 0) hour = 12;       // 00시 → 12am
+      else if (hour > 12) hour -= 12;  // 13~23시 → 1~11pm
+    
+      const formattedHour = hour.toString().padStart(2, '0');
+      return `${formattedHour}:${minute}${suffix}`;
     },
     
     // ✅ 티켓 다운로드 (adminAPI 사용)
