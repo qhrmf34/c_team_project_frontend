@@ -26,83 +26,83 @@
       <p class="error-message">{{ errorMessage }}</p>
       <button @click="goBack" class="btn-secondary">돌아가기</button>
     </div>
+  </div>
+      
+  <!-- Ticket (화면에 안보이게 숨김) -->
+  <div class="ticket-container">
+    <div class="ticket" ref="ticketElement" v-if="ticket">
+      <!-- 좌측 날짜 -->
+      <div class="ticket-left">
+        <div class="ticket-left-updown">
+          <div class="left-label">{{ formatDate(ticket.checkInDate) }}</div>
+          <div class="left-check">Check-In</div>
+        </div>
+        <div class="left-image">
+          <img src="/images/hotel_account_img/travel.jpg"  alt="travel"/>
+        </div>
+        <div class="ticket-left-updown">
+          <div class="left-label">{{ formatDate(ticket.checkOutDate) }}</div>
+          <div class="left-check">Check-Out</div>
+        </div>
+      </div>
 
-    <!-- 숨겨진 티켓 요소 (캡처용) -->
-    <div ref="hiddenTicket" class="hidden-ticket" v-if="ticketData">
-      <div class="ticket-preview">
-        <!-- 좌측 날짜 영역 -->
-        <div class="ticket-left">
-          <div class="ticket-left-updown">
-            <div class="left-label">{{ formatDate(ticketData.checkInDate) }}</div>
-            <div class="left-check">Check-In</div>
+      <!-- 중앙 -->
+      <div class="ticket-center">
+        <div class="top-bar">
+          <div class="guest">
+            <img :src="getImageUrl(ticket.profileImage)" alt="profile" >
+            <span>{{ ticket.memberName }}</span>
           </div>
-          <div class="left-image">
-            <img src="/images/hotel_account_img/travel.jpg" alt="travel"/>
+          <div class="center-bedroom">{{ ticket.roomName }} - {{ ticket.bedInfo }}</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div>
+              <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+            </div>
+            <div class="info-item-content">
+              <div class="info-check">체크인</div>          
+              <div class="info-item-time">{{formatBookingTime(ticket.checkInTime)}}</div>
+            </div>
           </div>
-          <div class="ticket-left-updown">
-            <div class="left-label">{{ formatDate(ticketData.checkOutDate) }}</div>
-            <div class="left-check">Check-Out</div>
+
+          <div class="info-item">
+            <div>
+              <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
+            </div>
+            <div class="info-item-content">
+              <div class="info-check">체크아웃</div>  
+              <div class="info-item-time">{{formatBookingTime(ticket.checkOutTime)}}</div>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div>
+              <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
+            </div>
+            <div class="info-item-content">
+              <div class="info-check">방번호</div>   
+              <div class="info-item-time">{{ ticket.roomNumber }}</div>
+            </div>
           </div>
         </div>
 
-        <!-- 중앙 정보 영역 -->
-        <div class="ticket-center">
-          <div class="top-bar">
-            <div class="guest">
-              <img :src="getImageUrl(ticketData.profileImage)" alt="profile">
-              <span>{{ ticketData.memberName }}</span>
-            </div>
-            <div class="center-bedroom">{{ ticketData.roomName }} - {{ ticketData.bedInfo }}</div>
+        <div class="ticket-number">
+          <div class="ticket-air">
+            TKT 
+            <div class="ticket-num">{{ ticket.barcode }}</div>
           </div>
-
-          <div class="info-grid">
-            <div class="info-item">
-              <div>
-                <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-              </div>
-              <div class="info-item-content">
-                <div class="info-check">체크인</div>          
-                <div class="info-item-time">{{ticketData.checkInTime}}pm</div>
-              </div>
-            </div>
-
-            <div class="info-item">
-              <div>
-                <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-              </div>
-              <div class="info-item-content">
-                <div class="info-check">체크아웃</div>  
-                <div class="info-item-time">{{ticketData.checkoutTime}}am</div>
-              </div>
-            </div>
-
-            <div class="info-item">
-              <div>
-                <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
-              </div>
-              <div class="info-item-content">
-                <div class="info-check">방번호</div>   
-                <div class="info-item-time">{{ ticketData.roomNumber }}</div>
-              </div>
-            </div> 
-          </div>
-
-          <div class="ticket-number">
-            <div class="ticket-air">
-              TKT 
-              <div class="ticket-num">{{ ticketData.barcode }}</div>
-            </div>
-            <div class="barcode">
-              <svg class="barcode-svg"></svg>
-            </div>
+          <div class="barcode">
+            <svg class="barcode-svg"></svg>
           </div>
         </div>
-        
-        <!-- 우측 호텔 이미지 -->
-        <div class="ticket-right">
-          <div>
-            <img :src="getImageUrl(ticketData.hotelImage)" alt="hotel"/>
-          </div>
+      </div>
+
+      <!-- 오른쪽 호텔 이미지 -->
+      <div class="ticket-right">
+        <div>
+          <img :src="getImageUrl(ticket.hotelImage)" alt="hotel" />
         </div>
       </div>
     </div>
@@ -124,9 +124,10 @@ export default {
       orderId: '',
       amount: 0,
       paymentId: null,
-      ticketData: null,
+      ticket: null,
       countdown: 5,
-      countdownTimer: null
+      countdownTimer: null,
+      isUploadingImage: false
     }
   },
   
@@ -178,8 +179,8 @@ export default {
           
           console.log('✅ 결제 완료! paymentId:', this.paymentId);
           
-          // 2. 티켓 정보 로드 및 이미지 생성
-          await this.loadTicketAndCreateImage();
+          // 2. 티켓 로드 및 이미지 생성 (백그라운드)
+          this.loadTicketAndCreateImage();
           
           // 3. 카운트다운 시작
           this.startCountdown();
@@ -198,59 +199,75 @@ export default {
     
     async loadTicketAndCreateImage() {
       try {
-        console.log('티켓 정보 로드 시작 - paymentId:', this.paymentId);
+        console.log('📋 티켓 로드 시작');
+        await this.loadTicket();
         
-        // 1. 티켓 정보 조회
-        const response = await ticketAPI.getTicketByPaymentId(this.paymentId);
-        
-        console.log('티켓 정보 응답:', response);
-        
-        if (response.code === 200) {
-          this.ticketData = response.data;
-          
-          // 2. DOM 렌더링 대기
-          await this.$nextTick();
-          await new Promise(resolve => setTimeout(resolve, 800));
-          
-          // 3. 바코드 생성
-          this.generateBarcode();
-          
-          // 4. 티켓 이미지가 없으면 생성 및 업로드
-          if (!this.ticketData.ticketImagePath) {
-            console.log('티켓 이미지 생성 시작');
-            await this.captureAndUploadTicket();
-          } else {
-            console.log('티켓 이미지 이미 존재:', this.ticketData.ticketImagePath);
-          }
+        if (this.ticket && !this.ticket.ticketImagePath) {
+          console.log('📸 티켓 이미지 생성 시작');
+          await this.captureAndUploadTicket();
         }
-        
       } catch (error) {
-        console.error('티켓 처리 실패:', error);
-        // 티켓 처리 실패해도 페이지 이동은 계속 진행
+        console.error('❌ 티켓 이미지 생성 실패:', error);
+      }
+    },
+    
+    async loadTicket() {
+      try {
+        const response = await ticketAPI.getTicketByPaymentId(this.paymentId);
+
+        if (response.code === 200) {
+          this.ticket = response.data;
+
+          await this.$nextTick();
+          setTimeout(() => {
+            this.generateBarcode();
+          }, 100);
+        }
+
+      } catch (error) {
+        console.error('티켓 로드 실패:', error);
       }
     },
     
     generateBarcode() {
+      if (!this.ticket || !this.ticket.barcode) {
+        console.log('티켓 또는 바코드 정보 없음:', this.ticket);
+        return;
+      }
+
       try {
         const barcodeElement = document.querySelector('.barcode-svg');
-        if (barcodeElement && this.ticketData.barcode) {
-          JsBarcode(barcodeElement, this.ticketData.barcode, {
+        console.log('바코드 요소:', barcodeElement);
+        console.log('바코드 데이터:', this.ticket.barcode);
+
+        if (barcodeElement) {
+          JsBarcode(barcodeElement, this.ticket.barcode, {
             format: 'CODE128',
             width: 2,
             height: 60,
             displayValue: false,
             margin: 0
           });
-          console.log('✅ 바코드 생성 완료');
+          console.log('바코드 생성 완료');
+        } else {
+          console.error('바코드 SVG 요소를 찾을 수 없습니다');
         }
       } catch (error) {
         console.error('바코드 생성 실패:', error);
       }
     },
     
+    // ✅ 티켓 캡처 및 업로드
     async captureAndUploadTicket() {
+      if (this.isUploadingImage) return;
+      
       try {
-        const ticketElement = this.$refs.hiddenTicket;
+        this.isUploadingImage = true;
+        
+        await this.$nextTick();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const ticketElement = this.$refs.ticketElement;
         if (!ticketElement) {
           console.error('티켓 요소를 찾을 수 없습니다');
           return;
@@ -258,46 +275,55 @@ export default {
         
         console.log('티켓 캡처 시작');
         
-        // HTML을 Canvas로 변환
         const canvas = await html2canvas(ticketElement, {
           backgroundColor: '#ffffff',
           scale: 2,
           useCORS: true,
           allowTaint: false,
-          logging: false,
-          width: 1200,
-          height: 600
+          logging: false
         });
         
         console.log('Canvas 생성 완료');
         
-        // Canvas를 Blob으로 변환
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         
         console.log('Blob 생성 완료, 크기:', blob.size);
         
-        // FormData 생성
         const formData = new FormData();
-        formData.append('file', blob, `ticket_${this.ticketData.barcode}.png`);
-        formData.append('barcode', this.ticketData.barcode);
+        formData.append('file', blob, `ticket_${this.ticket.barcode}.png`);
+        formData.append('barcode', this.ticket.barcode);
         
         console.log('서버에 업로드 시작');
         
-        // 서버에 업로드
-        const uploadResponse = await ticketAPI.uploadTicketImage(
-          this.ticketData.ticketId, 
+        const response = await ticketAPI.uploadTicketImage(
+          this.ticket.ticketId, 
           formData
         );
         
-        if (uploadResponse.code === 200) {
-          console.log('✅ 티켓 이미지 업로드 완료:', uploadResponse.data.imagePath);
-          this.ticketData.ticketImagePath = uploadResponse.data.imagePath;
+        if (response.code === 200) {
+          this.ticket.ticketImagePath = response.data.imagePath;
+          console.log('✅ 티켓 이미지 업로드 완료:', response.data.imagePath);
         }
         
       } catch (error) {
         console.error('티켓 이미지 업로드 실패:', error);
-        // 업로드 실패해도 계속 진행
+      } finally {
+        this.isUploadingImage = false;
       }
+    },
+    
+    formatBookingTime(time) {
+      if (!time) return '12:00pm';
+
+      const [hourStr, minuteStr] = time.split(':');
+      let hour = parseInt(hourStr);
+      const minute = minuteStr || '00';
+      const suffix = hour >= 12 ? 'pm' : 'am';
+
+      if (hour === 0) hour = 12;
+      else if (hour > 12) hour -= 12;
+
+      return `${hour.toString().padStart(2, '0')}:${minute}${suffix}`;
     },
     
     startCountdown() {
@@ -323,7 +349,7 @@ export default {
     
     formatPrice(price) {
       if (!price) return '₩0';
-      return '₩' + Math.floor(price).toLocaleString('ko-KR');
+      return '₩' + price.toLocaleString();
     },
     
     formatDate(dateString) {
@@ -336,40 +362,47 @@ export default {
     },
     
     getImageUrl(imagePath) {
-      if (!imagePath) return '/images/hotel_img/default.jpg';
-      if (imagePath.startsWith('http')) return imagePath;
-      if (imagePath.startsWith('/images/')) return imagePath;
+      if (!imagePath) return '/images/hotel_img/hotel1.jpg';
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
       return adminAPI.getImageUrl(imagePath);
     },
     
     goBack() {
-      this.$router.push('/hotelone');
+      this.$router.push('/hotelaccount');
     }
   }
 }
 </script>
 
 <style scoped>
+/* 기존 스타일 그대로 유지 */
 .payment-success-container {
-  max-width: 600px;
-  margin: 100px auto;
-  padding: 40px;
-  text-align: center;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .processing, .success, .error {
-  padding: 20px;
+  background: white;
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 
 .spinner {
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border-top: 4px solid #667eea;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
 }
@@ -380,243 +413,399 @@ export default {
 }
 
 .success-icon, .error-icon {
-  font-size: 64px;
+  font-size: 80px;
   margin-bottom: 20px;
 }
 
 h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #112211;
   margin-bottom: 20px;
-  color: #333;
 }
 
 .payment-info {
-  background: #f9f9f9;
+  background: #f5f5f5;
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 8px;
   margin: 20px 0;
 }
 
 .payment-info p {
   margin: 10px 0;
+  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
-  color: #666;
+  color: #333;
 }
 
 .redirect-message {
   color: #666;
   margin: 20px 0;
-  font-size: 14px;
 }
 
 .error-message {
-  color: #e74c3c;
+  color: #ff4444;
   margin: 20px 0;
 }
 
-button {
-  margin-top: 20px;
-  padding: 12px 32px;
-  font-size: 16px;
+.btn-primary, .btn-secondary {
+  padding: 15px 40px;
   border: none;
   border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.3s;
+  margin-top: 10px;
 }
 
 .btn-primary {
-  background-color: #4CAF50;
-  color: white;
+  background: #8DD3BB;
+  color: #112211;
 }
 
 .btn-primary:hover {
-  background-color: #45a049;
+  background: #7CC5AE;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(141, 211, 187, 0.4);
 }
 
 .btn-secondary {
-  background-color: #6c757d;
-  color: white;
+  background: #f0f0f0;
+  color: #112211;
 }
 
 .btn-secondary:hover {
-  background-color: #5a6268;
+  background: #e0e0e0;
 }
 
-/* 숨겨진 티켓 요소 */
-.hidden-ticket {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  width: 1200px;
-  height: 600px;
-  overflow: hidden;
-}
+/* 티켓 스타일 */
+  .ticket-container {
+      display: flex;
+      justify-content: center;
+      margin: 4000px 0;
+  }
 
-.ticket-preview {
-  display: flex;
-  background: white;
-  width: 1200px;
-  height: 600px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
-
-/* 좌측 날짜 영역 */
+  .ticket {
+      position: fixed;
+      display: flex;
+      width: 1231px;
+      height: 309px;
+      overflow: hidden;
+      margin: 0 auto; 
+  }
+/* 왼쪽 날짜 구역 */
 .ticket-left {
-  width: 200px;
-  background: linear-gradient(180deg, #FF8682 0%, #FF6B6B 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
-  color: white;
-  padding: 30px 20px;
+    width: 246px;
+    height: 100%;
+    background: #e5f2ed;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    font-weight: bold;
+    color: #333;
+    border-radius: 12px 0 0 12px;
 }
 
-.ticket-left-updown {
-  text-align: center;
+.ticket-left-updown{
+    width: 188px;
+    height: 58px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 4px;
+    padding-left: 20px;
 }
 
-.left-label {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 8px;
+.left-label{
+    width: 188px;
+    height: 39px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 30px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+}
+.left-check{
+    width: 70px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 0.6;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-align: left;
 }
 
-.left-check {
-  font-size: 14px;
-  opacity: 0.9;
+.left-image{
+    width: 60px;
+    height: 92px;
+    angle: -0 deg;
+    opacity: 1;
+    gap: 8px;
+    border-radius: 4px;
+    padding-left: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
-
-.left-image {
-  width: 80px;
-  height: 80px;
-}
-
-.left-image img {
-  width: 100%;
+.left-image img{
+  width: 36px;
   height: 100%;
-  object-fit: contain;
 }
 
-/* 중앙 정보 영역 */
+/* 중앙 메인 구역 */
 .ticket-center {
-  flex: 1;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: white;
+    width: 610px;
+    height: 309px;
+    angle: 0 deg;
+    opacity: 1;
+    position: relative;
+    border-radius: 0 12px 12px 0;
+    background-color: white;
 }
-
 .top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+    width: 100%;
+    height: 96px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 46px;
+    border-radius: 0px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #8DD3BB;
 }
-
+.top-bar > div {
+    margin: 0 14px; /* 각 요소에 좌우 여백 */
+}
 .guest {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
 }
-
 .guest img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
+    width: 48px;
+    height: 48px;
+    angle: 0 deg;
+    opacity: 1;
+    border: 1px solid #FFFFFF;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.guest span{
+    width: 141px;
+    height: 25px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Acme;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 20px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #112211;
 }
 
-.guest span {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
+.center-bedroom{
+    width: 228px;
+    height: 36px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Acme;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 14px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    text-align: right;
 
-.center-bedroom {
-  font-size: 16px;
-  color: #666;
 }
 
 .info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin: 30px 0;
+    width: 610px;
+    height: 83px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 32px;
+    padding: 24px;
+    display: flex;
 }
 
 .info-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 108px;
+    height: 35px;
+    angle: 0 deg;
+    opacity: 1;
+    gap: 8px;
 
-.info-item-img {
-  width: 32px;
-  height: 32px;
 }
-
+.info-item-img{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    angle: 0 deg;
+    opacity: 1;
+    border-radius: 4px;
+}
 .info-item-content {
-  display: flex;
-  flex-direction: column;
+    width: 68px;
+    height: 35px;
+    angle: 0 deg;
+    opacity: 1;
 }
 
-.info-check {
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 4px;
+.info-item-check{
+    width: 34px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 0.6;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
 }
 
-.info-item-time {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+.info-item-time{
+    width: 68px;
+    height: 20px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+
 }
 
-.ticket-number {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: auto;
+.info-check{
+    width: 50px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 0.6;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+
 }
 
-.ticket-air {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #666;
+.info-item-time{
+    width: 68px;
+    height: 20px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 16px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+
 }
 
-.ticket-num {
-  font-family: 'Courier New', monospace;
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
+.ticket-number{
+    height: 130px;
+    width: 610px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
+.ticket-air{
+    width: 45px;
+    height: 39px;
+    angle: 0 deg;
+    opacity: 1;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-style: SemiBold;
+    font-size: 32px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    padding-left: 30px;
+}
+.ticket-num{
+    width: 60px;
+    height: 15px;
+    angle: 0 deg;
+    opacity: 0.6;
+    font-family: Montserrat;
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 12px;
+    leading-trim: NONE;
+    line-height: 100%;
+    letter-spacing: 0%;
+    margin-top: 10px;
+}
+
 
 .barcode {
-  display: flex;
-  justify-content: flex-start;
+    width: 248px;
+    height: 100%;
+    angle: 0 deg;
+    opacity: 1;
+    display: flex;
+    flex-direction: column;   
+    justify-content: flex-end; 
+    align-items: center; 
 }
 
-.barcode-svg {
-  height: 60px;
+.barcode img{
+    height: 81px;
 }
 
-/* 우측 호텔 이미지 */
+/* 오른쪽 호텔 로고 (독립 카드) */
 .ticket-right {
-  width: 200px;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+    width: 375px;
+    height: 100%;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-left: 2px;
 }
-
-.ticket-right img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.ticket-right img{
+    width: 100%;
+    height: 100%;
+    angle: 0 deg;
+    opacity: 1;
+    top: 74px;
+    left: 107px;
 }
+  /* 바코드 SVG 스타일 */
+  .barcode-svg {
+    width: 100%;
+    height: auto;
+    margin: 0px 20px 20px 0px;
+  }
 </style>

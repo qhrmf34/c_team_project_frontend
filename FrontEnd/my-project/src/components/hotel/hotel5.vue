@@ -118,82 +118,17 @@
           </div>
         </div>
 
-        <!-- Ticket -->
+        <!-- 티켓 이미지 표시 -->
         <div class="ticket-container">
-          <div class="ticket" ref="ticketElement">
-            <!-- 좌측 날짜 -->
-            <div class="ticket-left">
-              <div class="ticket-left-updown">
-                <div class="left-label">{{ formatDate(ticket.checkInDate) }}</div>
-                <div class="left-check">Check-In</div>
-              </div>
-              <div class="left-image">
-                <img src="/images/hotel_account_img/travel.jpg"  alt="travel"/>
-              </div>
-              <div class="ticket-left-updown">
-                <div class="left-label">{{ formatDate(ticket.checkOutDate) }}</div>
-                <div class="left-check">Check-Out</div>
-              </div>
-            </div>
-
-            <!-- 중앙 -->
-            <div class="ticket-center">
-              <div class="top-bar">
-                <div class="guest">
-                  <img :src="getImageUrl(ticket.profileImage)" alt="profile">
-                  <span>{{ ticket.memberName }}</span>
-                </div>
-                <div class="center-bedroom">{{ ticket.roomName }} - {{ ticket.bedInfo }}</div>
-              </div>
-
-              <div class="info-grid">
-                <div class="info-item">
-                  <div>
-                    <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-                  </div>
-                  <div class="info-item-content">
-                    <div class="info-check">체크인</div>          
-                    <div class="info-item-time">{{formatBookingTime(ticket.checkInTime)}}</div>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <div>
-                    <img src="/images/hotel_account_img/check.jpg" class="info-item-img" alt="check"/>
-                  </div>
-                  <div class="info-item-content">
-                    <div class="info-check">체크아웃</div>  
-                    <div class="info-item-time">{{formatBookingTime(ticket.checkOutTime)}}</div>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <div>
-                    <img src="/images/hotel_account_img/room.jpg" class="info-item-img" alt="room"/>
-                  </div>
-                  <div class="info-item-content">
-                    <div class="info-check">방번호</div>   
-                    <div class="info-item-time">{{ ticket.roomNumber }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="ticket-number">
-                <div class="ticket-air">
-                  TKT 
-                  <div class="ticket-num">{{ ticket.barcode }}</div>
-                </div>
-                <div class="barcode">
-                  <svg class="barcode-svg"></svg>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 오른쪽 호텔 이미지 -->
-            <div class="ticket-right">
-              <div>
-                <img :src="getImageUrl(ticket.hotelImage)" alt="hotel"/>
-              </div>
+          <div class="ticket-image-wrapper">
+            <img 
+              v-if="ticket.ticketImagePath" 
+              :src="getImageUrl(ticket.ticketImagePath)" 
+              alt="티켓 이미지"
+              class="ticket-image"
+            >
+            <div v-else class="no-ticket-image">
+              <p>티켓 이미지를 불러올 수 없습니다.</p>
             </div>
           </div>
         </div>
@@ -356,8 +291,7 @@
 <script>
 import { authUtils, ticketAPI, paymentAPI, adminAPI, memberCouponAPI, memberImageAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
-import JsBarcode from 'jsbarcode'
-import html2canvas from 'html2canvas'
+
 
 export default {
   name: 'HotelFive',
@@ -372,20 +306,15 @@ export default {
       profileImageUrl: '/images/hotel_account_img/member.jpg',
       ticket: null,
       isLoading: true,
-      error: null,
-      isUploadingImage: false
+      error: null
     }
   },
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo();
-    
-    await this.loadTicket();
-    
-    if (this.ticket && !this.ticket.ticketImagePath) {
-      await this.captureAndUploadTicket();
-    }
+
+    await this.loadTicket();  // ✅ 이미지 로드만
   },
   
   beforeUnmount() {
@@ -459,119 +388,36 @@ export default {
       return tomorrow.toLocaleDateString('en-CA');
     },
     
-    async loadTicket() {
-      try {
-        this.isLoading = true;
+  async loadTicket() {
+    try {
+      this.isLoading = true;
 
-        const paymentId = this.$route.query.paymentId;
-        if (!paymentId) {
-          throw new Error('결제 정보가 없습니다.');
-        }
-
-        const response = await ticketAPI.getTicketByPaymentId(paymentId);
-
-        if (response.code === 200) {
-          this.ticket = response.data;
-
-          await this.$nextTick();
-          setTimeout(() => {
-            this.generateBarcode();
-          }, 100);
-        } else {
-          this.error = response.message || '티켓을 불러올 수 없습니다.';
-        }
-
-      } catch (error) {
-        console.error('티켓 로드 실패:', error);
-        this.error = error.response?.data?.message || error.message || '티켓을 불러오는데 실패했습니다.';
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    
-    generateBarcode() {
-      if (!this.ticket || !this.ticket.barcode) {
-        console.log('티켓 또는 바코드 정보 없음:', this.ticket);
-        return;
+      const paymentId = this.$route.query.paymentId;
+      if (!paymentId) {
+        throw new Error('결제 정보가 없습니다.');
       }
 
-      try {
-        const barcodeElement = document.querySelector('.barcode-svg');
-        console.log('바코드 요소:', barcodeElement);
-        console.log('바코드 데이터:', this.ticket.barcode);
+      const response = await ticketAPI.getTicketByPaymentId(paymentId);
 
-        if (barcodeElement) {
-          JsBarcode(barcodeElement, this.ticket.barcode, {
-            format: 'CODE128',
-            width: 2,
-            height: 60,
-            displayValue: false,
-            margin: 0
-          });
-          console.log('바코드 생성 완료');
-        } else {
-          console.error('바코드 SVG 요소를 찾을 수 없습니다');
+      if (response.code === 200) {
+        this.ticket = response.data;
+        console.log('✅ 티켓 로드 완료:', this.ticket);
+
+        if (this.ticket.ticketImagePath) {
+          console.log('✅ 티켓 이미지 경로:', this.ticket.ticketImagePath);
         }
-      } catch (error) {
-        console.error('바코드 생성 실패:', error);
+      } else {
+        this.error = response.message || '티켓을 불러올 수 없습니다.';
       }
-    },
-    
-    // ✅ 티켓 캡처 및 업로드
-    async captureAndUploadTicket() {
-      if (this.isUploadingImage) return;
-      
-      try {
-        this.isUploadingImage = true;
-        
-        await this.$nextTick();
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const ticketElement = this.$refs.ticketElement;
-        if (!ticketElement) {
-          console.error('티켓 요소를 찾을 수 없습니다');
-          return;
-        }
-        
-        console.log('티켓 캡처 시작');
-        
-        const canvas = await html2canvas(ticketElement, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          logging: false
-        });
-        
-        console.log('Canvas 생성 완료');
-        
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        
-        console.log('Blob 생성 완료, 크기:', blob.size);
-        
-        const formData = new FormData();
-        formData.append('file', blob, `ticket_${this.ticket.barcode}.png`);
-        formData.append('barcode', this.ticket.barcode);
-        
-        console.log('서버에 업로드 시작');
-        
-        const response = await ticketAPI.uploadTicketImage(
-          this.ticket.ticketId, 
-          formData
-        );
-        
-        if (response.code === 200) {
-          this.ticket.ticketImagePath = response.data.imagePath;
-          console.log('✅ 티켓 이미지 업로드 완료:', response.data.imagePath);
-        }
-        
-      } catch (error) {
-        console.error('티켓 이미지 업로드 실패:', error);
-      } finally {
-        this.isUploadingImage = false;
-      }
-    },
-    
+
+    } catch (error) {
+      console.error('티켓 로드 실패:', error);
+      this.error = error.response?.data?.message || error.message || '티켓을 불러오는데 실패했습니다.';
+    } finally {
+      this.isLoading = false;
+    }
+  },
+     
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -608,47 +454,45 @@ export default {
     },
     
     // ✅ 카카오톡 공유 (티켓 이미지만 공유)
-// ✅ 카카오톡 공유 (adminAPI 사용)
-async shareTicket() {
-  if (!window.Kakao) {
-    alert('카카오톡 공유 기능을 사용할 수 없습니다.');
-    return;
-  }
-
-  if (!window.Kakao.isInitialized()) {
-    window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY);
-  }
-
-  // ✅ 티켓 이미지가 없으면 먼저 생성
-  if (!this.ticket.ticketImagePath) {
-    alert('티켓 이미지를 생성하는 중입니다. 잠시 후 다시 시도해주세요.');
-    await this.captureAndUploadTicket();
-    return;
-  }
-
-  // ✅ adminAPI 사용
-  const ticketImageUrl = `${window.location.origin}/uploads${this.ticket.ticketImagePath}`;
-  
-  console.log('공유할 티켓 이미지:', ticketImageUrl);
-
-  try {
-    window.Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: `${this.ticket.hotelName} 예약 티켓`,
-        description: `체크인: ${this.formatDate(this.ticket.checkInDate)} | 체크아웃: ${this.formatDate(this.ticket.checkOutDate)}`,
-        imageUrl: ticketImageUrl,
-        link: {
-          mobileWebUrl: ticketImageUrl,
-          webUrl: ticketImageUrl,
-        },
+    async shareTicket() {
+      if (!window.Kakao) {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.');
+        return;
       }
-    });
-  } catch (error) {
-    console.error('카카오톡 공유 실패:', error);
-    alert('카카오톡 공유에 실패했습니다.');
-  }
-},
+    
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(process.env.VUE_APP_KAKAO_SHARE_KEY);
+      }
+    
+      // ✅ 티켓 이미지가 없으면 먼저 생성
+      if (!this.ticket.ticketImagePath) {
+        alert('티켓 이미지를 생성하는 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+    
+      // ✅ adminAPI 사용
+      const ticketImageUrl = adminAPI.getImageUrl(this.ticket.ticketImagePath);
+
+      console.log('공유할 티켓 이미지:', ticketImageUrl);
+    
+      try {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${this.ticket.hotelName} 예약 티켓`,
+            description: `체크인: ${this.formatDate(this.ticket.checkInDate)} | 체크아웃: ${this.formatDate(this.ticket.checkOutDate)}`,
+            imageUrl: ticketImageUrl,
+            link: {
+              mobileWebUrl: ticketImageUrl,
+              webUrl: ticketImageUrl,
+            },
+          }
+        });
+      } catch (error) {
+        console.error('카카오톡 공유 실패:', error);
+        alert('카카오톡 공유에 실패했습니다.');
+      }
+    },
     
     // ✅ 환불 요청
     async requestRefund() {
@@ -685,46 +529,29 @@ async shareTicket() {
     
     // ✅ 티켓 다운로드 (adminAPI 사용)
     async downloadTicket() {
+      if (!this.ticket || !this.ticket.ticketImagePath) {
+        alert('다운로드할 티켓 이미지가 없습니다.');
+        return;
+      }
+    
       try {
-        if (this.ticket.ticketImagePath) {
-          // ✅ adminAPI 사용
-          const imageUrl = adminAPI.getImageUrl(this.ticket.ticketImagePath);
+        const imageUrl = this.getImageUrl(this.ticket.ticketImagePath);
 
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
 
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `hotel-ticket-${this.ticket.barcode}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ticket_${this.ticket.barcode}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-          console.log('✅ 티켓 다운로드 완료');
-        } else {
-          // 이미지가 없으면 현재 화면 캡처
-          const ticketElement = this.$refs.ticketElement;
-
-          const canvas = await html2canvas(ticketElement, {
-            backgroundColor: '#ffffff',
-            scale: 2,
-            useCORS: true,
-            allowTaint: false
-          });
-
-          canvas.toBlob((blob) => {
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `hotel-ticket-${this.ticket.barcode}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          });
-        }
+        console.log('✅ 티켓 다운로드 완료');
       } catch (error) {
-        console.error('티켓 다운로드 중 오류:', error);
+        console.error('❌ 티켓 다운로드 실패:', error);
         alert('티켓 다운로드에 실패했습니다.');
       }
     },
@@ -794,7 +621,7 @@ async shareTicket() {
           if (imagePath.startsWith('http')) {
             this.profileImageUrl = imagePath;
           } else {
-            this.profileImageUrl = adminAPI.getImageUrl(this.imagePath);
+            this.profileImageUrl = adminAPI.getImageUrl(imagePath);
           }
         }
       } catch (error) {
@@ -1211,325 +1038,34 @@ async shareTicket() {
 
   }
 
-  /* Ticket styles from first code */
+  /* 티켓 이미지 컨테이너 */
   .ticket-container {
-      display: flex;
-      justify-content: center;
-      margin: 40px 0;
+    margin: 40px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  .ticket {
-      display: flex;
-      width: 1231px;
-      height: 309px;
-      overflow: hidden;
-      margin: 0 auto; 
-  }
-  /* 왼쪽 날짜 구역 */
-  .ticket-left {
-      width: 246px;
-      height: 100%;
-      background: #e5f2ed;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      font-weight: bold;
-      color: #333;
-      border-radius: 12px 0 0 12px;
+  .ticket-image-wrapper {
+    width: 100%;
+    max-width: 1231px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
   }
 
-  .ticket-left-updown{
-      width: 188px;
-      height: 58px;
-      angle: 0 deg;
-      opacity: 1;
-      gap: 4px;
-      padding-left: 20px;
-  }
-  
-  .left-label{
-      width: 188px;
-      height: 39px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Montserrat;
-      font-weight: 600;
-      font-style: SemiBold;
-      font-size: 30px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-  }
-  .left-check{
-      width: 70px;
-      height: 15px;
-      angle: 0 deg;
-      opacity: 0.6;
-      font-family: Montserrat;
-      font-weight: 500;
-      font-style: Medium;
-      font-size: 12px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      text-align: left;
+  .ticket-image {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
-  .left-image{
-      width: 60px;
-      height: 92px;
-      angle: -0 deg;
-      opacity: 1;
-      gap: 8px;
-      border-radius: 4px;
-      padding-left: 20px;
-      margin-top: 10px;
-      margin-bottom: 10px;
-  }
-  .left-image img{
-    width: 36px;
-    height: 100%;
-  }
-
-  /* 중앙 메인 구역 */
-  .ticket-center {
-      width: 610px;
-      height: 309px;
-      angle: 0 deg;
-      opacity: 1;
-      position: relative;
-      border-radius: 0 12px 12px 0;
-      background-color: white;
-  }
-  .top-bar {
-      width: 100%;
-      height: 96px;
-      angle: 0 deg;
-      opacity: 1;
-      gap: 46px;
-      border-radius: 0px 12px 0 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #8DD3BB;
-  }
-  .top-bar > div {
-      margin: 0 14px; /* 각 요소에 좌우 여백 */
-  }
-  .guest {
-      display: flex;
-      align-items: center;
-  }
-  .guest img {
-      width: 48px;
-      height: 48px;
-      angle: 0 deg;
-      opacity: 1;
-      border: 1px solid #FFFFFF;
-      border-radius: 50%;
-      margin-right: 10px;
-  }
-  .guest span{
-      width: 141px;
-      height: 25px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Acme;
-      font-weight: 400;
-      font-style: Regular;
-      font-size: 20px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      color: #112211;
-  }
-
-  .center-bedroom{
-      width: 228px;
-      height: 36px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Acme;
-      font-weight: 400;
-      font-style: Regular;
-      font-size: 14px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      text-align: right;
-
-  }
-
-  .info-grid {
-      width: 610px;
-      height: 83px;
-      angle: 0 deg;
-      opacity: 1;
-      gap: 32px;
-      padding: 24px;
-      display: flex;
-  }
-
-  .info-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 108px;
-      height: 35px;
-      angle: 0 deg;
-      opacity: 1;
-      gap: 8px;
-
-  }
-  .info-item-img{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      angle: 0 deg;
-      opacity: 1;
-      border-radius: 4px;
-  }
-  .info-item-content {
-      width: 68px;
-      height: 35px;
-      angle: 0 deg;
-      opacity: 1;
-  }
-
-  .info-item-check{
-      width: 34px;
-      height: 15px;
-      angle: 0 deg;
-      opacity: 0.6;
-      font-family: Montserrat;
-      font-weight: 600;
-      font-style: SemiBold;
-      font-size: 12px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-  }
-
-  .info-item-time{
-      width: 68px;
-      height: 20px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Montserrat;
-      font-weight: 500;
-      font-style: Medium;
-      font-size: 16px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-
-  }
-
-  .info-check{
-      width: 50px;
-      height: 15px;
-      angle: 0 deg;
-      opacity: 0.6;
-      font-family: Montserrat;
-      font-weight: 600;
-      font-style: SemiBold;
-      font-size: 12px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-
-  }
-
-  .info-item-time{
-      width: 68px;
-      height: 20px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Montserrat;
-      font-weight: 500;
-      font-style: Medium;
-      font-size: 16px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-
-  }
-
-  .ticket-number{
-      height: 130px;
-      width: 610px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-  }
-
-  .ticket-air{
-      width: 45px;
-      height: 39px;
-      angle: 0 deg;
-      opacity: 1;
-      font-family: Montserrat;
-      font-weight: 600;
-      font-style: SemiBold;
-      font-size: 32px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      padding-left: 30px;
-  }
-  .ticket-num{
-      width: 60px;
-      height: 15px;
-      angle: 0 deg;
-      opacity: 0.6;
-      font-family: Montserrat;
-      font-weight: 500;
-      font-style: Medium;
-      font-size: 12px;
-      leading-trim: NONE;
-      line-height: 100%;
-      letter-spacing: 0%;
-      margin-top: 10px;
-  }
-
-
-  .barcode {
-      width: 248px;
-      height: 100%;
-      angle: 0 deg;
-      opacity: 1;
-      display: flex;
-      flex-direction: column;   
-      justify-content: flex-end; 
-      align-items: center; 
-  }
-
-  .barcode img{
-      height: 81px;
-  }
-
-  /* 오른쪽 호텔 로고 (독립 카드) */
-  .ticket-right {
-      width: 375px;
-      height: 100%;
-      background: white;
-      border-radius: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-left: 2px;
-  }
-  .ticket-right img{
-      width: 161px;
-      height: 161px;
-      angle: 0 deg;
-      opacity: 1;
-      top: 74px;
-      left: 107px;
+  .no-ticket-image {
+    padding: 100px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 18px;
   }
 
   /* Terms and Conditions Section */

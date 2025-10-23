@@ -663,7 +663,7 @@ export default {
           if (imagePath.startsWith('http')) {
             this.profileImageUrl = imagePath;
           } else {
-            this.profileImageUrl = adminAPI.getImageUrl(this.imagePath);
+            this.profileImageUrl = adminAPI.getImageUrl(imagePath);
           }
         }
       } catch (error) {
