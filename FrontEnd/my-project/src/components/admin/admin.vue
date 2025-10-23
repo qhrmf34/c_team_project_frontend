@@ -306,7 +306,8 @@ export default {
       currentPage: 1,
       pageSize: 10,
       totalPages: 1,
-      
+      tempUploadedFiles: [], // 임시로 업로드된 파일 경로 추적
+      originalFilePath: null, // 수정 모드일 때 원본 파일 경로
       // 사용자 정보
       userInfo: null,
       isLoggedIn: false,
@@ -756,43 +757,7 @@ async loadForeignKeyData() {
       }
     },
     
-    // 모달
-    async openCreateModal() {
-      this.isEditMode = false;
-      this.editingId = null;
-      this.formData = {};
-      
-      // 호텔 생성 시 빈 배열로 초기화
-      if (this.currentTable === 'hotels') {
-        this.formData.amenities = [];
-        this.formData.freebies = [];
-      }
-      if (this.currentTable === 'room_pricing') {
-      const pricingFields = this.tableFields.room_pricing;
-      const priceField = pricingFields.find(f => f.key === 'price');
-      if (priceField) {
-        priceField.placeholder = '객실을 먼저 선택하세요';
-      }
-  }
-      await this.loadForeignKeyData();
-      this.showModal = true;
-    },
-    
-    openEditModal(item) {
-      this.isEditMode = true;
-      this.editingId = item.id;
-      this.formData = { ...item };
-      
-      // 외래키 ID 설정
-      this.setForeignKeyIds(item);
-      
-      // 호텔 수정 시 기존 편의시설/무료서비스 로드
-      if (this.currentTable === 'hotels') {
-        this.loadHotelFacilities(item.id);
-      }
-      
-      this.showModal = true;
-    },
+  
 
     setForeignKeyIds(item) {
       if (this.currentTable === 'cities' && item.countryId) {
@@ -826,49 +791,160 @@ async loadForeignKeyData() {
       }
     },
     
-    closeModal() {
-      this.showModal = false;
-      this.formData = {};
-      this.editingId = null;
-    },
 
     // 파일 업로드
+    // 파일 업로드 - 즉시 서버에 업로드하여 검증받음
     async handleFileUpload(event, fieldKey) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const file = event.target.files[0]
+      if (!file) return
       
       try {
-        adminAPI.validateImageFile(file);
+        // 1단계: 클라이언트 측 기본 검증
+        adminAPI.validateImageFile(file)
         
-        let folder = 'general';
+        // 폴더 결정
+        let folder = 'general'
         if (this.currentTable === 'city_images') {
-          folder = 'city';
-        } 
-        else if (this.currentTable === 'hotel_images') {
-          folder = 'hotel';
-        }
-        else if (this.currentTable === 'room_images') {
-          folder = 'room';
+          folder = 'city'
+        } else if (this.currentTable === 'hotel_images') {
+          folder = 'hotel'
+        } else if (this.currentTable === 'room_images') {
+          folder = 'room'
         }
         
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await adminAPI.uploadFile(formData, folder);
+        // 2단계: 서버에 실제 업로드 (서버 검증 통과)
+        const formData = new FormData()
+        formData.append('file', file)
+        const response = await adminAPI.uploadFile(formData, folder)
         
-        this.formData[fieldKey] = response.data.filePath;
-        this.showNotification('파일이 업로드되었습니다.', 'success');
+        const newFilePath = response.data.filePath
+        
+        // 3단계: 이전 임시 파일 정리
+        // 이전에 업로드된 임시 파일이 있고, 원본 파일이 아니라면 삭제
+        if (this.formData[fieldKey] && this.formData[fieldKey] !== this.originalFilePath) {
+          await this.deleteTemporaryFile(this.formData[fieldKey])
+          this.tempUploadedFiles = this.tempUploadedFiles.filter(
+            path => path !== this.formData[fieldKey]
+          )
+        }
+        
+        // 4단계: 새 파일 정보 저장
+        this.formData[fieldKey] = newFilePath
+        
+        // 원본 파일이 아닌 경우만 임시 목록에 추가
+        if (newFilePath !== this.originalFilePath) {
+          this.tempUploadedFiles.push(newFilePath)
+        }
+        
+        this.showNotification('파일이 업로드되었습니다.', 'success')
+        
       } catch (error) {
-        console.error('파일 업로드 실패:', error);
-        this.showNotification(error.message || '파일 업로드에 실패했습니다.', 'error');
+        console.error('파일 업로드 실패:', error)
+        // 서버 에러 메시지 표시
+        const errorMessage = error.response?.data?.message || error.message || '파일 업로드에 실패했습니다.'
+        this.showNotification(errorMessage, 'error')
       }
     },
-
+    // 임시 파일 삭제
+    async deleteTemporaryFile(filePath) {
+      try {
+        await adminAPI.deleteFile(filePath)
+        console.log('임시 파일 삭제 완료:', filePath)
+      } catch (error) {
+        console.error('임시 파일 삭제 실패:', filePath, error)
+        // 삭제 실패해도 계속 진행 (파일이 이미 없을 수도 있음)
+      }
+    },
+        // 생성 모달 열기
+    async openCreateModal() {
+      this.isEditMode = false
+      this.editingId = null
+      this.formData = {}
+      this.tempUploadedFiles = []
+      this.originalFilePath = null
+      
+      if (this.currentTable === 'hotels') {
+        this.formData.amenities = []
+        this.formData.freebies = []
+      }
+      
+      if (this.currentTable === 'room_pricing') {
+        const pricingFields = this.tableFields.room_pricing
+        const priceField = pricingFields.find(f => f.key === 'price')
+        if (priceField) {
+          priceField.placeholder = '객실을 먼저 선택하세요'
+        }
+      }
+      
+      await this.loadForeignKeyData()
+      this.showModal = true
+    },
+        // 수정 모달 열기
+    openEditModal(item) {
+      this.isEditMode = true
+      this.editingId = item.id
+      this.formData = { ...item }
+      this.tempUploadedFiles = []
+      
+      // 원본 파일 경로 저장 (테이블별로 필드명이 다름)
+      if (this.currentTable === 'city_images') {
+        this.originalFilePath = item.cityImagePath
+      } else if (this.currentTable === 'hotel_images') {
+        this.originalFilePath = item.hotelImagePath
+      } else if (this.currentTable === 'room_images') {
+        this.originalFilePath = item.roomImagePath
+      }
+      
+      this.setForeignKeyIds(item)
+      
+      if (this.currentTable === 'hotels') {
+        this.loadHotelFacilities(item.id)
+      }
+      
+      this.showModal = true
+    },
+    
+    // 모달 닫기
+    async closeModal() {
+      // 임시 업로드된 파일이 있으면 경고
+      if (this.tempUploadedFiles.length > 0) {
+        const confirmClose = confirm(
+          '업로드된 파일이 저장되지 않았습니다. 정말 닫으시겠습니까?\n(업로드된 파일은 삭제됩니다)'
+        )
+        
+        if (!confirmClose) {
+          return // 취소하면 모달 유지
+        }
+        
+        // 확인하면 임시 파일들 모두 삭제
+        for (const filePath of this.tempUploadedFiles) {
+          await this.deleteTemporaryFile(filePath)
+        }
+      }
+      
+      this.showModal = false
+      this.formData = {}
+      this.editingId = null
+      this.tempUploadedFiles = []
+      this.originalFilePath = null
+    },
     triggerFileInput(fieldKey) {
       document.getElementById(fieldKey).click();
     },
 
-    removeFile(fieldKey) {
-      this.formData[fieldKey] = null;
+    // 파일 제거 버튼
+    async removeFile(fieldKey) {
+      const filePath = this.formData[fieldKey]
+      
+      // 원본 파일이 아닌 임시 파일이면 서버에서도 삭제
+      if (filePath && filePath !== this.originalFilePath) {
+        await this.deleteTemporaryFile(filePath)
+        this.tempUploadedFiles = this.tempUploadedFiles.filter(
+          path => path !== filePath
+        )
+      }
+      
+      this.formData[fieldKey] = null
     },
 
     getFileName(filePath) {
@@ -876,59 +952,68 @@ async loadForeignKeyData() {
       return filePath.split('/').pop();
     },
     
+    // 저장
     async saveItem() {
-      this.isSaving = true;
+      this.isSaving = true
       try {
-        // 호텔 저장 시 편의시설/무료서비스 처리
+        // 저장 로직
         if (this.currentTable === 'hotels') {
-          const hotelData = { ...this.formData };
-          const selectedAmenities = this.formData.amenities || [];
-          const selectedFreebies = this.formData.freebies || [];
+          const hotelData = { ...this.formData }
+          const selectedAmenities = this.formData.amenities || []
+          const selectedFreebies = this.formData.freebies || []
           
-          // 호텔 기본 정보에서 amenities/freebies 제거
-          delete hotelData.amenities;
-          delete hotelData.freebies;
+          delete hotelData.amenities
+          delete hotelData.freebies
           
-          let hotelId;
+          let hotelId
           if (this.isEditMode) {
-            await adminAPI.update(this.currentTable, this.editingId, hotelData);
-            hotelId = this.editingId;
+            await adminAPI.update(this.currentTable, this.editingId, hotelData)
+            hotelId = this.editingId
           } else {
-            const response = await adminAPI.insert(this.currentTable, hotelData);
-            // 새로 생성된 호텔 ID 추출 (응답 형식에 따라 조정 필요)
-            hotelId = response.data?.id || this.editingId;
+            const response = await adminAPI.insert(this.currentTable, hotelData)
+            hotelId = response.data?.id || this.editingId
           }
           
-          // 편의시설 연결 업데이트
           if (this.isEditMode) {
-            await this.updateHotelFacilities(hotelId, selectedAmenities, 'amenities');
-            await this.updateHotelFacilities(hotelId, selectedFreebies, 'freebies');
+            await this.updateHotelFacilities(hotelId, selectedAmenities, 'amenities')
+            await this.updateHotelFacilities(hotelId, selectedFreebies, 'freebies')
           } else {
-            await this.createHotelFacilities(hotelId, selectedAmenities, 'amenities');
-            await this.createHotelFacilities(hotelId, selectedFreebies, 'freebies');
+            await this.createHotelFacilities(hotelId, selectedAmenities, 'amenities')
+            await this.createHotelFacilities(hotelId, selectedFreebies, 'freebies')
           }
           
-          this.showNotification('호텔 및 시설 정보가 저장되었습니다.', 'success');
+          this.showNotification('호텔 및 시설 정보가 저장되었습니다.', 'success')
         } else {
-          // 다른 테이블은 기존 방식대로
           if (this.isEditMode) {
-            await adminAPI.update(this.currentTable, this.editingId, this.formData);
-            this.showNotification('수정이 완료되었습니다.', 'success');
+            await adminAPI.update(this.currentTable, this.editingId, this.formData)
+            this.showNotification('수정이 완료되었습니다.', 'success')
           } else {
-            await adminAPI.insert(this.currentTable, this.formData);
-            this.showNotification('등록이 완료되었습니다.', 'success');
+            await adminAPI.insert(this.currentTable, this.formData)
+            this.showNotification('등록이 완료되었습니다.', 'success')
           }
         }
         
-        this.closeModal();
-        await this.loadTableData();
+        // 저장 성공! 임시 파일 목록 초기화 (실제 파일은 삭제하지 않음)
+        this.tempUploadedFiles = []
+        this.originalFilePath = null
+        
+        this.showModal = false
+        this.formData = {}
+        this.editingId = null
+        
+        await this.loadTableData()
+        
       } catch (error) {
-        console.error('저장 실패:', error);
-        this.showNotification(error.response?.data?.message || '저장에 실패했습니다.', 'error');
+        console.error('저장 실패:', error)
+        this.showNotification(
+          error.response?.data?.message || '저장에 실패했습니다.',
+          'error'
+        )
       } finally {
-        this.isSaving = false;
+        this.isSaving = false
       }
     },
+    
     
     async confirmDelete(id) {
       if (!confirm('정말 삭제하시겠습니까?')) return;
@@ -950,7 +1035,7 @@ async loadForeignKeyData() {
     getImageUrl(imagePath) {
       return adminAPI.getImageUrl(imagePath);
     },
-formatDate(dateString) {
+    formatDate(dateString) {
       return adminAPI.formatDate(dateString);
     },
 
@@ -1085,6 +1170,13 @@ formatDate(dateString) {
   
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
+    // 혹시 남아있는 임시 파일들 정리
+    if (this.tempUploadedFiles.length > 0) {
+      console.warn('컴포넌트 언마운트 시 임시 파일 정리:', this.tempUploadedFiles)
+      this.tempUploadedFiles.forEach(filePath => {
+        this.deleteTemporaryFile(filePath)
+      })
+    }
   }
 }
 </script>

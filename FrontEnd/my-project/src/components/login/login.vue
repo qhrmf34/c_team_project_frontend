@@ -347,10 +347,18 @@ export default {
       },
       initTurnstile() {
       // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
-        if (this.turnstileWidgetId) {
+      if (this.turnstileWidgetId) {
             console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
             return;
+      }
+      if (this.turnstileWidgetId !== null && window.turnstile) {
+        try {
+          window.turnstile.remove(this.turnstileWidgetId);
+          this.turnstileWidgetId = null;
+        } catch (error) {
+          console.log('기존 위젯 정리:', error);
         }
+      }
       // Turnstile 콜백을 전역으로 등록
       window.onTurnstileSuccess = (token) => {
         this.turnstileToken = token;

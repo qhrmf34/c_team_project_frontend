@@ -290,6 +290,47 @@ export const paymentMethodAPI = {
     return companyNames[cardCompany.toUpperCase()] || cardCompany;
   }
 }
+// 예약 API
+export const reservationAPI = {
+  /**
+   * 내 예약 목록 조회 (페이지네이션 지원)
+   */
+  async getMyReservations(params = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset);
+    }
+    if (params.size !== undefined) {
+      queryParams.append('size', params.size);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/reservations/my?${queryString}` : '/api/reservations/my';
+    
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+    /**
+   * 내 결제 내역 조회 (HotelAccount용 )
+   */
+  async getMyReservationHistory(params = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset);
+    }
+    if (params.size !== undefined) {
+      queryParams.append('size', params.size);
+    }
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/api/reservations/history?${queryString}` : '/api/reservations/history';
+    
+    const response = await apiClient.get(url);
+    return response.data;
+  }
+}
 // 결제 API 추가
 export const paymentAPI = {
   /**
@@ -419,7 +460,9 @@ export const hotelAPI = {
    * 객실 상세 정보 조회
    */
   async getRoomDetail(roomId) {
+    console.log('🔍 API 호출: getRoomDetail', roomId); // 디버깅용
     const response = await apiClient.get(`/api/admin/rooms/${roomId}/detail`);
+    console.log('📦 API 응답:', response.data); // 디버깅용
     return response.data;
   },
   // 호텔 검색
@@ -531,7 +574,7 @@ export const hotelAPI = {
   
   // ========== 찜하기 관련 ==========
   
-  // 찜한 호텔 목록 조회 (페이지네이션 지원)
+  // 찜 목록 조회 (WishlistHotelDto 사용)
   async getWishlistHotels(params = {}) {
     const queryParams = new URLSearchParams();
     
@@ -543,12 +586,12 @@ export const hotelAPI = {
     }
     
     const queryString = queryParams.toString();
-    const url = queryString ? `/api/carts?${queryString}` : '/api/carts';
+    const url = queryString ? `/api/carts/wishlist?${queryString}` : '/api/carts/wishlist';
     
     const response = await apiClient.get(url);
     return response.data;
   },
-  
+
   // 전체 찜한 호텔 조회 (페이지네이션 없음)
   async getAllWishlistHotels() {
     const response = await apiClient.get('/api/carts/all');
@@ -596,6 +639,21 @@ export const ticketAPI = {
   async getTicketByPaymentId(paymentId) {
     const response = await apiClient.get(`/api/tickets/payment/${paymentId}`);
     return response.data;
+  },
+    /**
+   * 티켓 이미지 업로드
+   */
+  async uploadTicketImage(ticketId, formData) {
+    const response = await apiClient.post(
+      `/api/tickets/${ticketId}/upload-image`, 
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return response.data;
   }
 }
 // 관리자 API
@@ -639,7 +697,13 @@ export const adminAPI = {
     })
     return response.data
   },
-
+  // 파일 삭제 메서드 
+  async deleteFile(filePath) {
+    const response = await apiClient.delete('/api/admin/delete-file', {
+      params: { filePath }
+    })
+    return response.data
+  },
   // 폴더별 파일 업로드 편의 메서드
   async uploadCityImage(file) {
     const formData = new FormData()
