@@ -153,7 +153,7 @@
                   </div>
                   <div class="info-item-content">
                     <div class="info-check">체크인</div>          
-                    <div class="info-item-time">{{ticket.checkInTime}}pm</div>
+                    <div class="info-item-time">{{formatBookingTime(ticket.checkInTime)}}</div>
                   </div>
                 </div>
 
@@ -163,7 +163,7 @@
                   </div>
                   <div class="info-item-content">
                     <div class="info-check">체크아웃</div>  
-                    <div class="info-item-time">{{ticket.checkOutTime}}am</div>
+                    <div class="info-item-time">{{formatBookingTime(ticket.checkOutTime)}}</div>
                   </div>
                 </div>
 
@@ -580,7 +580,20 @@ export default {
       
       return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
     },
-    
+    formatBookingTime(time) {
+      if (!time) return '12:00pm';
+
+      const [hourStr, minuteStr] = time.split(':');
+      let hour = parseInt(hourStr);
+      const minute = minuteStr || '00';
+      const suffix = hour >= 12 ? 'pm' : 'am';
+
+      if (hour === 0) hour = 12;
+      else if (hour > 12) hour -= 12;
+
+      return `${hour.toString().padStart(2, '0')}:${minute}${suffix}`;
+    },
+
     // ✅ 이미지 URL (기본 이미지 처리 추가)
     getImageUrl(imagePath) {
       if (!imagePath) return '/images/hotel_img/hotel1.jpg'; // ✅ 기본 이미지
