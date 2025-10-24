@@ -140,7 +140,7 @@
             <h2 class="section-title more-travel-title">여행 더보기</h2>
             <p class="section-subtitle">Going somewhere to celebrate this season? Whether you're going home or somewhere to roam, we've got the travel tools to get you to your<br> destination.</p>
           </div>
-          <button class="see-all-btn">See All</button>
+          <button class="see-all-btn" @click="goToHotelSearch">See All</button>
         </div>
 
         <div class="more-travel">
@@ -407,12 +407,7 @@ export default {
       },
 
       goToHotel() {
-        if (this.isLoggedIn) {
-          this.$router.push('/hotelone');
-        } else {
-          alert('로그인이 필요한 서비스입니다.');
-          this.$router.push('/login');
-        }
+        this.$router.push('/hotelone');
       },
 
       goToFavourites() {

@@ -999,12 +999,7 @@ export default {
     },
     
     goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
+      this.$router.push('/hotelone');
     }, 
     
     goToFavourites() {
