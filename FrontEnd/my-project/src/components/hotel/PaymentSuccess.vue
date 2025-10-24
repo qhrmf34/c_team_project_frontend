@@ -126,7 +126,9 @@ export default {
       ticket: null,
       countdown: 5,
       countdownTimer: null,
-      isUploadingImage: false
+      isUploadingImage: false,
+      uploadRetryCount: 0,
+      maxRetries: 3
     }
   },
   
@@ -179,12 +181,9 @@ export default {
           console.log('✅ 결제 완료! paymentId:', this.paymentId);
           
           // 2. 티켓 로드 및 이미지 생성 (백그라운드)
-        await this.$nextTick(); // DOM 렌더링 완료 대기
-        setTimeout(() => {
-          this.loadTicketAndCreateImage();
-        }, 300);          
-          // 3. 카운트다운 시작
-          this.startCountdown();
+        // await this.$nextTick(); // DOM 렌더링 완료 대기
+        await this.loadTicketAndCreateImage();
+        this.startCountdown();
           
         } else {
           this.isProcessing = false;
@@ -302,14 +301,21 @@ export default {
         );
         
         if (response.code === 200) {
-          this.ticket.ticketImagePath = response.data.imagePath;
-          console.log('✅ 티켓 이미지 업로드 완료:', response.data.imagePath);
+          this.uploadRetryCount = 0; // ✅ 성공 시 0으로 리셋
         }
-        
+
       } catch (error) {
-        console.error('티켓 이미지 업로드 실패:', error);
-      } finally {
-        this.isUploadingImage = false;
+        console.error('❌ 업로드 실패 (시도', this.uploadRetryCount + 1, '):', error);
+
+        // ✅ 재시도 로직
+        if (this.uploadRetryCount < this.maxRetries) {
+          this.uploadRetryCount++;  // ✅ 카운트 증가
+          console.log('🔄 재시도 중...', this.uploadRetryCount, '/', this.maxRetries);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return this.captureAndUploadTicket(); // 재귀 호출로 재시도
+        } else {
+          console.error('❌ 최대 재시도 횟수 초과');
+        }
       }
     },
     
