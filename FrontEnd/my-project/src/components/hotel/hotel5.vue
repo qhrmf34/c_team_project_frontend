@@ -82,7 +82,19 @@
     <!-- ✅ Error -->
     <div v-else-if="error" class="error-container">
       <p class="error-message">{{ error }}</p>
-      <button @click="$router.push('/hotelaccount')" class="btn-back">예약 내역으로</button>
+      <div class="error-actions">
+        <button @click="$router.push('/hotelaccount?tab=history')" class="btn-back">
+          예약 내역으로
+        </button>
+        <button 
+          v-if="errorPaymentId && !isRefunded" 
+          @click="requestRefundFromError" 
+          class="btn-refund-error"
+        >
+          환불 요청
+        </button>
+      </div>
+      <p v-if="isRefunded" class="refunded-info">이 결제는 이미 환불되었습니다.</p>
     </div>
 
     <!-- ✅ Ticket Content -->
@@ -306,7 +318,9 @@ export default {
       profileImageUrl: '/images/hotel_account_img/member.jpg',
       ticket: null,
       isLoading: true,
-      error: null
+      error: null,
+      errorPaymentId: null, 
+      isRefunded: false   
     }
   },
   
@@ -388,35 +402,44 @@ export default {
       return tomorrow.toLocaleDateString('en-CA');
     },
     
-  async loadTicket() {
-    try {
-      this.isLoading = true;
-
-      const paymentId = this.$route.query.paymentId;
-      if (!paymentId) {
-        throw new Error('결제 정보가 없습니다.');
-      }
-
-      const response = await ticketAPI.getTicketByPaymentId(paymentId);
-
-      if (response.code === 200) {
-        this.ticket = response.data;
-        console.log('✅ 티켓 로드 완료:', this.ticket);
-
-        if (this.ticket.ticketImagePath) {
-          console.log('✅ 티켓 이미지 경로:', this.ticket.ticketImagePath);
+    async loadTicket() {
+      try {
+        this.isLoading = true;
+      
+        const paymentId = this.$route.query.paymentId;
+        if (!paymentId) {
+          throw new Error('결제 정보가 없습니다.');
         }
-      } else {
-        this.error = response.message || '티켓을 불러올 수 없습니다.';
-      }
+      
+        // ✅ paymentId 저장 (환불 요청 시 사용)
+        this.errorPaymentId = paymentId;
+      
+        const response = await ticketAPI.getTicketByPaymentId(paymentId);
+      
+        if (response.code === 200) {
+          this.ticket = response.data;
+          this.isRefunded = response.data.refund || false; // ✅ 환불 여부 저장
+          console.log('✅ 티켓 로드 완료:', this.ticket);
+        
+          if (this.ticket.ticketImagePath) {
+            console.log('✅ 티켓 이미지 경로:', this.ticket.ticketImagePath);
+          }
+        } else {
+          this.error = response.message || '티켓을 불러올 수 없습니다.';
+        }
+      
+      } catch (error) {
+        console.error('티켓 로드 실패:', error);
+        this.error = error.response?.data?.message || error.message || '티켓을 불러오는데 실패했습니다.';
 
-    } catch (error) {
-      console.error('티켓 로드 실패:', error);
-      this.error = error.response?.data?.message || error.message || '티켓을 불러오는데 실패했습니다.';
-    } finally {
-      this.isLoading = false;
-    }
-  },
+        // ✅ 에러 응답에서 refund 정보 확인
+        if (error.response?.data?.refund !== undefined) {
+          this.isRefunded = error.response.data.refund;
+        }
+      } finally {
+        this.isLoading = false;
+      }
+    },
      
     formatDate(dateString) {
       if (!dateString) return '';
@@ -493,7 +516,43 @@ export default {
         alert('카카오톡 공유에 실패했습니다.');
       }
     },
-    
+    // ✅ 에러 화면에서 환불 요청
+    async requestRefundFromError() {
+      if (this.isRefunded) {
+        alert('이미 환불된 결제입니다.');
+        return;
+      }
+
+      if (!this.errorPaymentId) {
+        alert('결제 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      if (!confirm('정말 환불하시겠습니까?\n환불 후에는 예약이 취소됩니다.')) {
+        return;
+      }
+
+      const cancelReason = prompt('환불 사유를 입력해주세요', '티켓 이미지 생성 실패');
+      if (!cancelReason) return;
+
+      try {
+        const response = await paymentAPI.refundPayment(
+          this.errorPaymentId, 
+          cancelReason
+        );
+
+        if (response.code === 200) {
+          alert('환불이 완료되었습니다!');
+          this.$router.push({
+            path: '/hotelaccount',
+            query: { tab: 'history' }
+          });
+        }
+      } catch (error) {
+        console.error('환불 실패:', error);
+        alert(error.response?.data?.message || '환불 처리 중 오류가 발생했습니다.');
+      }
+    },
     // ✅ 환불 요청
     async requestRefund() {
       if (this.ticket.refund) {
@@ -1781,7 +1840,61 @@ export default {
     border-color: #8DD3BB;
     color: #8DD3BB;
   }
-
+  .error-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .btn-back {
+    padding: 12px 32px;
+    background: #8DD3BB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .btn-back:hover {
+    background: #7bc4ad;
+    transform: translateY(-2px);
+  }
+  
+  .btn-refund-error {
+    padding: 12px 32px;
+    background: #ff5252;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .btn-refund-error:hover {
+    background: #e04848;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+  }
+  
+  .refunded-info {
+    margin-top: 20px;
+    padding: 12px 20px;
+    background: #ffe0e0;
+    border: 1px solid #ff5252;
+    border-radius: 8px;
+    color: #d32f2f;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
   /* 반응형 */
   @media screen and (max-width: 768px) {
     .coupon-modal {

@@ -16,7 +16,6 @@
         <p>결제금액: {{ formatPrice(amount) }}</p>
       </div>
       <p class="redirect-message">{{ countdown }}초 후 티켓 페이지로 이동합니다...</p>
-      <button @click="goToTicket" class="btn-primary">티켓 바로 보기</button>
     </div>
     
     <!-- 실패 -->
@@ -180,8 +179,10 @@ export default {
           console.log('✅ 결제 완료! paymentId:', this.paymentId);
           
           // 2. 티켓 로드 및 이미지 생성 (백그라운드)
+        await this.$nextTick(); // DOM 렌더링 완료 대기
+        setTimeout(() => {
           this.loadTicketAndCreateImage();
-          
+        }, 300);          
           // 3. 카운트다운 시작
           this.startCountdown();
           
@@ -346,7 +347,7 @@ export default {
         query: { paymentId: this.paymentId }
       });
     },
-    
+
     formatPrice(price) {
       if (!price) return '₩0';
       return '₩' + price.toLocaleString();
@@ -384,7 +385,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, white 0%);
 }
 
 .processing, .success, .error {
@@ -461,16 +462,6 @@ h2 {
   margin-top: 10px;
 }
 
-.btn-primary {
-  background: #8DD3BB;
-  color: #112211;
-}
-
-.btn-primary:hover {
-  background: #7CC5AE;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(141, 211, 187, 0.4);
-}
 
 .btn-secondary {
   background: #f0f0f0;
