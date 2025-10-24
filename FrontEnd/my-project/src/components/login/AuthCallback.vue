@@ -16,6 +16,7 @@
 
 <script>
 import { authUtils } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'AuthCallback',
@@ -39,11 +40,13 @@ export default {
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('token')
         const userInfoParam = urlParams.get('userInfo')
+        const needAdditionalInfo = urlParams.get('needAdditionalInfo')
         const error = urlParams.get('error')
         
         console.log('URL 파라미터:', { 
           hasToken: !!token, 
-          hasUserInfo: !!userInfoParam, 
+          hasUserInfo: !!userInfoParam,
+          needAdditionalInfo,
           error 
         })
         
@@ -53,7 +56,6 @@ export default {
         
         if (token && userInfoParam) {
           try {
-            // URL 파라미터에서 받은 사용자 정보 파싱
             const userInfo = JSON.parse(decodeURIComponent(userInfoParam))
             
             console.log('파싱된 사용자 정보:', userInfo)
@@ -61,25 +63,23 @@ export default {
             
             // localStorage에 토큰과 사용자 정보 저장
             authUtils.saveAuth(token, userInfo)
+                        
+            const memberName = formatMemberName(userInfo)
             
-            console.log('✓ 토큰과 사용자 정보 저장 완료')
-            
-            // 저장된 정보 확인
-            const savedToken = localStorage.getItem('jwt_token')
-            const savedUserInfo = localStorage.getItem('user_info')
-            
-            console.log('저장 확인:', {
-              tokenSaved: !!savedToken,
-              userInfoSaved: !!savedUserInfo
-            })
-            
-            // 성공 메시지
-            alert(`${userInfo.firstName}님, 로그인되었습니다!`)
-            
-            // 메인 페이지로 리다이렉트 (3초 후)
-            setTimeout(() => {
-              this.$router.replace('/')
-            }, 1000)
+            // needAdditionalInfo 체크
+            if (needAdditionalInfo === 'true') {
+              alert(`${memberName}님, 추가 정보를 입력해주세요.`)
+              
+              setTimeout(() => {
+                this.$router.replace('/complete-social-signup')
+              }, 1000)
+            } else {
+              alert(`${memberName}님, 환영합니다!`)
+              
+              setTimeout(() => {
+                this.$router.replace('/')
+              }, 1000)
+            }
             
           } catch (parseError) {
             console.error('사용자 정보 파싱 실패:', parseError)
@@ -93,7 +93,6 @@ export default {
         console.error('콜백 처리 실패:', error)
         this.error = error.message
         
-        // 5초 후 로그인 페이지로 리다이렉트
         setTimeout(() => {
           this.goToLogin()
         }, 5000)

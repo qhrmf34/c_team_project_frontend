@@ -90,6 +90,43 @@
               </div>
             </div>
 
+            <!-- ✅ 주소 검색 섹션 (DB 구조에 맞춤) -->
+            <div class="address-section">
+              <!-- 주소 + 주소 검색 버튼 -->
+              <div class="input-group address-with-button">
+                <input 
+                  type="text" 
+                  id="road-address" 
+                  v-model="signupForm.roadAddress"
+                  placeholder="주소" 
+                  readonly
+                  required
+                >
+                <label for="road-address">주소</label>
+                
+                <!-- 다음 주소 검색 컴포넌트 -->
+                <DaumAddressPopup @address-selected="handleAddressSelected">
+                  <template #trigger="{ open }">
+                    <button type="button" class="inline-search-btn" @click="open">
+                      주소 검색
+                    </button>
+                  </template>
+                </DaumAddressPopup>
+              </div>
+
+              <!-- 상세 주소 (사용자 입력) -->
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  id="detail-address" 
+                  v-model="signupForm.detailAddress"
+                  placeholder="상세 주소를 입력하세요 (예: 101동 1001호)" 
+                  maxlength="50"
+                >
+                <label for="detail-address">상세 주소</label>
+              </div>
+            </div>
+
             <!-- Password Input Section -->
             <div class="signup-password-group">
               <div class="input-group">
@@ -140,13 +177,13 @@
               </div>
             </div>
 
-              <!-- Cloudflare Turnstile 위젯 -->
-              <div class="turnstile-wrapper">
-                <div 
-                  ref="turnstileWidget"
-                  class="cf-turnstile"
-                ></div>
-              </div>
+            <!-- Cloudflare Turnstile 위젯 -->
+            <div class="turnstile-wrapper">
+              <div 
+                ref="turnstileWidget"
+                class="cf-turnstile"
+              ></div>
+            </div>
 
             <!-- Options and Button Section -->
             <div class="form-options">
@@ -169,16 +206,14 @@
           
           <!-- Social Login Section -->
           <div class="social-login">
-            <!-- 카카오 버튼-->
             <button class="social-btn kakao-btn" @click="loginWithKakao">
               <img src="/images/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
             <button class="social-btn" @click="loginWithGoogle">
               <img src="/images/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
-
             </button>
             <button class="social-btn" @click="loginWithNaver">
-                <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
+              <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
             </button>
           </div>
         </div>
@@ -329,21 +364,23 @@
   </div>
 </template>
 
-// HotelSignup.vue - 결제수단 관련 수정 부분
-
 <script>
 // commonAxios에서 필요한 API들 불러오기
 import { memberAPI, paymentMethodAPI } from '@/utils/commonAxios'
+import DaumAddressPopup from '@/components/login/DaumAddres.vue'
 
 export default {
   name: 'HotelSignup',
+  components: {
+    DaumAddressPopup
+  },
   
   data() {
     return {
       currentScreen: 'signup',
       currentSlideIndex: 0,
       isLoading: false,
-      isPaymentLoading: false, // 결제수단 추가용 별도 로딩
+      isPaymentLoading: false,
       turnstileWidgetId: null, 
       turnstileToken: null,
       turnstileSiteKey: '', 
@@ -359,92 +396,92 @@ export default {
         phoneNumber: '',
         password: '',
         confirmPassword: '',
-        agreement: false
+        agreement: false,
+        
+        // ✅ DB 구조에 맞춘 주소 필드
+        roadAddress: '',      // VARCHAR(50) - 주소
+        detailAddress: ''     // VARCHAR(50) - 상세주소
       },
       
-      // 결제수단 폼 수정 (CVC → cardPassword)
       paymentForm: {
         cardNumber: '',
         expDate: '',
-        cardPassword: '', // CVC에서 cardPassword로 변경
+        cardPassword: '',
         nameOnCard: '',
-        country: 'KR', // 기본값을 한국으로 변경
+        country: 'KR',
         saveCard: false
       }
     }
   },
   
   mounted() {
-      // Turnstile 스크립트 로드 - 약간의 지연 후 실행
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.loadTurnstileScript();
-        }, 100);
-      });
-        setInterval(() => {
+    this.$nextTick(() => {
+      setTimeout(() => {
+        this.loadTurnstileScript();
+      }, 100);
+    });
+    
+    setInterval(() => {
       this.currentSlideIndex = (this.currentSlideIndex + 1) % 3;
     }, 5000);
   },
-    beforeUnmount() {
-      // Turnstile 위젯 제거
-      if (window.turnstile && this.turnstileWidgetId !== null) {
-        try {
-          window.turnstile.remove(this.turnstileWidgetId);
-        } catch (error) {
-          console.error('Turnstile 위젯 제거 실패:', error);
-        }
+
+  beforeUnmount() {
+    if (window.turnstile && this.turnstileWidgetId !== null) {
+      try {
+        window.turnstile.remove(this.turnstileWidgetId);
+      } catch (error) {
+        console.error('Turnstile 위젯 제거 실패:', error);
       }
-      
-      // 컴포넌트 제거 시 전역 콜백 정리
-      if (window.onTurnstileSuccess) {
-        delete window.onTurnstileSuccess;
-      }
-      if (window.onTurnstileError) {
-        delete window.onTurnstileError;
-      }
-    },
+    }
+    
+    if (window.onTurnstileSuccess) {
+      delete window.onTurnstileSuccess;
+    }
+    if (window.onTurnstileError) {
+      delete window.onTurnstileError;
+    }
+  },
+  
   methods: {
-      loadTurnstileScript() {
-        // 이미 스크립트가 로드되어 있는지 확인
-        if (window.turnstile) {
+    loadTurnstileScript() {
+      if (window.turnstile) {
+        this.initTurnstile();
+        return;
+      }
+    
+      const existingScript = document.querySelector('script[src*="turnstile"]');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => {
           this.initTurnstile();
-          return;
-        }
+        });
+        return;
+      }
+    
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => {
+        console.log('Turnstile 스크립트 로드 완료');
+        this.initTurnstile();
+      };
+
+      script.onerror = () => {
+        console.error('Turnstile 스크립트 로드 실패');
+        alert('로봇 검증 시스템을 불러오는데 실패했습니다. 페이지를 새로고침해주세요.');
+      };
+
+      document.head.appendChild(script);
+    },
+    
+    initTurnstile() {
+      if (this.turnstileWidgetId) {
+        console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
+        return;
+      }
       
-        // 스크립트가 이미 DOM에 있는지 확인
-        const existingScript = document.querySelector('script[src*="turnstile"]');
-        if (existingScript) {
-          existingScript.addEventListener('load', () => {
-            this.initTurnstile();
-          });
-          return;
-        }
-      
-        // 새로운 스크립트 태그 생성 및 로드
-        const script = document.createElement('script');
-        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-        script.async = true;
-        script.defer = true;
-
-        script.onload = () => {
-          console.log('Turnstile 스크립트 로드 완료');
-          this.initTurnstile();
-        };
-
-        script.onerror = () => {
-          console.error('Turnstile 스크립트 로드 실패');
-          alert('로봇 검증 시스템을 불러오는데 실패했습니다. 페이지를 새로고침해주세요.');
-        };
-
-        document.head.appendChild(script);
-      },
-      initTurnstile() {
-      // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
-        if (this.turnstileWidgetId) {
-            console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
-            return;
-        }
-      // Turnstile 콜백을 전역으로 등록
       window.onTurnstileSuccess = (token) => {
         this.turnstileToken = token;
         console.log('Turnstile 검증 성공');
@@ -456,11 +493,10 @@ export default {
         alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
       };
 
-      // Turnstile 위젯 렌더링
       this.$nextTick(() => {
         if (window.turnstile && this.$refs.turnstileWidget) {
           try {
-            this.turnstileSiteKey=String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
+            this.turnstileSiteKey = String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
             this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
               sitekey: this.turnstileSiteKey,
               theme: 'light',
@@ -474,6 +510,7 @@ export default {
         }
       });
     },
+    
     showScreen(screenName) {
       this.currentScreen = screenName;
       this.currentSlideIndex = 0;
@@ -487,7 +524,36 @@ export default {
       this.showPassword[fieldType] = !this.showPassword[fieldType];
     },
     
+    /**
+     * ✅ 다음 주소 검색 완료 후 처리 (DB 구조에 맞춤)
+     */
+    handleAddressSelected(addressData) {
+      console.log('선택된 주소:', addressData);
+      
+      // DB의 road_address 컬럼에 저장 (VARCHAR(50))
+      this.signupForm.roadAddress = addressData.roadAddress;
+      
+      // 건물명이 있고 아파트인 경우 상세주소에 미리 채우기 (선택사항)
+      if (addressData.buildingName && addressData.apartment === 'Y') {
+        this.signupForm.detailAddress = addressData.buildingName;
+      } else {
+        this.signupForm.detailAddress = '';
+      }
+      
+      // 상세주소 입력란으로 자동 포커스 이동
+      this.$nextTick(() => {
+        const detailAddressInput = document.getElementById('detail-address');
+        if (detailAddressInput) {
+          detailAddressInput.focus();
+        }
+      });
+    },
+    
+    /**
+     * 회원가입 제출
+     */
     async submitSignUp() {
+      // 기본 유효성 검사
       if (!this.signupForm.agreement) {
         alert('약관에 동의해주세요.');
         return;
@@ -497,7 +563,7 @@ export default {
         alert('로봇 검증을 완료해주세요.');
         return;
       }
-
+      
       if (this.signupForm.password !== this.signupForm.confirmPassword) {
         alert('비밀번호가 일치하지 않습니다.');
         return;
@@ -507,6 +573,21 @@ export default {
         alert('비밀번호는 8자 이상이어야 합니다.');
         return;
       }
+
+      const hasLetter = /[a-zA-Z]/.test(this.signupForm.password);
+      const hasNumber = /[0-9]/.test(this.signupForm.password);
+      const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(this.signupForm.password);
+      
+      if (!hasLetter || !hasNumber || !hasSpecial) {
+        alert('비밀번호는 영문, 숫자, 특수기호를 각각 최소 1개 이상 포함해야 합니다.');
+        return;
+      }
+
+      const phoneRegex = /^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$/;
+      if (!phoneRegex.test(this.signupForm.phoneNumber)) {
+        alert('01X-XXXX-XXXX 형식으로 입력해주세요.');
+        return;
+      }
       
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.signupForm.email)) {
@@ -514,9 +595,27 @@ export default {
         return;
       }
 
+      // ✅ 주소 유효성 검사
+      if (!this.signupForm.roadAddress) {
+        alert('주소를 검색해주세요.');
+        return;
+      }
+
+      // DB VARCHAR(50) 길이 제한 체크
+      if (this.signupForm.roadAddress.length > 50) {
+        alert('주소가 너무 깁니다. (최대 50자)');
+        return;
+      }
+
+      if (this.signupForm.detailAddress && this.signupForm.detailAddress.length > 50) {
+        alert('상세 주소가 너무 깁니다. (최대 50자)');
+        return;
+      }
+
       this.isLoading = true;
       
       try {
+        // ✅ 서버로 전송할 데이터 (DB 구조에 맞춤)
         const result = await memberAPI.signup({
           firstName: this.signupForm.firstName,
           lastName: this.signupForm.lastName,
@@ -525,11 +624,15 @@ export default {
           password: this.signupForm.password,
           confirmPassword: this.signupForm.confirmPassword,
           agreement: this.signupForm.agreement,
+          
+          // ✅ DB 주소 컬럼
+          roadAddress: this.signupForm.roadAddress,           // VARCHAR(50)
+          detailAddress: this.signupForm.detailAddress || null, // VARCHAR(50) NULL 허용
+          
           turnstileToken: this.turnstileToken
         });
         
         if (result.data && result.data.token) {
-          // JWT 토큰과 사용자 정보 저장
           localStorage.setItem('jwt_token', result.data.token);
           localStorage.setItem('user_info', JSON.stringify({
             id: result.data.memberId,
@@ -546,20 +649,19 @@ export default {
         console.error('회원가입 실패:', error);
         alert(error.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
         this.resetTurnstile();
-
       } finally {
         this.isLoading = false;
       }
     },
+    
     resetTurnstile() {
       this.turnstileToken = null;
       if (window.turnstile && this.$refs.turnstileWidget) {
         window.turnstile.reset(this.$refs.turnstileWidget);
       }
     },
-    // 결제수단 추가 메서드 - 실제 API 연동
+    
     async submitPaymentMethod() {
-      // 유효성 검사 강화
       if (!this.validatePaymentForm()) {
         return;
       }
@@ -567,23 +669,20 @@ export default {
       this.isPaymentLoading = true;
       
       try {
-        // 서버 API 형식에 맞게 데이터 변환
         const cardData = {
-          cardNumber: this.paymentForm.cardNumber.replace(/\s/g, ''), // 공백 제거
+          cardNumber: this.paymentForm.cardNumber.replace(/\s/g, ''),
           cardExpirationMonth: this.paymentForm.expDate.split('/')[0],
           cardExpirationYear: this.paymentForm.expDate.split('/')[1],
-          cardPassword: this.paymentForm.cardPassword, // 카드 비밀번호 앞 2자리
+          cardPassword: this.paymentForm.cardPassword,
           customerName: this.paymentForm.nameOnCard
         };
         
-        // 결제수단 등록 API 호출
         const response = await paymentMethodAPI.registerPaymentMethod(cardData);
         
         if (response && response.data) {
           alert('결제수단이 성공적으로 추가되었습니다!');
           this.$router.push('/hotelone');
         }
-        
       } catch (error) {
         console.error('결제수단 추가 실패:', error);
         
@@ -600,12 +699,11 @@ export default {
       }
     },
     
-    // 결제수단 유효성 검사 (강화된 버전)
     validatePaymentForm() {
       const validation = paymentMethodAPI.validateCardInfo({
         cardNumber: this.paymentForm.cardNumber,
         expiry: this.paymentForm.expDate,
-        cardPassword: this.paymentForm.cardPassword, // CVC → cardPassword
+        cardPassword: this.paymentForm.cardPassword,
         name: this.paymentForm.nameOnCard
       });
 
@@ -617,13 +715,11 @@ export default {
       return true;
     },
     
-    // 다음에 하기 버튼 클릭 시
     skipPayment() {
       alert('결제수단은 나중에 추가할 수 있습니다.');
       this.$router.push('/hotelone');
     },
     
-    // Input formatting methods - paymentMethodAPI 활용
     formatCardNumber() {
       this.paymentForm.cardNumber = paymentMethodAPI.formatCardNumber(this.paymentForm.cardNumber);
     },
@@ -632,12 +728,10 @@ export default {
       this.paymentForm.expDate = paymentMethodAPI.formatExpiryDate(this.paymentForm.expDate);
     },
     
-    // 카드 비밀번호 포맷팅 (2자리 숫자로 제한)
     formatCardPassword() {
       this.paymentForm.cardPassword = this.paymentForm.cardPassword.replace(/\D/g, '').substring(0, 2);
     },
     
-    // Social login functions
     loginWithGoogle() {
       window.location.href = 'http://localhost:8089/oauth2/authorization/google';
     },
@@ -733,32 +827,24 @@ export default {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: white;
+  background: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0.6;
+  transition: background 0.3s;
 }
 
 .dot.active {
-  background-color: #7dd3c0;
-  width: 32px;
-  height: 10px;
-  border-radius: 5px;
-  opacity: 1;
+  background: white;
 }
 
-.dot:hover {
-  opacity: 0.8;
-}
-
-/* ===== 폼 컨테이너 구역 ===== */
+/* ===== 폼 섹션 ===== */
 .form-section {
   flex: 1;
+  width: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50%;
-  padding: 2rem;
+  padding: 40px;
+  background-color: white;
 }
 
 .form-wrapper {
@@ -766,79 +852,76 @@ export default {
   max-width: 100%;
 }
 
-/* ===== 폼 헤더 구역 ===== */
+/* ===== 폼 헤더 ===== */
+.form-header {
+  margin-bottom: 40px;
+}
+
 .form-header h1 {
-  font-family: Acme;
-  font-weight: 400;
-  font-size: 40px;
-  line-height: 1.2;
-  margin-bottom: 10px;
+  font-size: 48px;
+  font-weight: bold;
+  margin-bottom: 8px;
   color: #333;
 }
 
 .form-header p {
-  font-family: Montserrat;
-  font-weight: 400;
   font-size: 16px;
-  line-height: 1.4;
-  margin-bottom: 48px;
   color: #666;
+  margin-bottom: 0;
 }
 
-/* ===== 공통 입력 필드 구역 ===== */
+/* ===== 입력 그룹 ===== */
 .input-group {
+  position: relative;
   width: 100%;
   height: 56px;
-  margin-bottom: 24px;
-  position: relative;
+  margin-bottom: 25px;
 }
 
-.input-group label {
-  position: absolute;
-  top: -8px;
-  left: 12px;
-  background: white;
-  padding: 0 4px;
+.input-group input,
+.input-group select {
+  width: 100%;
+  height: 56px;
+  padding: 16px;
+  border: 1px solid rgba(17, 34, 17, 0.15);
+  border-radius: 4px;
   font-family: Montserrat;
   font-weight: 400;
   font-size: 14px;
-  color: #666;
-  z-index: 1;
-}
-
-.input-group input, 
-.input-group select {
-  width: 100%;
-  height: 100%;
-  padding: 16px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-  font-family: Montserrat;
-  font-weight: 400;
-  font-size: 16px;
-  background: white;
-  transition: border-color 0.3s ease;
+  background-color: white;
+  transition: border-color 0.3s;
 }
 
 .input-group input:focus,
 .input-group select:focus {
   outline: none;
   border-color: #7dd3c0;
-  border-width: 2px;
 }
 
-.input-group input:focus + label,
-.input-group select:focus + label {
-  color: #7dd3c0;
+.input-group input[readonly] {
+  background-color: #f9f9f9;
+  cursor: pointer;
 }
 
-/* ===== 회원가입 전용 입력 그룹 ===== */
+.input-group label {
+  position: absolute;
+  left: 16px;
+  top: -8px;
+  background: white;
+  padding: 0 4px;
+  font-size: 12px;
+  color: #666;
+  font-family: Montserrat;
+  font-weight: 500;
+}
+
+/* ===== 이름 입력 행 ===== */
 .signup-name-row {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   width: 100%;
-  margin-bottom: 24px;
+  height: 56px;
+  margin-bottom: 25px;
 }
 
 .signup-name-row .input-group {
@@ -846,11 +929,13 @@ export default {
   margin-bottom: 0;
 }
 
+/* ===== 연락처 입력 행 ===== */
 .signup-contact-row {
   display: flex;
   gap: 20px;
   width: 100%;
-  margin-bottom: 24px;
+  height: 56px;
+  margin-bottom: 25px;
 }
 
 .signup-contact-row .input-group {
@@ -858,10 +943,58 @@ export default {
   margin-bottom: 0;
 }
 
+/* ✅ ===== 주소 검색 섹션 스타일 ===== */
+.address-section {
+  margin-bottom: 25px;
+}
+
+/* 주소 검색 버튼이 있는 입력 그룹 */
+.address-with-button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.address-with-button input {
+  flex: 1;
+}
+
+/* 인라인 주소 검색 버튼 */
+.inline-search-btn {
+  height: 56px;
+  padding: 0 20px;
+  background-color: #7dd3c0;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
+.inline-search-btn:hover {
+  background-color: #6bc4a6;
+}
+
+.inline-search-btn:active {
+  background-color: #5db399;
+}
+
+/* ===== 비밀번호 입력 그룹 ===== */
 .signup-password-group {
-  display: block;
+  display: flex;
+  gap: 20px;
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 25px;
+}
+
+.signup-password-group .input-group {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .password-input-wrapper {
@@ -872,36 +1005,36 @@ export default {
 
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: 16px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  color: #79747E;
+  padding: 0;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
-.password-toggle img{
-  width: 22.50015640258789px;
-  height: 15px;
-  top: 4.5px;
-  left: 0.75px;
-  angle: 0 deg;
+
+.password-toggle img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.password-toggle:hover img {
   opacity: 1;
-
 }
 
-.password-toggle:hover {
-  color: #333;
+/* ===== Turnstile 위젯 ===== */
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
 }
 
-/* ===== 옵션 및 버튼 구역 ===== */
+/* ===== 폼 옵션 및 버튼 ===== */
 .form-options {
-  width: 100%;
   margin: 32px 0;
 }
 
@@ -1017,17 +1150,13 @@ export default {
 .back-button {
   width: 36px;
   height: 17px;
-  angle: 0 deg;
   opacity: 1;
   background: none;
   border: none;
   font-family: Montserrat;
   font-weight: 500;
-  font-style: Medium;
   font-size: 14px;
-  leading-trim: NONE;
   line-height: 100%;
-  letter-spacing: 0%;
   color: #333;
   cursor: pointer;
   margin-bottom: 20px;
@@ -1035,7 +1164,6 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 8px 0;
-  font-weight: 500;
 }
 
 .back-button:hover {
@@ -1061,7 +1189,7 @@ export default {
   margin-bottom: 0;
 }
 
-/* ===== 결제수단 입력 그룹 - 회원가입과 동일한 스타일 적용 ===== */
+/* ===== 결제수단 입력 그룹 ===== */
 .payment-row {
   display: flex;
   gap: 20px;
@@ -1091,13 +1219,11 @@ export default {
   z-index: 2;
 }
 
-.card-logo img{
+.card-logo img {
   width: 24px;
   height: 15.072000503540039px;
-  angle: 0 deg;
   opacity: 1;
   top: 4.46px;
-
 }
 
 /* 체크박스 스타일 */
@@ -1197,10 +1323,5 @@ export default {
   display: flex;
   height: 100vh;
   width: 100%;
-}
-.turnstile-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
 }
 </style>

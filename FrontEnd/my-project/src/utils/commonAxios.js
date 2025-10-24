@@ -123,6 +123,10 @@ export const memberAPI = {
       confirmPassword
     })
     return response.data
+  },
+  // 소셜 로그인 추가 정보 입력
+  completeSocialSignup(data) {
+    return apiClient.post('/api/member/complete-social-signup', data);
   }
 }
 
