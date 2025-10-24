@@ -41,13 +41,13 @@
           </div>
         </div>
         <div class="dropdown-menu">
-          <a href="#" class="dropdown-item" @click="goToAccount">
+          <a href="#" class="dropdown-item" @click.prevent="goToAccount">
             <img src="/images/hotel_img/account.jpg">계정
           </a>
-          <a href="#" class="dropdown-item" @click="goToPaymentHistory">
+          <a href="#" class="dropdown-item" @click.prevent="goToPaymentHistory">
             <img src="/images/hotel_img/card.jpg">결제내역
           </a>
-          <a href="#" class="dropdown-item">
+          <a href="#" class="dropdown-item" @click.prevent="goToPaymentTab">
             <img src="/images/hotel_img/setting.jpg">설정
           </a>
           <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
@@ -929,9 +929,16 @@ export default {
         console.error('이미지 로드 실패:', error);
       }
     },
-    
+    goToAccount() {
+      this.activeTab = 'account';
+      this.isDropdownActive = false; 
+    },
     goToPaymentHistory() {
       this.activeTab = 'history';
+      this.isDropdownActive = false; 
+    },
+    goToPaymentTab() {
+      this.activeTab = 'payments';
       this.isDropdownActive = false; 
     },
     // ✅ 티켓 다운로드 가능 여부
@@ -1044,9 +1051,7 @@ export default {
       }
     },
     
-    goToAccount() {
-      // 이미 계정 페이지임
-    },
+
     
     goToHotel() {
       this.$router.push('/hotelone');
