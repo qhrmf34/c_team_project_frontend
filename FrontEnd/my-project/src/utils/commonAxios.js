@@ -44,6 +44,14 @@ apiClient.interceptors.response.use(
   }
 )
 
+// 인증 데이터 삭제 헬퍼 함수
+function clearAuthData() {
+  localStorage.removeItem('jwt_token')
+  localStorage.removeItem('user_info')
+  // 세션 스토리지도 함께 정리
+  sessionStorage.clear()
+}
+
 // 회원 API
 export const memberAPI = {
   // 회원가입
@@ -58,10 +66,20 @@ export const memberAPI = {
     return response.data
   },
 
-  // 로그아웃
+  // 로그아웃 - 개선된 버전
   async logout() {
-    const response = await apiClient.post('/api/member/logout')
-    return response.data
+    try {
+      // 서버에 로그아웃 요청
+      const response = await apiClient.post('/api/member/logout')
+      return response.data
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error)
+      // API 호출 실패해도 클라이언트 데이터는 삭제
+      throw error
+    } finally {
+      // 성공/실패 여부와 관계없이 항상 클라이언트 데이터 삭제
+      clearAuthData()
+    }
   },
 
   // 프로필 조회
@@ -78,8 +96,13 @@ export const memberAPI = {
 
   // 회원 탈퇴
   async deleteAccount() {
-    const response = await apiClient.delete('/api/member/profile')
-    return response.data
+    try {
+      const response = await apiClient.delete('/api/member/profile')
+      return response.data
+    } finally {
+      // 탈퇴 성공 시에도 클라이언트 데이터 삭제
+      clearAuthData()
+    }
   },
 
   // 비밀번호 재설정 요청

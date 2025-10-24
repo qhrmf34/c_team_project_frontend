@@ -761,6 +761,8 @@ export default {
   
   computed: {
     totalPages() {
+      // ✅ 0으로 나누기 방지 및 최소 1페이지
+      if (this.totalCount === 0) return 1;
       return Math.ceil(this.totalCount / this.pageSize);
     },
     
@@ -936,20 +938,23 @@ export default {
     canDownloadTicket(booking) {
       if (!booking.paymentId) return false;
       if (!booking.reservationsStatus) return false;
-      
+      if (!booking.hasTicket) return false; // ✅ 티켓 이미지가 없으면 비활성화
+
       const status = booking.paymentStatus?.toString().toLowerCase();
       return status === 'paid';
     },
+  
     // ✅ 버튼 툴팁 메시지
     getDownloadButtonTitle(booking) {
       if (!booking.paymentId) return '결제 정보가 없습니다';
       if (!booking.reservationsStatus) return '예약이 확정되지 않았습니다';
-      
+      if (!booking.hasTicket) return '티켓이 아직 생성되지 않았습니다'; // ✅ 추가
+
       const status = booking.paymentStatus?.toString().toLowerCase();
       if (status === 'refunded') return '환불된 예약입니다';
       if (status === 'failed') return '결제 실패한 예약입니다';
       if (status === 'paid') return '티켓 다운로드';
-      
+
       return '티켓을 다운로드할 수 없습니다';
     },
     getImageUrl(imagePath) {
@@ -1419,43 +1424,54 @@ export default {
     },
     
     // ✅ 예약 내역 로드
-    async loadReservations() {
-      if (!this.isLoggedIn) return;
-      
-      try {
-        this.isLoadingReservations = true;
-        
-        const response = await reservationAPI.getMyReservationHistory({
-          offset: this.currentPage * this.pageSize,
-          size: this.pageSize
-        });
-        
-        if (response && response.data) {
-          this.bookings = response.data.reservations || [];
-          this.totalCount = response.data.totalCount || 0;
-        }
-        
-      } catch (error) {
-        console.error('예약 내역 로드 실패:', error);
-        alert('예약 내역을 불러오는데 실패했습니다.');
-      } finally {
-        this.isLoadingReservations = false;
-      }
-    },
+  async loadReservations() {
+    if (!this.isLoggedIn) return;
     
+    try {
+      this.isLoadingReservations = true;
+      
+      const response = await reservationAPI.getMyReservationHistory({
+        offset: this.currentPage * this.pageSize,
+        size: this.pageSize
+      });
+      
+      if (response && response.data) {
+        this.bookings = response.data.reservations || [];
+        this.totalCount = response.data.totalCount || 0;
+        
+        // ✅ 빈 페이지 체크: 데이터가 없고 첫 페이지가 아니면 이전 페이지로
+        if (this.bookings.length === 0 && this.currentPage > 0) {
+          this.currentPage--;
+          await this.loadReservations();
+        }
+      }
+      
+    } catch (error) {
+      console.error('결제 내역 로드 실패:', error);
+      alert('결제 내역을 불러오는데 실패했습니다.');
+    } finally {
+      this.isLoadingReservations = false;
+    }
+  },
+  
+    
+    // ✅ 다음 페이지 (데이터 있을 때만)
     async loadNextPage() {
-      if (this.currentPage < this.totalPages - 1) {
+      const maxPage = Math.ceil(this.totalCount / this.pageSize) - 1;
+      if (this.currentPage < maxPage) {
         this.currentPage++;
         await this.loadReservations();
       }
     },
-    
+
+    // ✅ 이전 페이지
     async loadPreviousPage() {
       if (this.currentPage > 0) {
         this.currentPage--;
         await this.loadReservations();
       }
     },
+
     
     formatBookingDate(dateString) {
       if (!dateString) return '';
