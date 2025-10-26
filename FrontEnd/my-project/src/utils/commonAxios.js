@@ -366,20 +366,31 @@ export const paymentAPI = {
     /**
    * ✅ 전액 환불
    */
-  async refundPayment(paymentId, cancelReason) {
-    const response = await apiClient.post(`/api/payments/${paymentId}/refund`, {
-      cancelReason
-    });
+  async refundPayment(paymentId, refundData) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund`, refundData);
     return response.data;
   },
+
     /**
    * ✅ 부분 환불
    */
-  async refundPaymentPartial(paymentId, refundAmount, cancelReason) {
-    const response = await apiClient.post(`/api/payments/${paymentId}/refund-partial`, {
-      refundAmount,
-      cancelReason
-    });
+  async refundPaymentPartial(paymentId, refundData) {
+    const response = await apiClient.post(`/api/payments/${paymentId}/refund-partial`, refundData);
+    return response.data;
+  },
+    /**
+   * ✅ 환불 사유 옵션 조회 - 새로 추가
+   */
+  async getRefundReasonOptions() {
+    const response = await apiClient.get('/api/refund-reasons/options');
+    return response.data;
+  },
+
+  /**
+   * ✅ 특정 결제의 환불 사유 조회 - 새로 추가
+   */
+  async getRefundReasons(paymentId) {
+    const response = await apiClient.get(`/api/refund-reasons/payment/${paymentId}/all`);
     return response.data;
   },
   

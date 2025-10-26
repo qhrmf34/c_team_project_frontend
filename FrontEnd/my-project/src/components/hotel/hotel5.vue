@@ -88,7 +88,7 @@
         </button>
         <button 
           v-if="errorPaymentId && !isRefunded" 
-          @click="requestRefundFromError" 
+          @click="openRefundModal" 
           class="btn-refund-error"
         >
           환불 요청
@@ -147,7 +147,7 @@
 
         <!-- ✅ 환불 버튼 섹션 추가 -->
         <div class="refund-section" v-if="!ticket.refund">
-          <button class="refund-btn" @click="requestRefund">
+          <button class="refund-btn" @click="openRefundModal">
             <img src="/images/hotel_img/refund.jpg" alt="refund" v-if="false">
             환불 요청
           </button>
@@ -296,7 +296,65 @@
         </div>
       </div>
     </div>
-
+    <!-- 환불 사유 모달 추가 -->
+    <div v-if="showRefundModal" class="modal-overlay" @click.self="closeRefundModal">
+      <div class="refund-modal">
+        <div class="modal-header">
+          <h2>환불 요청</h2>
+          <button class="modal-close-btn" @click="closeRefundModal">&times;</button>
+        </div>
+      
+        <div class="modal-content">
+          <div class="refund-notice-box">
+            <p>⚠️ 환불 시 예약이 취소되며, 티켓은 사용할 수 없게 됩니다.</p>
+          </div>
+        
+          <!-- 환불 사유 선택 -->
+          <div class="form-group">
+            <label for="mainReason">환불 사유 <span class="required">*</span></label>
+            <select
+              id="mainReason"
+              v-model="refundForm.mainReason"
+              required
+              class="select-input"
+            >
+              <option value="" disabled>환불 사유를 선택하세요</option>
+              <option 
+                v-for="option in refundReasonOptions" 
+                :key="option.value" 
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        
+          <!-- 세부 사유 입력 -->
+          <div class="form-group">
+            <label for="detailReason">세부 사유</label>
+            <textarea
+              id="detailReason"
+              v-model="refundForm.detailReason"
+              placeholder="환불 사유를 상세히 입력해주세요 (선택사항)"
+              rows="4"
+              maxlength="1000"
+            ></textarea>
+            <p class="char-count">{{ refundForm.detailReason.length }} / 1000</p>
+          </div>
+        </div>
+      
+        <div class="modal-footer">
+          <button @click="closeRefundModal" class="btn-cancel">취소</button>
+          <button 
+            @click="requestRefund" 
+            class="btn-confirm"
+            :disabled="!refundForm.mainReason || isProcessing"
+          >
+            {{ isProcessing ? '처리 중...' : '환불 신청' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -320,7 +378,16 @@ export default {
       isLoading: true,
       error: null,
       errorPaymentId: null, 
-      isRefunded: false   
+      isRefunded: false,
+      
+      showRefundModal: false,
+      refundReasonOptions: [],
+      refundForm: {
+        mainReason: '',
+        detailReason: ''
+      },
+      isProcessing: false
+      
     }
   },
   
@@ -328,7 +395,9 @@ export default {
     document.addEventListener('click', this.handleClickOutside);
     this.loadUserInfo();
 
-    await this.loadTicket();  // ✅ 이미지 로드만
+    await this.loadRefundReasonOptions();
+
+    await this.loadTicket();  
   },
   
   beforeUnmount() {
@@ -516,76 +585,109 @@ export default {
         alert('카카오톡 공유에 실패했습니다.');
       }
     },
+    // ✅ 환불 사유 옵션 로드
+    async loadRefundReasonOptions() {
+      try {
+        const response = await paymentAPI.getRefundReasonOptions();
+        if (response.code === 200) {
+          this.refundReasonOptions = response.data;
+        }
+      } catch (error) {
+        console.error('환불 사유 옵션 로드 실패:', error);
+      }
+    },
+
+    // ✅ 환불 모달 열기
+    openRefundModal() {
+      console.log('openRefundModal 호출됨');
+      console.log('ticket:', this.ticket);
+      
+      // ✅ ticket null 체크 추가!
+      if (!this.ticket) {
+        alert('티켓 정보를 불러오는 중입니다.');
+        return;
+      }
+      
+      if (this.ticket.refund) {
+        alert('이미 환불된 티켓입니다.');
+        return;
+      }
+    
+      this.showRefundModal = true;
+      this.refundForm = {
+        mainReason: '',
+        detailReason: ''
+      };
+    },
+    // ✅ 환불 모달 닫기
+    closeRefundModal() {
+      this.showRefundModal = false;
+      this.refundForm = {
+        mainReason: '',
+        detailReason: ''
+      };
+    },
+
     // ✅ 에러 화면에서 환불 요청
     async requestRefundFromError() {
       if (this.isRefunded) {
         alert('이미 환불된 결제입니다.');
         return;
       }
-
+    
       if (!this.errorPaymentId) {
         alert('결제 정보를 찾을 수 없습니다.');
         return;
       }
-
-      if (!confirm('정말 환불하시겠습니까?\n환불 후에는 예약이 취소됩니다.')) {
-        return;
-      }
-
-      const cancelReason = prompt('환불 사유를 입력해주세요', '티켓 이미지 생성 실패');
-      if (!cancelReason) return;
-
-      try {
-        const response = await paymentAPI.refundPayment(
-          this.errorPaymentId, 
-          cancelReason
-        );
-
-        if (response.code === 200) {
-          alert('환불이 완료되었습니다!');
-          this.$router.push({
-            path: '/hotelaccount',
-            query: { tab: 'history' }
-          });
-        }
-      } catch (error) {
-        console.error('환불 실패:', error);
-        alert(error.response?.data?.message || '환불 처리 중 오류가 발생했습니다.');
-      }
-    },
-    // ✅ 환불 요청
-    async requestRefund() {
-      if (this.ticket.refund) {
-        alert('이미 환불된 티켓입니다.');
-        return;
-      }
-      
-      if (!confirm('정말 환불하시겠습니까?\n환불 후에는 예약이 취소됩니다.')) {
-        return;
-      }
-      
-      const cancelReason = prompt('환불 사유를 입력해주세요', '고객 요청');
-      if (!cancelReason) return;
-      
-      try {
-        const response = await paymentAPI.refundPayment(
-          this.ticket.paymentId, 
-          cancelReason
-        );
-        
-        if (response.code === 200) {
-          alert('환불이 완료되었습니다!');
-          this.$router.push({
-            path: '/hotelaccount',
-            query: { tab: 'history' }
-          });
-        }
-      } catch (error) {
-        console.error('환불 실패:', error);
-        alert(error.response?.data?.message || '환불 처리 중 오류가 발생했습니다.');
-      }
-    },
     
+      // 모달 열기
+      this.showRefundModal = true;
+      this.refundForm = {
+        mainReason: '',
+        detailReason: '티켓 이미지 생성 실패'
+      };
+    },
+    // 환불 요청
+    async requestRefund() {
+      if (!this.refundForm.mainReason) {
+        alert('환불 사유를 선택해주세요');
+        return;
+      }
+
+      if (!confirm('정말 환불하시겠습니까?\n환불 후에는 예약이 취소됩니다.')) {
+        return;
+      }
+
+      this.isProcessing = true;
+
+      try {
+        const refundData = {
+          cancelReason: this.refundForm.detailReason || '고객 요청',
+          mainReason: this.refundForm.mainReason,
+          detailReason: this.refundForm.detailReason
+        };
+
+        // ✅ paymentAPI 사용
+        const response = await paymentAPI.refundPayment(
+          this.ticket.paymentId,
+          refundData
+        );
+
+        if (response.code === 200) {
+          alert('환불이 완료되었습니다!');
+          this.closeRefundModal();
+          this.$router.push({
+            path: '/hotelaccount',
+            query: { tab: 'history' }
+          });
+        }
+      } catch (error) {
+        console.error('환불 실패:', error);
+        alert(error.response?.data?.message || '환불 처리 중 오류가 발생했습니다.');
+      } finally {
+        this.isProcessing = false;
+      }
+    },
     // ✅ 티켓 다운로드 (adminAPI 사용)
     async downloadTicket() {
       if (!this.ticket || !this.ticket.ticketImagePath) {
@@ -1936,5 +2038,229 @@ export default {
       padding: 16px 20px;
     }
   }
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h2 {
+    font-family: 'TradeGothic', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    color: #112211;
+    margin: 0;
+  }
+  
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: #112211;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+  
+  .modal-close-btn:hover {
+    color: #8DD3BB;
+  }
+  
+  .modal-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modal-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 16px;
+  }
 
+  /* ✅ 환불 모달 스타일 */
+  .refund-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+  
+  .refund-notice-box {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .refund-notice-box p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .form-group {
+    margin-bottom: 24px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #112211;
+    margin-bottom: 8px;
+  }
+  
+  .required {
+    color: #ff4444;
+  }
+  
+  .select-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.2s;
+  }
+  
+  .select-input:focus {
+    outline: none;
+    border-color: #8DD3BB;
+  }
+  
+  textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    resize: vertical;
+    min-height: 100px;
+  }
+  
+  textarea:focus {
+    outline: none;
+    border-color: #8DD3BB;
+  }
+  
+  .char-count {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+    margin-top: 4px;
+  }
+  
+  .btn-cancel,
+  .btn-confirm {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-cancel {
+    background: white;
+    color: #112211;
+    border: 2px solid #e0e0e0;
+  }
+  
+  .btn-cancel:hover {
+    border-color: #8DD3BB;
+    color: #8DD3BB;
+  }
+  
+  .btn-confirm {
+    background: #8DD3BB;
+    color: #112211;
+  }
+  
+  .btn-confirm:hover:not(:disabled) {
+    background: #7CC5AE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(141, 211, 187, 0.4);
+  }
+  
+  .btn-confirm:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  /* 반응형 */
+  @media screen and (max-width: 768px) {
+    .refund-modal {
+      width: 95%;
+      max-height: 90vh;
+    }
+  
+    .modal-header {
+      padding: 24px 20px 16px;
+    }
+  
+    .modal-header h2 {
+      font-size: 20px;
+    }
+  
+    .modal-content {
+      padding: 16px 20px;
+    }
+  
+    .modal-footer {
+      flex-direction: column;
+      padding: 16px 20px;
+    }
+  }
 </style>
