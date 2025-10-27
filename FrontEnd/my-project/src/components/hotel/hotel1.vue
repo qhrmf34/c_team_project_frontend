@@ -45,7 +45,7 @@
           <a href="#" class="dropdown-item" @click="goToPaymentHistory">
             <img src="/images/hotel_img/card.jpg">결제내역
           </a>
-          <a href="#" class="dropdown-item" @click="goToPayment">
+          <a href="#" class="dropdown-item" @click="goToPaymentTab">
             <img src="/images/hotel_img/setting.jpg">설정
           </a>
           <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
@@ -523,7 +523,7 @@ export default {
           this.$router.push('/login');
         }
       },
-      goToPayment() {
+      goToPaymentTab() {
         if (this.isLoggedIn) {
           this.$router.push({
             path: '/hotelaccount',

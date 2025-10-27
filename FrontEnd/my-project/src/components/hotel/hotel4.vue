@@ -1355,20 +1355,20 @@ export default {
       }
     },
 
-        // ===== 금액 변경 시 위젯 업데이트 =====
-        async updateTossAmount() {
-          if (this.tossWidgets && this.isWidgetReady) {
-            try {
-              await this.tossWidgets.setAmount({
-                currency: 'KRW',
-                value: this.totalPrice
-              });
-              console.log('금액 업데이트:', this.totalPrice);
-            } catch (error) {
-              console.error('금액 업데이트 실패:', error);
-            }
-          }
-        },  
+    // ===== 금액 변경 시 위젯 업데이트 =====
+    async updateTossAmount() {
+      if (this.tossWidgets && this.isWidgetReady) {
+        try {
+          await this.tossWidgets.setAmount({
+            currency: 'KRW',
+            value: this.totalPrice
+          });
+          console.log('금액 업데이트:', this.totalPrice);
+        } catch (error) {
+          console.error('금액 업데이트 실패:', error);
+        }
+      }
+    },  
     // 기본 예약 데이터 로드 (로그인 안한 상태)
     async loadBasicBookingData() {
       try {
