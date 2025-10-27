@@ -185,7 +185,7 @@
             
             <div v-if="groupedRooms && groupedRooms.length > 0">
               <div v-for="(group, index) in groupedRooms" :key="index" class="room-item">
-                <img :src="group.image || '/images/hotel_img/room-default.jpg'" :alt="group.roomName" class="room-image">
+                <img :src="group.image || '/images/hotel_img/room1.jpg'" :alt="group.roomName" class="room-image">
                 <div class="room-info">
                   <div class="room-details">
                     {{ group.roomName }} · {{ group.bedType }}
@@ -801,7 +801,7 @@ export default {
           }
         } catch (error) {
           console.error(`객실 ${room.roomId} 이미지 로드 실패:`, error);
-          room.image = '/images/hotel_img/room-default.jpg';
+          room.image = '/images/hotel_img/room1.jpg';
         }
       }
     },
