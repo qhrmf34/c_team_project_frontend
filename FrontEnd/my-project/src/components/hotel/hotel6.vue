@@ -61,7 +61,7 @@
           <a href="#" class="dropdown-item" @click="goToPaymentHistory">
             <img src="/images/hotel_img/card.jpg">결제내역
           </a>
-          <a href="#" class="dropdown-item">
+          <a href="#" class="dropdown-item" @click="goToPaymentTab">
             <img src="/images/hotel_img/setting.jpg">설정
           </a>
           <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
@@ -189,8 +189,8 @@
                     class="show-more-btn" 
                     @click="loadMoreReservations"
                     type="button"
-                    :disabled="isLoadingReservations">
-              {{ isLoadingReservations ? 'Loading...' : `Show more results (${reservations.length}/${reservationTotalCount})` }}
+                    :disabled="isLoadingMoreReservations">
+              {{ isLoadingMoreReservations  ? 'Loading...' : `Show more results (${reservations.length}/${reservationTotalCount})` }}
             </button>
             <button v-show="!isLoadingReservations && reservations.length > reservationPageSize && !hasMoreReservations" 
                     class="show-more-btn" 
@@ -267,9 +267,9 @@
             <button v-show="!isLoading && hotels.length > 0 && hasMoreHotels" 
                     class="show-more-btn" 
                     @click="loadMoreHotels"
-                    :disabled="isLoading"
+                    :disabled="isLoadingMoreHotels"
                     type="button">
-              {{ isLoading ? 'Loading...' : `Show more results (${hotels.length}/${totalCount})` }}
+              {{ isLoadingMoreHotels ? 'Loading...' : `Show more results (${hotels.length}/${totalCount})` }}
             </button>
             
             <button v-show="!isLoading && hotels.length > pageSize && !hasMoreHotels" 
@@ -411,7 +411,10 @@ export default {
       isLoadingReservations: false,
       reservations: [],
       reservationsCount: 0,
-      
+
+      isLoadingMoreHotels: false,
+      isLoadingMoreReservations: false, 
+
       // 사용자 정보
       userInfo: null,
       isLoggedIn: false,
@@ -572,9 +575,9 @@ export default {
     async loadMoreReservations() {
       if (this.isLoadingReservations || !this.hasMoreReservations) return;
     
-      this.isLoadingReservations = true;
-    
+        this.isLoadingMoreReservations = true;    
       try {
+
         const params = {
           offset: this.reservationCurrentOffset,
           size: this.reservationPageSize
@@ -591,7 +594,7 @@ export default {
         console.error('예약 추가 로드 중 오류:', error);
         alert('예약 추가 로드 중 오류가 발생했습니다.');
       } finally {
-        this.isLoadingReservations = false;
+        this.isLoadingMoreReservations = false;
       }
     },
     /**
@@ -692,8 +695,8 @@ export default {
     async loadMoreHotels() {
       if (this.isLoading || !this.hasMoreHotels) return;
 
-      this.isLoading = true;
-
+      this.isLoadingMoreHotels = true; 
+      
       try {
         const params = {
           offset: this.currentOffset,
@@ -730,7 +733,7 @@ export default {
         console.error('추가 로드 중 오류:', error);
         alert('추가 로드 중 오류가 발생했습니다.');
       } finally {
-        this.isLoading = false;
+        this.isLoadingMoreHotels = false;
       }
     },
 
@@ -830,6 +833,18 @@ export default {
           query: { tab: 'history' }
         });
         this.isDropdownActive = false;
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    goToPaymentTab() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'payments' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
       } else {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
@@ -996,12 +1011,7 @@ export default {
     },
     
     goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
+      this.$router.push('/hotelone');
     }, 
     
     goToFavourites() {

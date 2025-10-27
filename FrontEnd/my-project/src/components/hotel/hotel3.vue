@@ -48,7 +48,7 @@
           <a href="#" class="dropdown-item" @click="goToPaymentHistory">
             <img src="/images/hotel_img/card.jpg">결제내역
           </a>
-          <a href="#" class="dropdown-item">
+          <a href="#" class="dropdown-item" @click="goToPaymentTab">
             <img src="/images/hotel_img/setting.jpg">설정
           </a>
           <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
@@ -185,7 +185,7 @@
             
             <div v-if="groupedRooms && groupedRooms.length > 0">
               <div v-for="(group, index) in groupedRooms" :key="index" class="room-item">
-                <img :src="group.image || '/images/hotel_img/room-default.jpg'" :alt="group.roomName" class="room-image">
+                <img :src="group.image || '/images/hotel_img/room1.jpg'" :alt="group.roomName" class="room-image">
                 <div class="room-info">
                   <div class="room-details">
                     {{ group.roomName }} · {{ group.bedType }}
@@ -801,7 +801,7 @@ export default {
           }
         } catch (error) {
           console.error(`객실 ${room.roomId} 이미지 로드 실패:`, error);
-          room.image = '/images/hotel_img/room-default.jpg';
+          room.image = '/images/hotel_img/room1.jpg';
         }
       }
     },
@@ -1259,7 +1259,18 @@ export default {
         this.$router.push('/login');
       }
     },
-    
+    goToPaymentTab() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'payments' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
     async loadHotelDetail(hotelId) {
       try {
         const response = await hotelAPI.getHotelDetail(hotelId);
@@ -1566,12 +1577,7 @@ export default {
     },
     
     goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
+      this.$router.push('/hotelone');
     },
     
     // ===== 유틸리티 메서드 =====

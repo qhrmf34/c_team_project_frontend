@@ -46,7 +46,7 @@
           <a href="#" class="dropdown-item" @click="goToPaymentHistory">
             <img src="/images/hotel_img/card.jpg">결제내역
           </a>
-          <a href="#" class="dropdown-item">
+          <a href="#" class="dropdown-item" @click="goToPaymentTab">
             <img src="/images/hotel_img/setting.jpg">설정
           </a>
           <hr style="border: 0.5px solid rgba(17, 34, 17, 0.25);">
@@ -1355,20 +1355,20 @@ export default {
       }
     },
 
-        // ===== 금액 변경 시 위젯 업데이트 =====
-        async updateTossAmount() {
-          if (this.tossWidgets && this.isWidgetReady) {
-            try {
-              await this.tossWidgets.setAmount({
-                currency: 'KRW',
-                value: this.totalPrice
-              });
-              console.log('금액 업데이트:', this.totalPrice);
-            } catch (error) {
-              console.error('금액 업데이트 실패:', error);
-            }
-          }
-        },  
+    // ===== 금액 변경 시 위젯 업데이트 =====
+    async updateTossAmount() {
+      if (this.tossWidgets && this.isWidgetReady) {
+        try {
+          await this.tossWidgets.setAmount({
+            currency: 'KRW',
+            value: this.totalPrice
+          });
+          console.log('금액 업데이트:', this.totalPrice);
+        } catch (error) {
+          console.error('금액 업데이트 실패:', error);
+        }
+      }
+    },  
     // 기본 예약 데이터 로드 (로그인 안한 상태)
     async loadBasicBookingData() {
       try {
@@ -1813,12 +1813,7 @@ export default {
     },
     
     goToHotel() {
-      if (this.isLoggedIn) {
-        this.$router.push('/hotelone');
-      } else {
-        alert('로그인이 필요한 서비스입니다.');
-        this.$router.push('/login');
-      }
+      this.$router.push('/hotelone');
     },
     
     goToFavourites() {
@@ -1846,6 +1841,18 @@ export default {
           query: { tab: 'history' }
         });
         this.isDropdownActive = false;
+      } else {
+        alert('로그인이 필요한 서비스입니다.');
+        this.$router.push('/login');
+      }
+    },
+    goToPaymentTab() {
+      if (this.isLoggedIn) {
+        this.$router.push({
+          path: '/hotelaccount',
+          query: { tab: 'payments' }
+        });
+        this.isDropdownActive = false; // 드롭다운 닫기
       } else {
         alert('로그인이 필요한 서비스입니다.');
         this.$router.push('/login');
