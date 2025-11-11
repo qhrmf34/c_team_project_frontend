@@ -11,7 +11,6 @@ import HotelSignup from '../components/login/signup.vue'
 import HotelMaster from '../components/hotelmaster.vue'
 import HotelTest from '../components/hotel/hoteltest.vue'
 import AuthCallback from '../components/login/AuthCallback.vue'
-import CompleteSocialSignup from '../components/login/CompleteSocialSignup.vue'
 import HotelAdmin from '../components/admin/admin.vue'
 import PaymentSuccess from '../components/hotel/PaymentSuccess.vue'
 import PaymentFail from '../components/hotel/PaymentFail.vue'
@@ -89,12 +88,6 @@ const routes = [
     name: 'AuthCallback',
     component: AuthCallback, 
     meta: { title: '로딩' }
-  },
-  {
-    path: '/complete-social-signup',
-    name: 'CompleteSocialSignup',
-    component: CompleteSocialSignup,
-    meta: { title: '추가 정보 입력', }
   },
   {
     path: '/admin',

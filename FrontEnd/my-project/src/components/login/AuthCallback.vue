@@ -32,73 +32,106 @@ export default {
   },
   
   methods: {
+    decodeJWT(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (error) {
+        console.error('JWT 디코딩 실패:', error);
+        return null;
+      }
+    },
+    
+    extractUserInfoFromUrl(urlParams) {
+      const userInfoParam = urlParams.get('userInfo')
+      if (!userInfoParam) return null
+      
+      try {
+        return JSON.parse(decodeURIComponent(userInfoParam))
+      } catch (error) {
+        console.error('userInfo 파싱 실패:', error)
+        return null
+      }
+    },
+    
+    extractUserInfoFromJWT(token) {
+      const payload = this.decodeJWT(token)
+      if (!payload) return null
+      
+      return {
+        id: payload.sub || null,
+        firstName: payload.firstName || '',
+        lastName: payload.lastName || '',
+        email: payload.email || '',
+        provider: payload.provider || '',
+        type: payload.type || ''
+      }
+    },
+    
     async handleCallback() {
       try {
-        console.log('=== AuthCallback 실행 ===')
-        console.log('현재 URL:', window.location.href)
-        
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('token')
-        const userInfoParam = urlParams.get('userInfo')
-        const needAdditionalInfo = urlParams.get('needAdditionalInfo')
         const error = urlParams.get('error')
-        
-        console.log('URL 파라미터:', { 
-          hasToken: !!token, 
-          hasUserInfo: !!userInfoParam,
-          needAdditionalInfo,
-          error 
-        })
         
         if (error) {
           throw new Error(this.getErrorMessage(error))
         }
         
-        if (token && userInfoParam) {
-          try {
-            const userInfo = JSON.parse(decodeURIComponent(userInfoParam))
-            
-            console.log('파싱된 사용자 정보:', userInfo)
-            console.log('토큰 앞부분:', token.substring(0, 20) + '...')
-            
-            // localStorage에 토큰과 사용자 정보 저장
-            authUtils.saveAuth(token, userInfo)
-                        
-            const memberName = formatMemberName(userInfo)
-            
-            // needAdditionalInfo 체크
-            if (needAdditionalInfo === 'true') {
-              alert(`${memberName}님, 추가 정보를 입력해주세요.`)
-              
-              setTimeout(() => {
-                this.$router.replace('/complete-social-signup')
-              }, 1000)
-            } else {
-              alert(`${memberName}님, 환영합니다!`)
-              
-              setTimeout(() => {
-                this.$router.replace('/')
-              }, 1000)
-            }
-            
-          } catch (parseError) {
-            console.error('사용자 정보 파싱 실패:', parseError)
-            throw new Error('사용자 정보 처리 중 오류가 발생했습니다.')
+        if (!token) {
+          throw new Error('토큰이 누락되었습니다.')
+        }
+        
+        // URL 파라미터에서 userInfo 추출 (우선순위 1)
+        let userInfo = this.extractUserInfoFromUrl(urlParams)
+        
+        // userInfo가 없으면 JWT에서 추출 (우선순위 2)
+        if (!userInfo) {
+          userInfo = this.extractUserInfoFromJWT(token)
+          if (!userInfo) {
+            throw new Error('사용자 정보를 추출할 수 없습니다.')
           }
+        }
+        
+        const memberName = formatMemberName(userInfo)
+        const isNewUser = userInfo.type === 'social_signup'
+        
+        if (isNewUser) {
+          this.handleNewUser(token, userInfo, memberName)
         } else {
-          throw new Error('토큰 또는 사용자 정보가 누락되었습니다.')
+          this.handleExistingUser(token, userInfo, memberName)
         }
         
       } catch (error) {
         console.error('콜백 처리 실패:', error)
         this.error = error.message
-        
-        setTimeout(() => {
-          this.goToLogin()
-        }, 5000)
+        setTimeout(() => this.goToLogin(), 5000)
       } finally {
         this.loading = false
       }
+    },
+    
+    handleNewUser(token, userInfo, memberName) {
+      sessionStorage.setItem('socialSignupData', JSON.stringify({
+        tempToken: token,
+        socialInfo: userInfo
+      }))
+      
+      alert(`${memberName}님, 추가 정보를 입력해주세요.`)
+      this.$router.replace('/signup')
+    },
+    
+    handleExistingUser(token, userInfo, memberName) {
+      authUtils.saveAuth(token, userInfo)
+      alert(`${memberName}님, 환영합니다!`)
+      this.$router.replace('/')
     },
     
     getErrorMessage(error) {

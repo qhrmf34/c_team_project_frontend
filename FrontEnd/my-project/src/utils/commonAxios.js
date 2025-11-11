@@ -24,18 +24,15 @@ apiClient.interceptors.request.use(
   }
 )
 
-// 응답 인터셉터 - 토큰 만료 처리
+// 응답 인터셉터
 apiClient.interceptors.response.use(
   (response) => {
     return response
   },
   (error) => {
     if (error.response?.status === 401) {
-      // 토큰 만료 시 자동 로그아웃
-      localStorage.removeItem('jwt_token')
-      localStorage.removeItem('user_info')
-      
-      // 현재 페이지가 인증이 필요한 페이지라면 로그인 페이지로 이동
+      authUtils.clearAuth()
+
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
         window.location.href = '/login'
       }
@@ -124,10 +121,13 @@ export const memberAPI = {
     })
     return response.data
   },
-  // 소셜 로그인 추가 정보 입력
-  completeSocialSignup(data) {
-    return apiClient.post('/api/member/complete-social-signup', data);
-  }
+  completeSocialSignup(data, token) {
+    return apiClient.post('/api/member/complete-social-signup', data, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
 }
 
 // 회원 이미지 API
@@ -777,31 +777,43 @@ export const adminAPI = {
   }
 }
 
-// 인증 관련 유틸리티
 export const authUtils = {
-  // 토큰 저장
+  // ✅ 저장
   saveAuth(token, userInfo) {
     localStorage.setItem('jwt_token', token)
     localStorage.setItem('user_info', JSON.stringify(userInfo))
   },
 
-  // 토큰 조회
+  clearAuth() {
+    localStorage.removeItem('jwt_token') 
+    localStorage.removeItem('user_info')
+    sessionStorage.clear()
+    console.log('✅ Auth 정보 삭제 완료')
+  },
+
+  // ✅ 조회
   getToken() {
     return localStorage.getItem('jwt_token')
   },
 
-  // 사용자 정보 조회
   getUserInfo() {
     const userInfo = localStorage.getItem('user_info')
     return userInfo ? JSON.parse(userInfo) : null
   },
 
-  // 로그인 상태 확인
-  isLoggedIn() {
+  getMemberId() {
+     const userInfo = this.getUserInfo()
+    return userInfo ? userInfo.id : null
+  },
+
+  isAuthenticated() {
     return !!this.getToken()
   },
 
-  // 토큰 만료 확인
+  isLoggedIn() {
+    return this.isAuthenticated()
+  },
+
   isTokenExpired() {
     const token = this.getToken()
     if (!token) return true
@@ -811,19 +823,19 @@ export const authUtils = {
       const currentTime = Date.now() / 1000
       return payload.exp < currentTime
     } catch (error) {
+      console.error('토큰 파싱 실패:', error)
       return true
     }
   },
 
-  // 로그아웃
   async logout() {
     try {
       await memberAPI.logout()
+      console.log('✅ 서버 로그아웃 성공')
     } catch (error) {
-      console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
+      console.warn('⚠️ 서버 로그아웃 실패, 로컬 정보만 삭제:', error)
     } finally {
-      localStorage.removeItem('jwt_token')
-      localStorage.removeItem('user_info')
+      this.clearAuth()
     }
   }
 }

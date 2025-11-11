@@ -822,7 +822,7 @@ export default {
         
         this.priceRange = {
           min: 0,                    
-          max: maxPrice,
+          max: finalMax,
           dynamicMin: 0,             
           dynamicMax: finalMax
         };
