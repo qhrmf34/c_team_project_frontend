@@ -38,7 +38,7 @@
           </header>
 
           <form @submit.prevent="submitSignUp">
-            <!-- 이름 입력 섹션 -->
+            <!-- 이름 입력 섹션 - 소셜 로그인 시 한 칸으로 합침 -->
             <div v-if="isSocialLogin" class="input-group" style="margin-bottom: 25px;">
               <input 
                 type="text" 
@@ -51,6 +51,7 @@
               <label for="full-name">Name (소셜 계정 정보)</label>
             </div>
 
+            <!-- 일반 로그인 시 성/이름 분리 (기존 구조 유지) -->
             <div v-else class="signup-name-row">
               <div class="input-group">
                 <input 
@@ -78,6 +79,7 @@
 
             <!-- Contact Input Section -->
             <div class="signup-contact-row">
+              <!-- 이메일 - 소셜 로그인 시 처리 -->
               <div class="input-group">
                 <input 
                   type="email" 
@@ -108,8 +110,9 @@
               </div>
             </div>
 
-            <!-- 주소 검색 섹션 -->
+            <!-- 주소 검색 섹션 (DB 구조에 맞춤) -->
             <div class="address-section">
+              <!-- 주소 + 주소 검색 버튼 -->
               <div class="input-group address-with-button">
                 <input 
                   type="text" 
@@ -121,6 +124,7 @@
                 >
                 <label for="road-address">주소</label>
                 
+                <!-- 다음 주소 검색 컴포넌트 -->
                 <DaumAddressPopup @address-selected="handleAddressSelected">
                   <template #trigger="{ open }">
                     <button type="button" class="inline-search-btn" @click="open">
@@ -130,6 +134,7 @@
                 </DaumAddressPopup>
               </div>
 
+              <!-- 상세 주소 (사용자 입력) -->
               <div class="input-group">
                 <input 
                   type="text" 
@@ -142,7 +147,7 @@
               </div>
             </div>
 
-            <!-- Password Input Section -->
+            <!-- Password Input Section - 소셜 로그인 시 숨김 -->
             <div v-if="!isSocialLogin" class="signup-password-group">
               <div class="input-group">
                 <div class="password-input-wrapper">
@@ -212,22 +217,24 @@
             </div>
           </form>
           
-          <!-- 소셜 로그인 버튼 -->
+          <!-- 소셜 로그인 버튼 - 일반 회원가입 시만 표시 -->
           <template v-if="!isSocialLogin">
+            <!-- Divider -->
             <div class="divider">
               <span class="divider-beeline"></span>
               <span>Or Sign up with</span>
               <span class="divider-beeline"></span>
             </div>
             
+            <!-- Social Login Section -->
             <div class="social-login">
-              <button class="social-btn kakao-btn" @click="loginWithSocial('kakao')">
+              <button class="social-btn kakao-btn" @click="loginWithKakao">
                 <img src="/images/login_img/kakao.jpg" alt="카카오 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
-              <button class="social-btn" @click="loginWithSocial('google')">
+              <button class="social-btn" @click="loginWithGoogle">
                 <img src="/images/login_img/google.jpg" alt="구글 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
-              <button class="social-btn" @click="loginWithSocial('naver')">
+              <button class="social-btn" @click="loginWithNaver">
                 <img src="/images/login_img/naver.jpg" alt="네이버 로그인" width="24" height="24" style="border-radius: 4px;"/>
               </button>
             </div>
@@ -394,6 +401,7 @@ export default {
       currentSlideIndex: 0,
       isLoading: false,
       
+      // 소셜 로그인 관련 데이터
       isSocialLogin: false,
       socialUserInfo: null,
       tempToken: null,
@@ -445,7 +453,11 @@ export default {
   },
   
   methods: {
+    // 소셜 로그인 콜백 처리
     handleSocialLoginCallback() {
+      console.log('=== 소셜 로그인 콜백 처리 시작 ===');
+      
+      // sessionStorage에서 소셜 로그인 데이터 확인만
       const savedSocialData = sessionStorage.getItem('socialSignupData');
       
       if (savedSocialData) {
@@ -456,19 +468,22 @@ export default {
           this.socialUserInfo = socialData.socialInfo;
           this.tempToken = socialData.tempToken;
           
+          // 이메일 설정
           if (socialData.socialInfo.provider === 'google') {
             this.signupForm.email = socialData.socialInfo.email || '';
           } else {
             this.signupForm.email = `${socialData.socialInfo.provider} 계정 (서버에서 자동 생성)`;
           }
-          
+                    
         } catch (error) {
-          console.error('sessionStorage 파싱 실패:', error);
           sessionStorage.removeItem('socialSignupData');
         }
+      } else {
+        console.log('sessionStorage에 소셜 데이터 없음 - 일반 회원가입 모드');
       }
     },
     
+    // 회원가입 제출
     async submitSignUp() {
       if (this.isSocialLogin) {
         await this.completeSocialSignup();
@@ -477,8 +492,28 @@ export default {
       }
     },
     
+    // 소셜 회원가입 완료
     async completeSocialSignup() {
-      if (!this.validateSocialSignup()) return;
+      // 유효성 검사
+      if (!this.turnstileToken) {
+        alert('보안 검증을 완료해주세요.');
+        return;
+      }
+      
+      if (!this.signupForm.agreement) {
+        alert('약관에 동의해주세요.');
+        return;
+      }
+      
+      if (!this.signupForm.phoneNumber) {
+        alert('전화번호를 입력해주세요.');
+        return;
+      }
+      
+      if (!this.signupForm.roadAddress) {
+        alert('주소를 입력해주세요.');
+        return;
+      }
       
       this.isLoading = true;
       
@@ -490,12 +525,30 @@ export default {
           turnstileToken: this.turnstileToken
         }, this.tempToken);
         
-        const { token: finalToken, memberId: finalMemberId } = this.extractResponseData(response);
+        let finalToken, finalMemberId;
+        
+        // 응답 구조 파악
+        if (response.data.data) {
+          // Case 1: { data: { data: { token, memberId } } }
+          finalToken = response.data.data.token;
+          finalMemberId = response.data.data.memberId;
+        } else if (response.data.token) {
+          // Case 2: { data: { token, memberId } }
+          finalToken = response.data.token;
+          finalMemberId = response.data.memberId;
+        } else {
+          throw new Error('응답에서 토큰을 찾을 수 없습니다.');
+        }
+        
+        console.log('추출된 정보:');
+        console.log('- finalToken:', finalToken ? '있음' : '없음');
+        console.log('- finalMemberId:', finalMemberId);
         
         if (!finalToken || !finalMemberId) {
           throw new Error('토큰 또는 memberId를 받지 못했습니다.');
         }
         
+        // authUtils.saveAuth() 사용 (로그인 상태 유지)
         const finalUserInfo = {
           id: finalMemberId,
           firstName: this.socialUserInfo.firstName,
@@ -505,30 +558,57 @@ export default {
         };
         
         authUtils.saveAuth(finalToken, finalUserInfo);
-        
+                
+        // sessionStorage 정리 (회원가입 완료)
         sessionStorage.removeItem('socialSignupData');
         
+        // 상태 초기화
         const providerName = this.socialUserInfo?.provider || '소셜';
-        this.resetSocialState();
+        this.isSocialLogin = false;
+        this.socialUserInfo = null;
+        this.tempToken = null;
         
         alert(`${providerName} 회원가입이 완료되었습니다!`);
+        
+        // 메인 페이지로 이동
         this.$router.push('/');
         
-      } catch (error) {
-        console.error('소셜 회원가입 실패:', error);
-        this.handleSignupError(error);
+      } catch (error) {        
+        if (error.response?.data?.message) {
+          alert(error.response.data.message);
+        } else if (error.response?.status === 404) {
+          alert('API 엔드포인트를 찾을 수 없습니다.');
+        } else {
+          alert('회원가입에 실패했습니다. 다시 시도해주세요.');
+        }
+        
         this.resetTurnstile();
       } finally {
         this.isLoading = false;
       }
     },
     
+    // 일반 회원가입
     async regularSignup() {
-      if (!this.validateRegularSignup()) return;
+      // 유효성 검사
+      if (this.signupForm.password !== this.signupForm.confirmPassword) {
+        alert('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+      
+      if (!this.turnstileToken) {
+        alert('보안 검증을 완료해주세요.');
+        return;
+      }
+      
+      if (!this.signupForm.agreement) {
+        alert('약관에 동의해주세요.');
+        return;
+      }
       
       this.isLoading = true;
       
-      try {
+      try {        
         const result = await memberAPI.signup({
           firstName: this.signupForm.firstName,
           lastName: this.signupForm.lastName,
@@ -542,112 +622,58 @@ export default {
           agreement: this.signupForm.agreement
         });
         
+        console.log('=== 일반 회원가입 성공 ===');
+        console.log('응답:', result.data);
+        
+        // 일반 회원가입 성공 시 토큰 저장
         if (result.data && result.data.token) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-          localStorage.setItem('jwt_token', result.data.token);
-=======
           localStorage.setItem('token', result.data.token);
->>>>>>> 22d81e984555acfedf46c8ac4886d461674077b4
-=======
-          localStorage.setItem('token', result.data.token);
->>>>>>> 22d81e984555acfedf46c8ac4886d461674077b4
           localStorage.setItem('memberId', result.data.memberId);
           
           alert('회원가입이 완료되었습니다!');
+          
+          // 결제수단 화면으로 이동
           this.showScreen('payment');
         }
         
       } catch (error) {
-        console.error('일반 회원가입 실패:', error);
-        this.handleSignupError(error);
+        console.error('❌ 일반 회원가입 실패:', error);
+        
+        if (error.response?.data?.message) {
+          alert(error.response.data.message);
+        } else {
+          alert('회원가입에 실패했습니다. 다시 시도해주세요.');
+        }
+        
         this.resetTurnstile();
       } finally {
         this.isLoading = false;
       }
     },
     
-    validateSocialSignup() {
-      if (!this.turnstileToken) {
-        alert('보안 검증을 완료해주세요.');
-        return false;
-      }
-      
-      if (!this.signupForm.agreement) {
-        alert('약관에 동의해주세요.');
-        return false;
-      }
-      
-      if (!this.signupForm.phoneNumber) {
-        alert('전화번호를 입력해주세요.');
-        return false;
-      }
-      
-      if (!this.signupForm.roadAddress) {
-        alert('주소를 입력해주세요.');
-        return false;
-      }
-      
-      return true;
-    },
-    
-    validateRegularSignup() {
-      if (this.signupForm.password !== this.signupForm.confirmPassword) {
-        alert('비밀번호가 일치하지 않습니다.');
-        return false;
-      }
-      
-      if (!this.turnstileToken) {
-        alert('보안 검증을 완료해주세요.');
-        return false;
-      }
-      
-      if (!this.signupForm.agreement) {
-        alert('약관에 동의해주세요.');
-        return false;
-      }
-      
-      return true;
-    },
-    
-    extractResponseData(response) {
-      if (response.data.data) {
-        return {
-          token: response.data.data.token,
-          memberId: response.data.data.memberId
-        };
-      } else if (response.data.token) {
-        return {
-          token: response.data.token,
-          memberId: response.data.memberId
-        };
-      }
-      return { token: null, memberId: null };
-    },
-    
-    handleSignupError(error) {
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      } else if (error.response?.status === 404) {
-        alert('API 엔드포인트를 찾을 수 없습니다.');
-      } else {
-        alert('회원가입에 실패했습니다. 다시 시도해주세요.');
-      }
-    },
-    
-    resetSocialState() {
-      this.isSocialLogin = false;
-      this.socialUserInfo = null;
-      this.tempToken = null;
-    },
-    
     handleAddressSelected(addressData) {
       this.signupForm.roadAddress = addressData.roadAddress || addressData.jibunAddress;
+      console.log('주소 선택:', this.signupForm.roadAddress);
     },
     
-    loginWithSocial(provider) {
+    loginWithKakao() {
       const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
-      const authUrl = `${baseUrl}/oauth2/authorization/${provider}`;
+      const authUrl = `${baseUrl}/oauth2/authorization/kakao`;
+      console.log('Kakao 로그인 시작:', authUrl);
+      window.location.href = authUrl;
+    },
+    
+    loginWithGoogle() {
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
+      const authUrl = `${baseUrl}/oauth2/authorization/google`;
+      console.log('Google 로그인 시작:', authUrl);
+      window.location.href = authUrl;
+    },
+    
+    loginWithNaver() {
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
+      const authUrl = `${baseUrl}/oauth2/authorization/naver`;
+      console.log('Naver 로그인 시작:', authUrl);
       window.location.href = authUrl;
     },
     
@@ -674,12 +700,15 @@ export default {
           sitekey: process.env.VUE_APP_TURNSTILE_SITE_KEY,
           callback: (token) => {
             this.turnstileToken = token;
+            console.log('Turnstile 토큰 생성됨');
           },
           'error-callback': () => {
             this.turnstileToken = null;
+            console.error('Turnstile 오류 발생');
           },
           'expired-callback': () => {
             this.turnstileToken = null;
+            console.warn('Turnstile 토큰 만료');
           },
           theme: 'light',
           size: 'normal'
@@ -691,6 +720,7 @@ export default {
       if (window.turnstile && this.turnstileWidgetId !== null) {
         window.turnstile.reset(this.turnstileWidgetId);
         this.turnstileToken = null;
+        console.log('Turnstile 리셋됨');
       }
     },
     
@@ -710,6 +740,7 @@ export default {
     
     showScreen(screen) {
       this.currentScreen = screen;
+      console.log('화면 전환:', screen);
     },
     
     formatCardNumber(event) {
@@ -720,7 +751,11 @@ export default {
     },
     
     async submitPaymentMethod() {
-      if (!this.validatePaymentForm()) return;
+      if (!this.paymentForm.cardNumber || !this.paymentForm.expDate || 
+          !this.paymentForm.cardPassword || !this.paymentForm.nameOnCard) {
+        alert('모든 필드를 입력해주세요.');
+        return;
+      }
       
       const expDateParts = this.paymentForm.expDate.split('/');
       if (expDateParts.length !== 2) {
@@ -753,15 +788,6 @@ export default {
       } finally {
         this.isLoading = false;
       }
-    },
-    
-    validatePaymentForm() {
-      if (!this.paymentForm.cardNumber || !this.paymentForm.expDate || 
-          !this.paymentForm.cardPassword || !this.paymentForm.nameOnCard) {
-        alert('모든 필드를 입력해주세요.');
-        return false;
-      }
-      return true;
     },
     
     skipPayment() {
@@ -963,7 +989,6 @@ export default {
   margin-bottom: 0;
 }
 
-/* ===== 주소 검색 섹션 스타일 ===== */
 .address-section {
   margin-bottom: 25px;
 }
@@ -1002,7 +1027,6 @@ export default {
   background-color: #5db399;
 }
 
-/* ===== 비밀번호 입력 그룹 ===== */
 .signup-password-group {
   display: flex;
   gap: 20px;
@@ -1044,14 +1068,12 @@ export default {
   opacity: 1;
 }
 
-/* ===== Turnstile 위젯 ===== */
 .turnstile-wrapper {
   display: flex;
   justify-content: center;
   margin: 20px 0;
 }
 
-/* ===== 폼 옵션 및 버튼 ===== */
 .form-options {
   margin: 32px 0;
 }
@@ -1102,7 +1124,6 @@ export default {
   cursor: not-allowed;
 }
 
-/* ===== 구분선 구역 ===== */
 .divider {
   display: flex;
   justify-content: space-between;
@@ -1327,7 +1348,6 @@ export default {
   text-align: center;
 }
 
-/* ===== 화면 전환 제어 ===== */
 .screen {
   display: none;
 }

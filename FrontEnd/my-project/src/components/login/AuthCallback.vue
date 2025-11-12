@@ -101,7 +101,7 @@ export default {
         }
         
         const memberName = formatMemberName(userInfo)
-        const isNewUser = userInfo.type === 'social_signup'
+        const isNewUser = userInfo.id === null || userInfo.id === undefined
         
         if (isNewUser) {
           this.handleNewUser(token, userInfo, memberName)
