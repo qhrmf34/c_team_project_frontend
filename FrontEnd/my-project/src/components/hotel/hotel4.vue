@@ -690,6 +690,9 @@ export default {
       showCouponModal: false,
       receivedCoupons: [],
       phoneNumber: '',
+      newsletter: {
+        email: ''
+      },
       email: '',
       // 로그인 폼 
       loginForm: {

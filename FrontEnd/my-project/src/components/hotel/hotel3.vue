@@ -574,7 +574,9 @@ export default {
       reviewText: '',
       selectedReportReason: '',
       reportDescription: '',
-      newsletterEmail: '',
+      newsletter: {
+        email: ''
+      },
       activeFilter: 'all',
       selectedReviewId: null,
       isShareModalVisible: false,

@@ -379,7 +379,9 @@ export default {
       error: null,
       errorPaymentId: null, 
       isRefunded: false,
-      
+      newsletter: {
+        email: ''
+      },
       showRefundModal: false,
       refundReasonOptions: [],
       refundForm: {
