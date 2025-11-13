@@ -56,7 +56,6 @@ async function checkTokenValidity(token) {
 // localStorage 정리 함수
 function clearAuth() {
   localStorage.removeItem('jwt_token')
-  localStorage.removeItem('user_info')
 }
 
 // beforeEach: await 없이 즉시 next() 호출
@@ -65,6 +64,7 @@ router.beforeEach((to, from, next) => {
   
   const token = localStorage.getItem('jwt_token')
   
+  // 페이지간 이동 또는 또는 외부에서 들어와서 사용할떄도 로컬 스토리지를 초기화함. 어떻게 할지 생각해봐야할듯.
   // 토큰이 있으면 백그라운드에서 검증 (페이지 이동 차단 안 함)
   if (token) {
     checkTokenValidity(token).then(isValid => {

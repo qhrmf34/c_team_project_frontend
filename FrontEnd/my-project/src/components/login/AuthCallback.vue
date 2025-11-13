@@ -16,6 +16,7 @@
 
 <script>
 import { authUtils } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'AuthCallback',
@@ -33,73 +34,97 @@ export default {
   methods: {
     async handleCallback() {
       try {
-        console.log('=== AuthCallback 실행 ===')
-        console.log('현재 URL:', window.location.href)
-        
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('token')
-        const userInfoParam = urlParams.get('userInfo')
         const error = urlParams.get('error')
         
-        console.log('URL 파라미터:', { 
-          hasToken: !!token, 
-          hasUserInfo: !!userInfoParam, 
-          error 
-        })
-        
+        // 에러 체크
         if (error) {
           throw new Error(this.getErrorMessage(error))
         }
         
-        if (token && userInfoParam) {
-          try {
-            // URL 파라미터에서 받은 사용자 정보 파싱
-            const userInfo = JSON.parse(decodeURIComponent(userInfoParam))
-            
-            console.log('파싱된 사용자 정보:', userInfo)
-            console.log('토큰 앞부분:', token.substring(0, 20) + '...')
-            
-            // localStorage에 토큰과 사용자 정보 저장
-            authUtils.saveAuth(token, userInfo)
-            
-            console.log('✓ 토큰과 사용자 정보 저장 완료')
-            
-            // 저장된 정보 확인
-            const savedToken = localStorage.getItem('jwt_token')
-            const savedUserInfo = localStorage.getItem('user_info')
-            
-            console.log('저장 확인:', {
-              tokenSaved: !!savedToken,
-              userInfoSaved: !!savedUserInfo
-            })
-            
-            // 성공 메시지
-            alert(`${userInfo.firstName}님, 로그인되었습니다!`)
-            
-            // 메인 페이지로 리다이렉트 (3초 후)
-            setTimeout(() => {
-              this.$router.replace('/')
-            }, 1000)
-            
-          } catch (parseError) {
-            console.error('사용자 정보 파싱 실패:', parseError)
-            throw new Error('사용자 정보 처리 중 오류가 발생했습니다.')
-          }
+        if (!token) {
+          throw new Error('토큰이 누락되었습니다.')
+        }
+        
+        // JWT 디코딩하여 사용자 정보 추출
+        const payload = authUtils.decodeToken(token)
+        
+        if (!payload) {
+          throw new Error('JWT 토큰을 디코딩할 수 없습니다.')
+        }
+        
+        // 토큰 타입 확인
+        const tokenType = payload.type
+        const memberId = payload.sub ? parseInt(payload.sub) : null
+        
+        // 사용자 정보 구성
+        const userInfo = {
+          id: memberId,
+          firstName: payload.firstName || '',
+          lastName: payload.lastName || '',
+          email: payload.email || '',
+          provider: payload.provider || ''
+        }
+        
+        const memberName = formatMemberName(userInfo)
+        
+        // 토큰 타입에 따라 분기
+        if (tokenType === 'social_signup') {
+          // 신규 회원 - 임시 토큰
+          this.handleNewUser(token, userInfo, memberName)
+        } else if (tokenType === 'social_login' || tokenType === 'access') {
+          // 기존 회원 - 정식 토큰
+          this.handleExistingUser(token, memberName)
         } else {
-          throw new Error('토큰 또는 사용자 정보가 누락되었습니다.')
+          throw new Error('알 수 없는 토큰 타입입니다.')
         }
         
       } catch (error) {
-        console.error('콜백 처리 실패:', error)
+        console.error('❌ 콜백 처리 실패:', error)
         this.error = error.message
-        
-        // 5초 후 로그인 페이지로 리다이렉트
-        setTimeout(() => {
-          this.goToLogin()
-        }, 5000)
-      } finally {
         this.loading = false
+        setTimeout(() => this.goToLogin(), 5000)
       }
+    },
+    
+    handleNewUser(token, userInfo, memberName) {
+      // sessionStorage에 임시 토큰과 정보 저장
+      const socialData = {
+        tempToken: token,
+        socialInfo: {
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          email: userInfo.email,
+          provider: userInfo.provider
+        }
+      }
+      
+      sessionStorage.setItem('socialSignupData', JSON.stringify(socialData))
+      
+      alert(`${memberName}님, 추가 정보를 입력해주세요.`)
+      
+      // signup 페이지로 이동
+      this.$router.replace('/signup')
+    },
+    
+    handleExistingUser(token, memberName) {
+      // localStorage에 토큰 저장
+      localStorage.setItem('jwt_token', token)
+      
+      // 저장 확인
+      const savedToken = localStorage.getItem('jwt_token')
+      if (!savedToken) {
+        this.error = '토큰 저장에 실패했습니다.'
+        this.loading = false
+        return
+      }
+      
+      alert(`${memberName}님, 환영합니다!`)
+      
+      // 페이지 이동
+      this.loading = false
+      this.$router.push('/')
     },
     
     getErrorMessage(error) {
