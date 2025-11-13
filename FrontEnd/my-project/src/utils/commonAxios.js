@@ -33,7 +33,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // 토큰 만료 시 자동 로그아웃
       localStorage.removeItem('jwt_token')
-      localStorage.removeItem('user_info')
       
       // 현재 페이지가 인증이 필요한 페이지라면 로그인 페이지로 이동
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
@@ -47,7 +46,6 @@ apiClient.interceptors.response.use(
 // 인증 데이터 삭제 헬퍼 함수
 function clearAuthData() {
   localStorage.removeItem('jwt_token')
-  localStorage.removeItem('user_info')
   // 세션 스토리지도 함께 정리
   sessionStorage.clear()
 }
@@ -108,6 +106,15 @@ export const memberAPI = {
   // 비밀번호 재설정 요청
   async forgotPassword(email) {
     const response = await apiClient.post('/api/member/forgot-password', { email })
+    return response.data
+  },
+
+  async completeSocialSignup(data, token) {
+    const response = await apiClient.post('/api/member/complete-social-signup', data, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     return response.data
   },
 
@@ -547,7 +554,6 @@ export const hotelAPI = {
   },
 
 
-
   /**
    * 리뷰 작성 가능 여부 체크
    * GET /api/reviews/eligibility?hotelId=1
@@ -809,10 +815,14 @@ export const adminAPI = {
 
 // 인증 관련 유틸리티
 export const authUtils = {
-  // 토큰 저장
-  saveAuth(token, userInfo) {
+ // 토큰 저장 (기존 메서드 - 하위 호환성)
+  saveAuth(token) {
     localStorage.setItem('jwt_token', token)
-    localStorage.setItem('user_info', JSON.stringify(userInfo))
+  },
+
+  // 토큰 저장 (새 메서드 - 더 명확한 이름)
+  saveToken(token) {
+    localStorage.setItem('jwt_token', token)
   },
 
   // 토큰 조회
@@ -820,15 +830,49 @@ export const authUtils = {
     return localStorage.getItem('jwt_token')
   },
 
-  // 사용자 정보 조회
+  // JWT 디코딩하여 사용자 정보 추출
+  decodeToken(token) {
+    if (!token) return null
+    
+    try {
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+      return JSON.parse(jsonPayload)
+    } catch (error) {
+      console.error('JWT 디코딩 실패:', error)
+      return null
+    }
+  },
+
+  // 토큰에서 사용자 정보 가져오기
   getUserInfo() {
-    const userInfo = localStorage.getItem('user_info')
-    return userInfo ? JSON.parse(userInfo) : null
+    const token = this.getToken()
+    if (!token) return null
+    
+    const payload = this.decodeToken(token)
+    if (!payload) return null
+    
+    return {
+      id: payload.sub ? parseInt(payload.sub) : null,
+      firstName: payload.firstName || '',
+      lastName: payload.lastName || '',
+      email: payload.email || '',
+      provider: payload.provider || '',
+      type: payload.type || ''
+    }
   },
 
   // 로그인 상태 확인
   isLoggedIn() {
-    return !!this.getToken()
+    const token = this.getToken()
+    if (!token) return false
+    return !this.isTokenExpired()
   },
 
   // 토큰 만료 확인
@@ -837,7 +881,9 @@ export const authUtils = {
     if (!token) return true
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
+      const payload = this.decodeToken(token)
+      if (!payload || !payload.exp) return true
+      
       const currentTime = Date.now() / 1000
       return payload.exp < currentTime
     } catch (error) {
@@ -853,9 +899,7 @@ export const authUtils = {
       console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
     } finally {
       localStorage.removeItem('jwt_token')
-      localStorage.removeItem('user_info')
-    }
   }
 }
-
+}
 export default apiClient
