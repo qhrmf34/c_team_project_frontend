@@ -233,8 +233,9 @@
 </template>
 
 <script>
-// commonAxios에서 memberAPI 불러오기
-import { memberAPI } from '@/utils/commonAxios'
+// commonAxios에서 memberAPI와 authUtils 불러오기
+import { memberAPI, authUtils } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelLogin',
@@ -345,50 +346,52 @@ export default {
 
         document.head.appendChild(script);
       },
+      
       initTurnstile() {
-      // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
-      if (this.turnstileWidgetId) {
-            console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
-            return;
-      }
-      if (this.turnstileWidgetId !== null && window.turnstile) {
-        try {
-          window.turnstile.remove(this.turnstileWidgetId);
-          this.turnstileWidgetId = null;
-        } catch (error) {
-          console.log('기존 위젯 정리:', error);
+        // 이미 렌더링된 위젯이 있다면 이 함수를 중단합니다.
+        if (this.turnstileWidgetId) {
+          console.log('Turnstile 위젯이 이미 렌더링되었습니다. 중복 렌더링 방지.');
+          return;
         }
-      }
-      // Turnstile 콜백을 전역으로 등록
-      window.onTurnstileSuccess = (token) => {
-        this.turnstileToken = token;
-        console.log('Turnstile 검증 성공');
-      };
-
-      window.onTurnstileError = (error) => {
-        this.turnstileToken = null;
-        console.error('Turnstile 검증 실패:', error);
-        alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
-      };
-
-      // Turnstile 위젯 렌더링
-      this.$nextTick(() => {
-        if (window.turnstile && this.$refs.turnstileWidget) {
+        if (this.turnstileWidgetId !== null && window.turnstile) {
           try {
-            this.turnstileSiteKey=String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
-            this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
-              sitekey: this.turnstileSiteKey,
-              theme: 'light',
-              callback: window.onTurnstileSuccess,
-              'error-callback': window.onTurnstileError
-            });
-            console.log('Turnstile 위젯 렌더링 완료');
+            window.turnstile.remove(this.turnstileWidgetId);
+            this.turnstileWidgetId = null;
           } catch (error) {
-            console.error('Turnstile 위젯 렌더링 실패:', error);
+            console.log('기존 위젯 정리:', error);
           }
         }
-      });
-    },
+        // Turnstile 콜백을 전역으로 등록
+        window.onTurnstileSuccess = (token) => {
+          this.turnstileToken = token;
+          console.log('Turnstile 검증 성공');
+        };
+
+        window.onTurnstileError = (error) => {
+          this.turnstileToken = null;
+          console.error('Turnstile 검증 실패:', error);
+          alert('로봇 검증에 실패했습니다. 페이지를 새로고침해주세요.');
+        };
+
+        // Turnstile 위젯 렌더링
+        this.$nextTick(() => {
+          if (window.turnstile && this.$refs.turnstileWidget) {
+            try {
+              this.turnstileSiteKey=String(process.env.VUE_APP_TURNSTILE_SITE_KEY);
+              this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileWidget, {
+                sitekey: this.turnstileSiteKey,
+                theme: 'light',
+                callback: window.onTurnstileSuccess,
+                'error-callback': window.onTurnstileError
+              });
+              console.log('Turnstile 위젯 렌더링 완료');
+            } catch (error) {
+              console.error('Turnstile 위젯 렌더링 실패:', error);
+            }
+          }
+        });
+      },
+      
     async handleLogin() {
       if (!this.loginForm.email || !this.loginForm.password) {
         alert('이메일과 비밀번호를 입력해주세요.');
@@ -414,17 +417,29 @@ export default {
         });
         
         if (result.data && result.data.token) {
-          // JWT 토큰과 사용자 정보 저장
-          localStorage.setItem('jwt_token', result.data.token);
-          localStorage.setItem('user_info', JSON.stringify({
-            id: result.data.memberId,
-            firstName: result.data.firstName,
-            lastName: result.data.lastName,
-            email: result.data.email,
-            provider: result.data.provider
-          }));
+          // JWT 토큰에서 사용자 정보 추출
+          const payload = authUtils.decodeToken(result.data.token);
           
-          alert('로그인이 완료되었습니다!');
+          if (!payload) {
+            throw new Error('JWT 토큰을 디코딩할 수 없습니다.');
+          }
+          
+          // JWT에서 추출한 정보로 사용자 정보 구성
+          const userInfo = {
+            id: payload.sub ? parseInt(payload.sub) : null,
+            firstName: payload.firstName || '',
+            lastName: payload.lastName || '',
+            email: payload.email || '',
+            provider: payload.provider || ''
+          };
+          
+          // 사용자 이름 포맷팅
+          const memberName = formatMemberName(userInfo);
+          
+          // JWT 토큰만 저장 (사용자 정보는 토큰에서 추출)
+          localStorage.setItem('jwt_token', result.data.token);
+          
+          alert(`${memberName}님, 환영합니다!`);
           this.$router.push('/hotelone'); // 호텔1 화면으로 이동
         }
       } catch (error) {
@@ -436,6 +451,7 @@ export default {
         this.isLoading = false;
       }
     },
+    
     resetTurnstile() {
         this.turnstileToken = null;
         if (window.turnstile && this.$refs.turnstileWidget) {

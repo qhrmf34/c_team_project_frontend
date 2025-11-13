@@ -469,7 +469,7 @@ export default {
           if (socialData.socialInfo.provider === 'google') {
             this.signupForm.email = socialData.socialInfo.email || '';
           } else {
-            this.signupForm.email = `${socialData.socialInfo.provider} 계정 (서버에서 자동 생성)`;
+            this.signupForm.email = '';
           }
                     
         } catch (error) {
