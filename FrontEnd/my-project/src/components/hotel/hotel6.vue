@@ -414,6 +414,10 @@ export default {
 
       isLoadingMoreHotels: false,
       isLoadingMoreReservations: false, 
+      
+      newsletter: {
+        email: ''
+      },
 
       // 사용자 정보
       userInfo: null,

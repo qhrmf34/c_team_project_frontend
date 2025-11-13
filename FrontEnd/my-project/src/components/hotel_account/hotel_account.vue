@@ -752,7 +752,9 @@ export default {
       confirmPassword: '',
       
       // Newsletter
-      newsletterEmail: '',
+      newsletter: {
+        email: ''
+      },
       
       // 로딩 상태
       isLoading: true

@@ -724,6 +724,10 @@ export default {
         country: 'KR',
         saveInfo: false
       },
+
+      newsletter: {
+        email: ''
+      },
       
       // 사용자 정보
       userInfo: null,

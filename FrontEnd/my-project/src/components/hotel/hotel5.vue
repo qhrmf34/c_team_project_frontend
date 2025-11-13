@@ -380,6 +380,10 @@ export default {
       errorPaymentId: null, 
       isRefunded: false,
       
+      newsletter: {
+        email: ''
+      },
+
       showRefundModal: false,
       refundReasonOptions: [],
       refundForm: {

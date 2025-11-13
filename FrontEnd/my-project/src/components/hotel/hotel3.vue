@@ -574,7 +574,6 @@ export default {
       reviewText: '',
       selectedReportReason: '',
       reportDescription: '',
-      newsletterEmail: '',
       activeFilter: 'all',
       selectedReviewId: null,
       isShareModalVisible: false,
@@ -593,6 +592,10 @@ export default {
       isEditMode: false,
       editingReviewId: null,
       guests: 2,  
+      
+      newsletter: {
+        email: ''
+      },
 
       isRoomSelectionModalVisible: false,
       selectedRoomGroup: null,
@@ -1342,54 +1345,40 @@ export default {
       if (!this.hotel || !window.google) {
         return;
       }
-      
-      if (this.hotel.latitude && this.hotel.longitude) {
-        const position = {
-          lat: parseFloat(this.hotel.latitude),
-          lng: parseFloat(this.hotel.longitude)
-        };
-        
-        const map = new google.maps.Map(document.getElementById('googleMap'), {
-          center: position,
-          zoom: 15
-        });
-        
-        new google.maps.Marker({
-          position: position,
-          map: map,
-          title: this.hotel.hotelName
-        });
-      } else {
-        this.geocodeAddress(this.hotel.address);
-      }
+    
+      // 호텔 이름이 있으면 이름으로, 없으면 주소로 검색
+      const query = this.hotel.hotelName;
+      this.geocodeAddress(query);
     },
     
-    geocodeAddress(address) {
+    geocodeAddress(query) {
       const geocoder = new google.maps.Geocoder();
-      
-      geocoder.geocode({ address: address }, (results, status) => {
-        if (status === 'OK') {
+    
+      geocoder.geocode({ address: query }, (results, status) => {
+        if (status === 'OK' && results[0]) {
           const position = results[0].geometry.location;
-          
+        
           const map = new google.maps.Map(document.getElementById('googleMap'), {
             center: position,
-            zoom: 15
+            zoom: 20
           });
-          
+        
           new google.maps.Marker({
             position: position,
             map: map,
             title: this.hotel.hotelName
           });
+        } else {
+          console.error('Geocode was not successful for the following reason: ' + status);
         }
       });
     },
     
-    openGoogleMaps() {
-      const address = this.hotel.address;
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-      window.open(url, '_blank');
-    },
+openGoogleMaps() {
+  const address = this.hotel.hotelName;
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  window.open(url, '_blank');
+},
     
     // ===== UI 메서드 =====
     
