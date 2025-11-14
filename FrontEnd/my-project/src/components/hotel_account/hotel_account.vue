@@ -583,7 +583,7 @@
             <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
           </div>
           <div class="newsletter-form">
-            <input type="email" class="newsletter-input" placeholder="Your email address" v-model="newsletterEmail">
+            <input type="email" class="newsletter-input" placeholder="Your email address" v-model="newsletter.email">
             <button class="subscribe-btn" @click="subscribe">Subscribe</button>
           </div>
         </div>
@@ -683,6 +683,7 @@
 
 <script>
 import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI, memberCouponAPI, reservationAPI, ticketAPI } from '@/utils/commonAxios'
+import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelAccount',
@@ -745,6 +746,7 @@ export default {
       editInputType: 'text',
       editValue: '',
       
+      profileImageUrl:'',
       // Password Modal Data
       passwordStep: 1,
       currentPassword: '',
@@ -770,23 +772,8 @@ export default {
     
     displayUserName() {
       if (this.isLoggedIn && this.userInfo) {
-        const { provider, firstName, lastName, email } = this.userInfo;
-        
-        if (provider === 'kakao' || provider === 'google' || provider === 'naver') {
-          return firstName || email?.split('@')[0] || 'Social User';
-        }
-        
-        if (provider === 'local') {
-          if (firstName && lastName) {
-            return `${firstName} ${lastName}`;
-          } else if (firstName) {
-            return firstName;
-          } else if (email) {
-            return email.split('@')[0];
-          }
-        }
+        return formatMemberName(this.userInfo);
       }
-      
       return 'Guest';
     },
     
@@ -869,8 +856,8 @@ export default {
   },
   
   watch: {
-    '$route'(to) {
-      this.loadUserInfo();
+    async '$route'(to) {
+      await this.loadUserInfo();
       if (to.query.tab) {
         this.activeTab = to.query.tab;
       }
@@ -883,18 +870,35 @@ export default {
       this.$router.push('/login');
     },
 
-    loadUserInfo() {
+    async loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
+    
       if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
+        try {
+          // await 추가!
+          this.userInfo = await authUtils.getUserInfo();
+
+          if (this.userInfo) {
+            this.loadMemberImages();
+          } else {
+            console.warn('사용자 정보가 null입니다.');
+            await authUtils.logout();
+            this.isLoggedIn = false;
+          }
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error);
+          // 토큰이 유효하지 않으면 로그아웃
+          if (error.response?.status === 401) {
+            await authUtils.logout();
+            this.isLoggedIn = false;
+            this.userInfo = null;
+          }
+        }
       } else {
         this.userInfo = null;
-        this.$router.push('/login');
+        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
-    
     async loadUserProfile() {
       if (!this.isLoggedIn) return;
       
@@ -904,7 +908,6 @@ export default {
         
         if (response && response.data) {
           this.actualUserInfo = response.data;
-          console.log('실제 사용자 정보:', this.actualUserInfo);
         }
       } catch (error) {
         console.error('프로필 로드 실패:', error);
@@ -1211,7 +1214,7 @@ export default {
             const userInfo = authUtils.getUserInfo();
             userInfo.firstName = updateData.firstName;
             userInfo.lastName = updateData.lastName;
-            authUtils.saveAuth(authUtils.getToken(), userInfo);
+            authUtils.saveToken(authUtils.getToken(), userInfo);
             this.loadUserInfo();
           }
           
@@ -1551,23 +1554,25 @@ export default {
     },
     
     async subscribe() {
+       // 로그인 확인
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.')
         this.$router.push('/login')
         return
       }
-
+    
+      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
       try {
         const response = await memberCouponAPI.subscribeAndReceiveCoupons()
-        
+
         if (response.code === 200) {
           this.receivedCoupons = response.data || []
           this.showCouponModal = true
-          this.newsletterEmail = ''
+          this.newsletter.email = '' // 이메일 입력창 초기화
         }
       } catch (error) {
         console.error('쿠폰 지급 실패:', error)
-        
+
         if (error.response?.status === 404) {
           alert('현재 지급 가능한 쿠폰이 없습니다.')
         } else if (error.response?.status === 401) {
@@ -1578,6 +1583,7 @@ export default {
         }
       }
     },
+
 
     closeCouponModal() {
       this.showCouponModal = false

@@ -288,7 +288,7 @@
 </template>
 
 <script>
-import { authUtils, adminAPI } from '@/utils/commonAxios'
+import { authUtils, adminAPI, memberImageAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -538,17 +538,47 @@ export default {
   
   methods: {
     // 인증 관련
-    loadUserInfo() {
+    async loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
-      
+    
       if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
+        try {
+          // ✅ await 추가!
+          this.userInfo = await authUtils.getUserInfo();
+                    
+          if (this.userInfo) {
+            this.loadProfileImage();
+          } else {
+            console.warn('사용자 정보가 null입니다.');
+            await authUtils.logout();
+            this.isLoggedIn = false;
+          }
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error);
+          // 토큰이 유효하지 않으면 로그아웃
+          if (error.response?.status === 401) {
+            await authUtils.logout();
+            this.isLoggedIn = false;
+            this.userInfo = null;
+          }
+        }
       } else {
         this.userInfo = null;
-        this.$router.push('/login');
+        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
-    
+    async loadProfileImage() {
+      if (!this.isLoggedIn) return;
+
+      try {
+        const response = await memberImageAPI.getProfileImage();
+        if (response && response.data && response.data.imagePath) {
+          this.profileImageUrl = this.getImageUrl(response.data.imagePath);
+        }
+      } catch (error) {
+        console.error('프로필 이미지 로드 실패:', error);
+      }
+    },
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {
         try {
@@ -1155,6 +1185,9 @@ async loadForeignKeyData() {
   },
   
   watch: {
+    async '$route'() {
+      await this.loadUserInfo();
+    },
     currentTable() {
       this.loadTableData();
     }
@@ -1162,7 +1195,7 @@ async loadForeignKeyData() {
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo();
+    await this.loadUserInfo();
     
     await this.loadForeignKeyData();
     await this.loadTableData();

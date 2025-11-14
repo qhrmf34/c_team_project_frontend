@@ -638,19 +638,19 @@ export default {
     },
     
     loginWithKakao() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
       const authUrl = `${baseUrl}/oauth2/authorization/kakao`;
       window.location.href = authUrl;
     },
     
     loginWithGoogle() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
       const authUrl = `${baseUrl}/oauth2/authorization/google`;
       window.location.href = authUrl;
     },
     
     loginWithNaver() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8080';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
       const authUrl = `${baseUrl}/oauth2/authorization/naver`;
       window.location.href = authUrl;
     },

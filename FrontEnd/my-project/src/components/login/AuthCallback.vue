@@ -36,7 +36,12 @@ export default {
       try {
         const urlParams = new URLSearchParams(window.location.search)
         const token = urlParams.get('token')
+        const needAdditionalInfo = urlParams.get('needAdditionalInfo')  // ✅ 추가
         const error = urlParams.get('error')
+        
+        console.log('=== AuthCallback 처리 ===')
+        console.log('token:', token ? 'exists' : 'null')
+        console.log('needAdditionalInfo:', needAdditionalInfo)
         
         // 에러 체크
         if (error) {
@@ -47,37 +52,45 @@ export default {
           throw new Error('토큰이 누락되었습니다.')
         }
         
-        // JWT 디코딩하여 사용자 정보 추출
-        const payload = authUtils.decodeToken(token)
+        // ✅ needAdditionalInfo를 boolean으로 변환
+        const needsInfo = needAdditionalInfo === 'true'
         
-        if (!payload) {
-          throw new Error('JWT 토큰을 디코딩할 수 없습니다.')
-        }
-        
-        // 토큰 타입 확인
-        const tokenType = payload.type
-        const memberId = payload.sub ? parseInt(payload.sub) : null
-        
-        // 사용자 정보 구성
-        const userInfo = {
-          id: memberId,
-          firstName: payload.firstName || '',
-          lastName: payload.lastName || '',
-          email: payload.email || '',
-          provider: payload.provider || ''
-        }
-        
-        const memberName = formatMemberName(userInfo)
-        
-        // 토큰 타입에 따라 분기
-        if (tokenType === 'social_signup') {
-          // 신규 회원 - 임시 토큰
+        // ✅ needAdditionalInfo로 분기
+        if (needsInfo) {
+          // 신규 회원 - 추가 정보 입력 필요
+          console.log('→ 신규 회원: 추가 정보 입력으로 이동')
+          
+          // JWT 디코딩하여 사용자 정보 추출
+          const payload = authUtils.decodeToken(token)
+          const userInfo = {
+            id: payload.sub ? parseInt(payload.sub) : null,
+            firstName: payload.firstName || '',
+            lastName: payload.lastName || '',
+            email: payload.email || '',
+            provider: payload.provider || ''
+          }
+          const memberName = formatMemberName(userInfo)
+          
           this.handleNewUser(token, userInfo, memberName)
-        } else if (tokenType === 'social_login' || tokenType === 'access') {
-          // 기존 회원 - 정식 토큰
-          this.handleExistingUser(token, memberName)
         } else {
-          throw new Error('알 수 없는 토큰 타입입니다.')
+          // 기존 회원 - 바로 로그인
+          console.log('→ 기존 회원: 바로 로그인')
+          
+          // 토큰 저장
+          localStorage.setItem('jwt_token', token)
+          
+          // 사용자 정보 조회하여 환영 메시지
+          try {
+            const userInfo = await authUtils.getUserInfo()
+            const memberName = formatMemberName(userInfo)
+            alert(`${memberName}님, 환영합니다!`)
+          } catch (err) {
+            console.error('사용자 정보 조회 실패:', err)
+            alert('환영합니다!')
+          }
+          
+          this.loading = false
+          this.$router.push('/hotelone')
         }
         
       } catch (error) {
@@ -106,25 +119,6 @@ export default {
       
       // signup 페이지로 이동
       this.$router.replace('/signup')
-    },
-    
-    handleExistingUser(token, memberName) {
-      // localStorage에 토큰 저장
-      localStorage.setItem('jwt_token', token)
-      
-      // 저장 확인
-      const savedToken = localStorage.getItem('jwt_token')
-      if (!savedToken) {
-        this.error = '토큰 저장에 실패했습니다.'
-        this.loading = false
-        return
-      }
-      
-      alert(`${memberName}님, 환영합니다!`)
-      
-      // 페이지 이동
-      this.loading = false
-      this.$router.push('/')
     },
     
     getErrorMessage(error) {

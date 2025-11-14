@@ -32,7 +32,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // 토큰 만료 시 자동 로그아웃
-      localStorage.removeItem('jwt_token')
+      authUtils.clearAuth()
       
       // 현재 페이지가 인증이 필요한 페이지라면 로그인 페이지로 이동
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
@@ -64,7 +64,13 @@ export const memberAPI = {
     return response.data
   },
 
-  // 로그아웃 - 개선된 버전
+  // 사용자 정보 조회 
+  async getUserInfo() {
+    const response = await apiClient.get('/api/member/info')
+    return response.data
+  },
+
+  // 로그아웃
   async logout() {
     try {
       // 서버에 로그아웃 요청
@@ -815,12 +821,9 @@ export const adminAPI = {
 
 // 인증 관련 유틸리티
 export const authUtils = {
- // 토큰 저장 (기존 메서드 - 하위 호환성)
-  saveAuth(token) {
-    localStorage.setItem('jwt_token', token)
-  },
 
-  // 토큰 저장 (새 메서드 - 더 명확한 이름)
+
+  // 토큰 저장 
   saveToken(token) {
     localStorage.setItem('jwt_token', token)
   },
@@ -828,6 +831,11 @@ export const authUtils = {
   // 토큰 조회
   getToken() {
     return localStorage.getItem('jwt_token')
+  },
+  // 인증 데이터 삭제
+  clearAuth() {
+    localStorage.removeItem('jwt_token')
+    sessionStorage.clear()
   },
 
   // JWT 디코딩하여 사용자 정보 추출
@@ -851,20 +859,16 @@ export const authUtils = {
   },
 
   // 토큰에서 사용자 정보 가져오기
-  getUserInfo() {
-    const token = this.getToken()
-    if (!token) return null
-    
-    const payload = this.decodeToken(token)
-    if (!payload) return null
-    
-    return {
-      id: payload.sub ? parseInt(payload.sub) : null,
-      firstName: payload.firstName || '',
-      lastName: payload.lastName || '',
-      email: payload.email || '',
-      provider: payload.provider || '',
-      type: payload.type || ''
+  async getUserInfo() {
+    try {
+      const response = await memberAPI.getUserInfo()
+      if (response.code === 200) {
+        return response.data
+      }
+      return null
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error)
+      return null
     }
   },
 
@@ -898,7 +902,7 @@ export const authUtils = {
     } catch (error) {
       console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
     } finally {
-      localStorage.removeItem('jwt_token')
+      this.clearAuth()
   }
 }
 }
