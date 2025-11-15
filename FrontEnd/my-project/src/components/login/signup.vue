@@ -449,7 +449,12 @@ export default {
   mounted() {
     this.startImageSlider();
     this.loadTurnstileScript();
-    this.handleSocialLoginCallback();
+    
+    // ✅ sessionStorage에 socialSignupData가 있을 때만 실행
+    const savedSocialData = sessionStorage.getItem('socialSignupData');
+    if (savedSocialData) {
+      this.handleSocialLoginCallback();
+    }
   },
   
   methods: {
@@ -774,7 +779,17 @@ export default {
     if (window.turnstile && this.turnstileWidgetId !== null) {
       window.turnstile.remove(this.turnstileWidgetId);
     }
+  },
+  beforeRouteLeave(to, from, next) {
+    // 회원가입 완료하지 않고 떠나는 경우
+    if (to.path === '/login' || to.path === '/hotelone') {
+      console.log('회원가입 미완료 상태로 페이지 이동 → 소셜 데이터 정리');
+      sessionStorage.removeItem('socialSignupData');
+    }
+    
+    next();
   }
+  
 };
 </script>
 

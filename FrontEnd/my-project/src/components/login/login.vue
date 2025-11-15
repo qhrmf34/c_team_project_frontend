@@ -601,6 +601,7 @@ export default {
     },
     
     goToSignup() {
+      sessionStorage.removeItem('socialSignupData');
       this.$router.push('/signup');
     },
     

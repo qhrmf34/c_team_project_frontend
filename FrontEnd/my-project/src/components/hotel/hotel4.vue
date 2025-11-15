@@ -1263,13 +1263,6 @@ export default {
 
         if (result.data && result.data.token) {
           localStorage.setItem('jwt_token', result.data.token);
-          localStorage.setItem('user_info', JSON.stringify({
-            id: result.data.memberId,
-            firstName: result.data.firstName,
-            lastName: result.data.lastName,
-            email: result.data.email,
-            provider: result.data.provider
-          }));
 
           this.loadUserInfo();
 
@@ -1326,10 +1319,13 @@ export default {
       window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
     },
 
+    
     goToSignup() {
       // 예약 정보 세션에 저장 후 회원가입 페이지로
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
       sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      
+      sessionStorage.removeItem('socialSignupData');
       this.$router.push('/signup');
     },
     // ===== 토스 SDK 로드 =====
