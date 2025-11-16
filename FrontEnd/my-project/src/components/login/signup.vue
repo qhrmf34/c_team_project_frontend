@@ -79,7 +79,7 @@
 
             <!-- Contact Input Section -->
             <div class="signup-contact-row">
-              <!-- 이메일 - 소셜 로그인 시 처리 -->
+              <!-- ✅ 이메일 - 구글은 읽기전용, 카카오/네이버는 입력 가능 -->
               <div class="input-group">
                 <input 
                   type="email" 
@@ -87,14 +87,13 @@
                   v-model="signupForm.email"
                   placeholder="john.doe@gmail.com" 
                   maxlength="100" 
-                  required
+                  :required="!isSocialLogin || socialUserInfo.provider === 'kakao' || socialUserInfo.provider === 'naver'"
                   :readonly="isSocialLogin && socialUserInfo.provider === 'google'"
                   :disabled="isSocialLogin && socialUserInfo.provider === 'google'"
                 >
                 <label for="signup-email">
                   Email
                   <span v-if="isSocialLogin && socialUserInfo.provider === 'google'"> (소셜 계정 정보)</span>
-                  <span v-else-if="isSocialLogin"> (자동 생성)</span>
                 </label>
               </div>
               
@@ -239,7 +238,7 @@
                 <input type="checkbox" id="agreement-checkbox" v-model="signupForm.agreement" required>
                 <label for="agreement-checkbox">동의 하기</label>
               </div>
-              <button type="submit" class="submit-button" :disabled="isLoading || !isPasswordValid">
+              <button type="submit" class="submit-button" :disabled="isLoading || (!isSocialLogin && !isPasswordValid)">
                 {{ isLoading ? '가입 중...' : (isSocialLogin ? '회원가입 완료' : '계정 생성') }}
               </button>
             </div>
@@ -560,14 +559,16 @@ export default {
           this.socialUserInfo = socialData.socialInfo;
           this.tempToken = socialData.tempToken;
           
-          // 이메일 설정
+          // ✅ 이메일 설정: 구글만 자동 입력, 카카오/네이버는 비워둠
           if (socialData.socialInfo.provider === 'google') {
             this.signupForm.email = socialData.socialInfo.email || '';
           } else {
+            // 카카오, 네이버는 사용자가 직접 입력하도록 비워둠
             this.signupForm.email = '';
           }
                     
         } catch (error) {
+          console.error('소셜 데이터 파싱 실패:', error);
           sessionStorage.removeItem('socialSignupData');
         }
       }
@@ -582,7 +583,7 @@ export default {
       }
     },
     
-    // 소셜 회원가입 완료
+    // ✅ 소셜 회원가입 완료
     async completeSocialSignup() {
       // 유효성 검사
       if (!this.turnstileToken) {
@@ -592,6 +593,13 @@ export default {
       
       if (!this.signupForm.agreement) {
         alert('약관에 동의해주세요.');
+        return;
+      }
+      
+      // ✅ 카카오/네이버는 이메일 필수
+      if ((this.socialUserInfo.provider === 'kakao' || this.socialUserInfo.provider === 'naver') 
+          && !this.signupForm.email) {
+        alert('이메일을 입력해주세요.');
         return;
       }
       
@@ -608,12 +616,21 @@ export default {
       this.isLoading = true;
       
       try {
-        const response = await memberAPI.completeSocialSignup({
-          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''), // ✅ 하이픈 제거
+        const requestData = {
+          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''),
           roadAddress: this.signupForm.roadAddress,
           detailAddress: this.signupForm.detailAddress || null,
           turnstileToken: this.turnstileToken
-        }, this.tempToken);
+        };
+        
+        // ✅ 카카오/네이버만 이메일 추가
+        if (this.socialUserInfo.provider === 'kakao' || this.socialUserInfo.provider === 'naver') {
+          requestData.email = this.signupForm.email;
+        }
+        
+        console.log('소셜 회원가입 요청 데이터:', requestData);
+        
+        const response = await memberAPI.completeSocialSignup(requestData, this.tempToken);
         
         // 응답에서 토큰 추출
         let finalToken;
@@ -694,7 +711,7 @@ export default {
           firstName: this.signupForm.firstName,
           lastName: this.signupForm.lastName,
           email: this.signupForm.email,
-          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''), // ✅ 하이픈 제거
+          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''),
           password: this.signupForm.password,
           confirmPassword: this.signupForm.confirmPassword,
           roadAddress: this.signupForm.roadAddress,
@@ -818,7 +835,6 @@ export default {
       this.paymentForm.cardNumber = value;
     },
     
-    // ✅ 결제수단 등록 (기존 코드 유지)
     async submitPaymentMethod() {
       if (!this.paymentForm.cardNumber || !this.paymentForm.expDate || 
           !this.paymentForm.cvv || !this.paymentForm.cardholderName) {
@@ -871,6 +887,7 @@ export default {
       window.turnstile.remove(this.turnstileWidgetId);
     }
   },
+  
   beforeRouteLeave(to, from, next) {
     // 회원가입 완료하지 않고 떠나는 경우
     if (to.path === '/login' || to.path === '/hotelone') {
@@ -880,9 +897,12 @@ export default {
     
     next();
   }
-  
 };
 </script>
+
+<style scoped>
+/* 기존 CSS는 그대로 유지 - 여기서는 생략 */
+</style>
 
 <style scoped>
 /* ===== 기본 설정 ===== */

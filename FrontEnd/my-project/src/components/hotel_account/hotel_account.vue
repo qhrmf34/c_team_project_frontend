@@ -147,73 +147,134 @@
           <div v-if="isLoading" class="loading-message">
             <p>사용자 정보를 불러오는 중...</p>
           </div>
-          
+        
           <div v-else>
             <h2 class="account-title">Account</h2>
             <section class="card">
               <div class="content-body">
-                <!-- 이름 -->
-                <div class="row">
-                  <div>
-                    <div class="meta">Name</div>
-                    <div class="value">{{ displayUserInfo.name || '이름 없음' }}</div>
+              
+                <!-- ✅ 일반 회원 -->
+                <template v-if="isLocalAccount">
+                  <!-- 이름 -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Name</div>
+                      <div class="value">{{ displayUserInfo.name || '이름 없음' }}</div>
+                    </div>
+                    <button class="btn" @click="openEditModal('name')">Change</button>
                   </div>
-                  <button 
-                    class="btn" 
-                    @click="openEditModal('name')"
-                    :disabled="isSocialAccount"
-                    :class="{ 'btn-disabled': isSocialAccount }"
-                    :title="isSocialAccount ? '소셜 로그인 계정은 이름을 변경할 수 없습니다.' : ''"
-                  >
-                    {{ isSocialAccount ? 'Social Account' : 'Change' }}
-                  </button>
-                </div>
-
-                <!-- 이메일 -->
-                <div class="row">
-                  <div>
-                    <div class="meta">Email</div>
-                    <div class="value">{{ displayUserInfo.email || '이메일 없음' }}</div>
+                
+                  <!-- 이메일 -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Email</div>
+                      <div class="value">{{ displayUserInfo.email || '이메일 없음' }}</div>
+                    </div>
+                    <button 
+                      class="btn-disabled" 
+                      disabled
+                      title="일반 계정은 이메일을 변경할 수 없습니다."
+                    >
+                      Local Account
+                    </button>
                   </div>
-                  <button 
-                    class="btn" 
-                    @click="openEditModal('email')"
-                    :disabled="isSocialAccount"
-                    :class="{ 'btn-disabled': isSocialAccount }"
-                    :title="isSocialAccount ? '소셜 로그인 계정은 이메일을 변경할 수 없습니다.' : ''"
-                  >
-                    {{ isSocialAccount ? 'Social Account' : 'Change' }}
-                  </button>                
-                </div>
-
-                <!-- 비밀번호 (로컬 계정만 표시) -->
-                <div class="row" v-if="isLocalAccount">
-                  <div>
-                    <div class="meta">Password</div>
-                    <div class="value">************</div>
+                
+                  <!-- 비밀번호 -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Password</div>
+                      <div class="value">************</div>
+                    </div>
+                    <button class="btn" @click="openPasswordModal">Change</button>
                   </div>
-                  <button class="btn" @click="openPasswordModal">Change</button>
-                </div>
-
-                <!-- 소셜 로그인 정보 표시 (소셜 계정만) -->
-                <div class="row" v-if="isSocialAccount">
-                  <div>
-                    <div class="meta">Login Provider</div>
-                    <div class="value">{{ userStatus }}</div>
+                
+                  <!-- 전화번호 -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Phone number</div>
+                      <div class="value">{{ displayUserInfo.phone || '전화번호 없음' }}</div>
+                    </div>
+                    <button class="btn" @click="openEditModal('phone')">Change</button>
                   </div>
-                  <span class="btn-disabled" title="소셜 로그인 계정입니다">Social Account</span>
-                </div>
-
-                <!-- 전화번호 -->
-                <div class="row" v-if="isLocalAccount">
-                  <div>
-                    <div class="meta">Phone number</div>
-                    <div class="value">{{ displayUserInfo.phone || '전화번호 없음' }}</div>
+                
+                  <!-- ✅ 주소 (일반 회원) -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Address</div>
+                      <div class="value">{{ displayUserInfo.fullAddress || '주소 없음' }}</div>
+                    </div>
+                    <button class="btn" @click="openEditModal('address')">Change</button>
                   </div>
-                  <button class="btn" @click="openEditModal('phone')">Change</button>
-                </div>
+                </template>
+              
+                <!-- ✅ 소셜 회원 -->
+                <template v-else-if="isSocialAccount">
+                  <!-- 이름 -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Name</div>
+                      <div class="value">{{ displayUserInfo.name || '이름 없음' }}</div>
+                    </div>
+                    <button 
+                      class="btn-disabled"
+                      disabled
+                      title="소셜 로그인 계정은 이름을 변경할 수 없습니다."
+                    >
+                      Social Account
+                    </button>
+                  </div>
+                
+                  <!-- 이메일 (카카오, 네이버만 변경 가능) -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Email</div>
+                      <div class="value">{{ displayUserInfo.email || '이메일 없음' }}</div>
+                    </div>
+                    <button 
+                      v-if="canChangeEmail"
+                      class="btn" 
+                      @click="openEditModal('email')"
+                    >
+                      Change
+                    </button>
+                    <button 
+                      v-else
+                      class="btn-disabled"
+                      disabled
+                      title="Google 계정은 이메일을 변경할 수 없습니다."
+                    >
+                      Google Account
+                    </button>
+                  </div>
+                
+                  <!-- ✅ 전화번호 (소셜 계정도 변경 가능) -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Phone number</div>
+                      <div class="value">{{ displayUserInfo.phone || '전화번호 없음' }}</div>
+                    </div>
+                    <button class="btn" @click="openEditModal('phone')">Change</button>
+                  </div>
+                
+                  <!-- ✅ 주소 (소셜 계정도 변경 가능) -->
+                  <div class="row">
+                    <div>
+                      <div class="meta">Address</div>
+                      <div class="value">{{ displayUserInfo.fullAddress || '주소 없음' }}</div>
+                    </div>
+                    <button class="btn" @click="openEditModal('address')">Change</button>
+                  </div>
+                </template>
+              
               </div>
             </section>
+          
+            <!-- ✅ 회원 탈퇴 버튼 -->
+            <div class="withdraw-section">
+              <button class="withdraw-btn" @click="openWithdrawModal">
+                회원 탈퇴
+              </button>
+            </div>
           </div>
         </section>
 
@@ -490,17 +551,65 @@
       </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- 주소 변경 모달 (Edit Modal) -->
     <div class="modal" :class="{ open: editModalActive }">
       <div class="backdrop" @click="closeEditModal"></div>
       <div class="card">
         <button class="close" @click="closeEditModal">&times;</button>
         <h2 class="title">{{ editModalTitle }}</h2>
-        
-        <form @submit.prevent="saveEdit">
+
+        <!-- ✅ 주소 변경일 경우 -->
+        <form v-if="editType === 'address'" @submit.prevent="saveEdit">
+          <div class="field">
+            <label class="label">도로명 주소</label>
+            <div class="address-input-group">
+              <input 
+                class="input address-input" 
+                type="text" 
+                v-model="tempRoadAddress"
+                placeholder="주소 검색 버튼을 눌러주세요" 
+                readonly
+                required
+              >
+              <DaumAddressPopup @address-selected="handleAddressSelected">
+                <template #trigger="{ open }">
+                  <button type="button" class="address-search-btn" @click="open">
+                    주소 검색
+                  </button>
+                </template>
+              </DaumAddressPopup>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">상세 주소</label>
+            <input 
+              class="input" 
+              type="text" 
+              v-model="tempDetailAddress"
+              placeholder="상세 주소를 입력하세요 (선택사항)"
+            >
+          </div>
+
+          <button class="submit" type="submit">저장</button>
+        </form>
+
+        <!-- 기존 필드 변경 (이름, 이메일, 전화번호) -->
+        <form v-else @submit.prevent="saveEdit">
           <div class="field">
             <label class="label">{{ editFieldLabel }}</label>
             <input 
+              v-if="editType === 'phone'"
+              class="input" 
+              type="tel" 
+              v-model="editValue"
+              @input="editValue = formatPhoneNumber(editValue)"
+              :placeholder="editPlaceholder"
+              maxlength="13"
+              required
+            >
+            <input 
+              v-else
               class="input" 
               :type="editInputType" 
               v-model="editValue" 
@@ -509,6 +618,48 @@
             >
           </div>
           <button class="submit" type="submit">저장</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ✅ 회원 탈퇴 모달 -->
+    <div class="modal" :class="{ open: withdrawModalActive }">
+      <div class="backdrop" @click="closeWithdrawModal"></div>
+      <div class="card withdraw-modal-card">
+        <button class="close" @click="closeWithdrawModal">&times;</button>
+        <h2 class="title withdraw-title">회원 탈퇴</h2>
+
+        <div class="withdraw-warning">
+          <p>⚠️ 탈퇴 시 다음 사항을 확인해주세요:</p>
+          <ul>
+            <li>탈퇴 후 <strong>1시간 동안 재가입이 불가능</strong>합니다.</li>
+            <li>1시간 경과 후 모든 회원 정보가 영구 삭제됩니다.</li>
+            <li>작성한 리뷰는 "탈퇴회원"으로 표시됩니다.</li>
+            <li>진행 중인 예약 내역이 있다면 먼저 확인해주세요.</li>
+          </ul>
+        </div>
+
+        <form @submit.prevent="confirmWithdraw">
+          <!-- 로컬 계정만 비밀번호 입력 -->
+          <div v-if="isLocalAccount" class="field">
+            <label class="label">비밀번호 확인</label>
+            <input 
+              class="input" 
+              type="password" 
+              v-model="withdrawPassword" 
+              placeholder="비밀번호를 입력하세요" 
+              required
+            >
+          </div>
+
+          <div class="withdraw-buttons">
+            <button type="button" class="cancel-btn" @click="closeWithdrawModal">
+              취소
+            </button>
+            <button type="submit" class="withdraw-confirm-btn">
+              탈퇴하기
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -684,51 +835,44 @@
 <script>
 import { authUtils, memberAPI, paymentMethodAPI, memberImageAPI, adminAPI, memberCouponAPI, reservationAPI, ticketAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
+import DaumAddressPopup from '@/components/login/DaumAddres.vue'
 
 export default {
   name: 'HotelAccount',
+  components: {
+    DaumAddressPopup
+  },
   data() {
     return {
       isDropdownActive: false,
-      // 사용자 정보
       userInfo: null,
       isLoggedIn: false,
       activeTab: 'account',
       coverImage: '/images/hotel_account_img/back.jpg',
       profileAvatar: '/images/hotel_account_img/member.jpg',
       
-      // 실제 사용자 정보 (API에서 가져옴)
       actualUserInfo: null,
       
-      // Booking Data
       sortOption: 'upcoming',
-      bookings: [], // ✅ 중복 제거 - 하나만 남김
+      bookings: [],
       
-      // 페이지네이션
       isLoadingReservations: false,
       currentPage: 0,
       pageSize: 3,
       totalCount: 0,
       
-      // Payment Cards
       paymentCards: [],
-      
-      // 카드 로딩 상태
       isLoadingCards: false,
-      
-      // 카드 추가 시 로딩 상태
       isAddingCard: false,
       
-      //쿠폰
       showCouponModal: false,
       receivedCoupons: [],
 
-      // Modal States
       addCardModalActive: false,
       editModalActive: false,
       passwordModalActive: false,
+      withdrawModalActive: false, // ✅ 탈퇴 모달
       
-      // New Card Data
       newCard: {
         number: '',
         expiry: '',
@@ -738,34 +882,36 @@ export default {
         saveInfo: false
       },
       
-      // Edit Modal Data
+      // ✅ 주소 수정 관련
       editType: '',
       editModalTitle: '',
       editFieldLabel: '',
       editPlaceholder: '',
       editInputType: 'text',
       editValue: '',
+      tempRoadAddress: '',     // 임시 도로명 주소
+      tempDetailAddress: '',   // 임시 상세 주소
       
       profileImageUrl:'',
-      // Password Modal Data
+      
       passwordStep: 1,
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
       
-      // Newsletter
+      // ✅ 회원 탈퇴 관련
+      withdrawPassword: '',
+      
       newsletter: {
         email: ''
       },
       
-      // 로딩 상태
       isLoading: true
     }
   },
   
   computed: {
     totalPages() {
-      // ✅ 0으로 나누기 방지 및 최소 1페이지
       if (this.totalCount === 0) return 1;
       return Math.ceil(this.totalCount / this.pageSize);
     },
@@ -798,6 +944,10 @@ export default {
       return ['google', 'kakao', 'naver'].includes(this.userInfo?.provider);
     },
     
+    canChangeEmail() {
+      return ['kakao', 'naver'].includes(this.userInfo?.provider);
+    },
+    
     displayUserInfo() {
       if (!this.actualUserInfo) return {};
       
@@ -805,11 +955,35 @@ export default {
         name: this.actualUserInfo.firstName || '',
         email: this.actualUserInfo.email || '',
         phone: this.actualUserInfo.phoneNumber || '전화번호 없음',
+        roadAddress: this.actualUserInfo.roadAddress || '주소 없음',
+        detailAddress: this.actualUserInfo.detailAddress || '',
         provider: this.actualUserInfo.provider || 'local'
       };
       
+      // ✅ 이름 포맷팅
       if (this.isLocalAccount && this.actualUserInfo.lastName) {
         info.name = `${this.actualUserInfo.firstName} ${this.actualUserInfo.lastName}`;
+      }
+      
+      // ✅ 전화번호 포맷팅 (010-1234-5678)
+      if (info.phone !== '전화번호 없음') {
+        const cleaned = info.phone.replace(/\D/g, '');
+        if (cleaned.length === 10) {
+          // 010-123-4567
+          info.phone = `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+        } else if (cleaned.length === 11) {
+          // 010-1234-5678
+          info.phone = `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7)}`;
+        }
+      }
+      
+      // ✅ 주소 포맷팅 (도로명 주소 + 상세 주소)
+      if (info.roadAddress !== '주소 없음' && info.detailAddress) {
+        info.fullAddress = `${info.roadAddress}, ${info.detailAddress}`;
+      } else if (info.roadAddress !== '주소 없음') {
+        info.fullAddress = info.roadAddress;
+      } else {
+        info.fullAddress = '주소 없음';
       }
       
       return info;
@@ -843,7 +1017,7 @@ export default {
     await this.loadUserProfile();
     await this.loadPaymentMethods();
     await this.loadMemberImages();
-    await this.loadReservations(); // ✅ 예약 내역 로드
+    await this.loadReservations();
     
     if (this.$route.query.tab) {
       this.activeTab = this.$route.query.tab;
@@ -864,7 +1038,7 @@ export default {
     }
   },
   
-  methods: {
+methods: {
     goToLogin() {
       this.isDropdownActive = false;
       this.$router.push('/login');
@@ -875,7 +1049,6 @@ export default {
     
       if (this.isLoggedIn) {
         try {
-          // await 추가!
           this.userInfo = await authUtils.getUserInfo();
 
           if (this.userInfo) {
@@ -887,7 +1060,6 @@ export default {
           }
         } catch (error) {
           console.error('사용자 정보 로드 실패:', error);
-          // 토큰이 유효하지 않으면 로그아웃
           if (error.response?.status === 401) {
             await authUtils.logout();
             this.isLoggedIn = false;
@@ -899,6 +1071,7 @@ export default {
         this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
+    
     async loadUserProfile() {
       if (!this.isLoggedIn) return;
       
@@ -934,33 +1107,35 @@ export default {
         console.error('이미지 로드 실패:', error);
       }
     },
+    
     goToAccount() {
       this.activeTab = 'account';
       this.isDropdownActive = false; 
     },
+    
     goToPaymentHistory() {
       this.activeTab = 'history';
       this.isDropdownActive = false; 
     },
+    
     goToPaymentTab() {
       this.activeTab = 'payments';
       this.isDropdownActive = false; 
     },
-    // ✅ 티켓 다운로드 가능 여부
+    
     canDownloadTicket(booking) {
       if (!booking.paymentId) return false;
       if (!booking.reservationsStatus) return false;
-      if (!booking.hasTicket) return false; // ✅ 티켓 이미지가 없으면 비활성화
+      if (!booking.hasTicket) return false;
 
       const status = booking.paymentStatus?.toString().toLowerCase();
       return status === 'paid';
     },
   
-    // ✅ 버튼 툴팁 메시지
     getDownloadButtonTitle(booking) {
       if (!booking.paymentId) return '결제 정보가 없습니다';
       if (!booking.reservationsStatus) return '예약이 확정되지 않았습니다';
-      if (!booking.hasTicket) return '티켓이 아직 생성되지 않았습니다'; // ✅ 추가
+      if (!booking.hasTicket) return '티켓이 아직 생성되지 않았습니다';
 
       const status = booking.paymentStatus?.toString().toLowerCase();
       if (status === 'refunded') return '환불된 예약입니다';
@@ -969,6 +1144,7 @@ export default {
 
       return '티켓을 다운로드할 수 없습니다';
     },
+    
     getImageUrl(imagePath) {
       if (!imagePath) {
         return '/images/hotel_img/hotel1.jpg';
@@ -1055,9 +1231,19 @@ export default {
         }
       }
     },
-    
+    formatPhoneNumber(value) {
+      const cleaned = value.replace(/\D/g, '');
 
-    
+      if (cleaned.length <= 3) {
+        return cleaned;
+      } else if (cleaned.length <= 7) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+      } else if (cleaned.length <= 10) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+      } else {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7, 11)}`;
+      }
+    },
     goToHotel() {
       this.$router.push('/hotelone');
     },
@@ -1127,15 +1313,31 @@ export default {
       }
     },
     
+    // ✅ 주소 선택 핸들러
+    handleAddressSelected(addressData) {
+      this.tempRoadAddress = addressData.roadAddress || addressData.jibunAddress;
+    },
+    
     openEditModal(type) {
-      if (this.isSocialAccount) {
-        alert('소셜 로그인 계정은 정보를 변경할 수 없습니다.');
+      if (this.isSocialAccount && (type === 'name')) {
+        alert('소셜 로그인 계정은 이름을 변경할 수 없습니다.');
         return;
       }
-      
+
+      if (type === 'email') {
+        if (this.isLocalAccount) {
+          alert('일반 계정은 이메일을 변경할 수 없습니다.');
+          return;
+        }
+        if (this.userInfo?.provider === 'google') {
+          alert('Google 계정은 이메일을 변경할 수 없습니다.');
+          return;
+        }
+      }
+
       this.editType = type;
       this.editModalActive = true;
-      
+
       const config = {
         name: {
           title: '이름 변경',
@@ -1156,10 +1358,17 @@ export default {
           label: '전화번호',
           placeholder: '전화번호를 입력하세요',
           type: 'tel',
-          value: this.displayUserInfo.phone === '전화번호 없음' ? '' : this.displayUserInfo.phone
+          value: this.displayUserInfo.phone === '전화번호 없음' ? '' : this.displayUserInfo.phone // ✅ 이미 포맷된 값
+        },
+        address: {
+          title: '주소 변경',
+          label: '주소',
+          placeholder: '주소 검색 버튼을 눌러주세요',
+          type: 'text',
+          value: this.displayUserInfo.roadAddress
         }
       };
-      
+
       const currentConfig = config[type];
       if (currentConfig) {
         this.editModalTitle = currentConfig.title;
@@ -1167,6 +1376,11 @@ export default {
         this.editPlaceholder = currentConfig.placeholder;
         this.editInputType = currentConfig.type;
         this.editValue = currentConfig.value;
+
+        if (type === 'address') {
+          this.tempRoadAddress = this.displayUserInfo.roadAddress || '';
+          this.tempDetailAddress = this.displayUserInfo.detailAddress || '';
+        }
       }
     },
     
@@ -1178,9 +1392,40 @@ export default {
     resetEditModal() {
       this.editType = '';
       this.editValue = '';
+      this.tempRoadAddress = '';
+      this.tempDetailAddress = '';
     },
     
     async saveEdit() {
+      // ✅ 주소 수정일 경우
+      if (this.editType === 'address') {
+        if (!this.tempRoadAddress || this.tempRoadAddress.trim() === '') {
+          alert('주소를 입력해주세요.');
+          return;
+        }
+        
+        try {
+          const updateData = {
+            roadAddress: this.tempRoadAddress,
+            detailAddress: this.tempDetailAddress || null
+          };
+          
+          const response = await memberAPI.updateProfile(updateData);
+          
+          if (response && response.data) {
+            await this.loadUserProfile();
+            this.closeEditModal();
+            alert('주소가 변경되었습니다.');
+          }
+        } catch (error) {
+          console.error('주소 변경 실패:', error);
+          const serverMessage = error.response?.data?.message || error.message;
+          alert(serverMessage);
+        }
+        return;
+      }
+      
+      // 기존 로직
       if (!this.editValue.trim()) {
         alert('값을 입력해주세요.');
         return;
@@ -1227,7 +1472,7 @@ export default {
         alert(serverMessage);
       }
     },
-    
+        
     openPasswordModal() {
       if (this.isSocialAccount) {
         alert('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
@@ -1428,39 +1673,35 @@ export default {
       this.newCard.name = this.newCard.name.replace(/[0-9]/g, '');
     },
     
-    // ✅ 예약 내역 로드
-  async loadReservations() {
-    if (!this.isLoggedIn) return;
-    
-    try {
-      this.isLoadingReservations = true;
+    async loadReservations() {
+      if (!this.isLoggedIn) return;
       
-      const response = await reservationAPI.getMyReservationHistory({
-        offset: this.currentPage * this.pageSize,
-        size: this.pageSize
-      });
-      
-      if (response && response.data) {
-        this.bookings = response.data.reservations || [];
-        this.totalCount = response.data.totalCount || 0;
+      try {
+        this.isLoadingReservations = true;
         
-        // ✅ 빈 페이지 체크: 데이터가 없고 첫 페이지가 아니면 이전 페이지로
-        if (this.bookings.length === 0 && this.currentPage > 0) {
-          this.currentPage--;
-          await this.loadReservations();
+        const response = await reservationAPI.getMyReservationHistory({
+          offset: this.currentPage * this.pageSize,
+          size: this.pageSize
+        });
+        
+        if (response && response.data) {
+          this.bookings = response.data.reservations || [];
+          this.totalCount = response.data.totalCount || 0;
+          
+          if (this.bookings.length === 0 && this.currentPage > 0) {
+            this.currentPage--;
+            await this.loadReservations();
+          }
         }
+        
+      } catch (error) {
+        console.error('결제 내역 로드 실패:', error);
+        alert('결제 내역을 불러오는데 실패했습니다.');
+      } finally {
+        this.isLoadingReservations = false;
       }
-      
-    } catch (error) {
-      console.error('결제 내역 로드 실패:', error);
-      alert('결제 내역을 불러오는데 실패했습니다.');
-    } finally {
-      this.isLoadingReservations = false;
-    }
-  },
-  
+    },
     
-    // ✅ 다음 페이지 (데이터 있을 때만)
     async loadNextPage() {
       const maxPage = Math.ceil(this.totalCount / this.pageSize) - 1;
       if (this.currentPage < maxPage) {
@@ -1469,7 +1710,6 @@ export default {
       }
     },
 
-    // ✅ 이전 페이지
     async loadPreviousPage() {
       if (this.currentPage > 0) {
         this.currentPage--;
@@ -1477,7 +1717,6 @@ export default {
       }
     },
 
-    
     formatBookingDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -1487,6 +1726,7 @@ export default {
       
       return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
     },
+    
     formatBookingTime(time) {
       if (!time) return '12:00pm';
     
@@ -1495,17 +1735,14 @@ export default {
       const minute = minuteStr || '00';
       const suffix = hour >= 12 ? 'pm' : 'am';
     
-      if (hour === 0) hour = 12;       // 00시 → 12am
-      else if (hour > 12) hour -= 12;  // 13~23시 → 1~11pm
+      if (hour === 0) hour = 12;
+      else if (hour > 12) hour -= 12;
     
       const formattedHour = hour.toString().padStart(2, '0');
       return `${formattedHour}:${minute}${suffix}`;
     },
     
-    // ✅ 티켓 다운로드 (adminAPI 사용)
     async downloadTicket(booking) {
-      console.log('다운로드 시도:', booking);
-      
       if (!booking.paymentId) {
         alert('결제 정보가 없습니다.');
         return;
@@ -1513,8 +1750,6 @@ export default {
       
       try {
         const response = await ticketAPI.getTicketByPaymentId(booking.paymentId);
-        
-        console.log('티켓 응답:', response);
         
         if (response.code === 200 && response.data.ticketImagePath) {
           const imageUrl = adminAPI.getImageUrl(response.data.ticketImagePath);
@@ -1529,8 +1764,6 @@ export default {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(link.href);
-          
-          console.log('✅ 티켓 다운로드 완료');
         } else {
           alert('티켓 이미지를 찾을 수 없습니다.');
         }
@@ -1540,7 +1773,6 @@ export default {
       }
     },
     
-    // ✅ 티켓 상세 보기 (중복 제거)
     viewBookingDetails(booking) {
       if (!booking.paymentId) {
         alert('결제 정보가 없습니다.');
@@ -1554,21 +1786,19 @@ export default {
     },
     
     async subscribe() {
-       // 로그인 확인
       if (!this.isLoggedIn) {
         alert('로그인이 필요한 서비스입니다.')
         this.$router.push('/login')
         return
       }
     
-      // 이메일 입력 여부 무시하고 바로 쿠폰 지급
       try {
         const response = await memberCouponAPI.subscribeAndReceiveCoupons()
 
         if (response.code === 200) {
           this.receivedCoupons = response.data || []
           this.showCouponModal = true
-          this.newsletter.email = '' // 이메일 입력창 초기화
+          this.newsletter.email = ''
         }
       } catch (error) {
         console.error('쿠폰 지급 실패:', error)
@@ -1583,7 +1813,6 @@ export default {
         }
       }
     },
-
 
     closeCouponModal() {
       this.showCouponModal = false
@@ -1600,10 +1829,62 @@ export default {
       return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
     },
     
+    // ========== ✅ 회원 탈퇴 관련 ==========
+    
+    openWithdrawModal() {
+      this.withdrawModalActive = true;
+      this.withdrawPassword = '';
+    },
+    
+    closeWithdrawModal() {
+      this.withdrawModalActive = false;
+      this.withdrawPassword = '';
+    },
+    
+    async confirmWithdraw() {
+      // 로컬 계정은 비밀번호 체크
+      if (this.isLocalAccount) {
+        if (!this.withdrawPassword) {
+          alert('비밀번호를 입력해주세요.');
+          return;
+        }
+      }
+      
+      if (!confirm('정말로 탈퇴하시겠습니까?\n탈퇴 후 1시간 동안은 재가입이 불가능합니다.')) {
+        return;
+      }
+      
+      try {
+        const requestData = this.isLocalAccount ? { password: this.withdrawPassword } : {};
+        
+        const response = await memberAPI.withdrawMember(requestData);
+        
+        if (response && response.code === 200) {
+          this.closeWithdrawModal();
+          alert('회원 탈퇴가 완료되었습니다.\n1시간 후 모든 정보가 삭제됩니다.');
+          
+          // 로그아웃 처리
+          await authUtils.logout();
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        console.error('회원 탈퇴 실패:', error);
+        
+        if (error.response?.status === 401) {
+          alert('비밀번호가 일치하지 않습니다.');
+        } else if (error.response?.status === 400) {
+          alert(error.response.data?.message || '이미 탈퇴한 회원입니다.');
+        } else {
+          alert('회원 탈퇴 중 오류가 발생했습니다.');
+        }
+      }
+    },
+    
     closeAllModals() {
       this.addCardModalActive = false;
       this.editModalActive = false;
       this.passwordModalActive = false;
+      this.withdrawModalActive = false;
       this.isDropdownActive = false;
       this.resetNewCard();
       this.resetEditModal();
@@ -1611,6 +1892,7 @@ export default {
     }
   }
 }
+
 </script>
 
 <style scoped>
@@ -3365,6 +3647,159 @@ export default {
     text-align: center;
     padding: 60px 20px;
     color: #666;
+  }
+    /* ========== ✅ 회원 탈퇴 섹션 ========== */
+  .withdraw-section {
+    margin-top: 40px;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .withdraw-btn {
+    padding: 12px 32px;
+    background-color: transparent;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+    border-radius: 8px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .withdraw-btn:hover {
+    background-color: #ef4444;
+    color: white;
+  }
+
+  /* ========== ✅ 회원 탈퇴 모달 스타일 ========== */
+  .withdraw-modal-card {
+    max-width: 500px;
+  }
+
+  .withdraw-title {
+    color: #ef4444;
+  }
+
+  .withdraw-warning {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .withdraw-warning p {
+    font-weight: 600;
+    color: #991b1b;
+    margin-bottom: 12px;
+  }
+
+  .withdraw-warning ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .withdraw-warning li {
+    color: #7f1d1d;
+    font-size: 13px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .withdraw-warning li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #ef4444;
+    font-weight: bold;
+  }
+
+  .withdraw-warning strong {
+    color: #991b1b;
+    font-weight: 700;
+  }
+
+  .withdraw-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .cancel-btn,
+  .withdraw-confirm-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .cancel-btn {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #374151;
+  }
+
+  .cancel-btn:hover {
+    background-color: #e5e7eb;
+  }
+
+  .withdraw-confirm-btn {
+    background-color: #ef4444;
+    border: none;
+    color: white;
+  }
+
+  .withdraw-confirm-btn:hover {
+    background-color: #dc2626;
+  }
+
+  /* ========== ✅ 주소 변경 모달 스타일 ========== */
+  .address-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .address-input {
+    flex: 1;
+  }
+
+  .address-search-btn {
+    height: 44px;
+    padding: 0 20px;
+    background-color: #7dd3c0;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+  }
+
+  .address-search-btn:hover {
+    background-color: #6bc4a6;
+  }
+
+  .address-search-btn:active {
+    background-color: #5db399;
+  }
+
+  /* ========== 기존 모달 스타일 개선 ========== */
+  .modal .field {
+    margin-bottom: 16px;
+  }
+
+  .modal .field:last-of-type {
+    margin-bottom: 0;
   }
 
   /* 반응형 */

@@ -57,7 +57,11 @@ export const memberAPI = {
     const response = await apiClient.post('/api/member/signup', signupData)
     return response.data
   },
-
+  // 회원 탈퇴
+  async withdrawMember(requestData) {
+    const response = await apiClient.post('/api/member/withdraw', requestData)
+    return response.data
+  },
   // 로그인
   async login(loginData) {
     const response = await apiClient.post('/api/member/login', loginData)
