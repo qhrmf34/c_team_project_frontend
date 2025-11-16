@@ -97,13 +97,16 @@
                   <span v-else-if="isSocialLogin"> (자동 생성)</span>
                 </label>
               </div>
+              
+              <!-- ✅ 전화번호 - 자동 포맷팅 -->
               <div class="input-group">
                 <input 
-                  type="text" 
+                  type="tel" 
                   id="phone-number" 
                   v-model="signupForm.phoneNumber"
-                  placeholder="010-1234-1234" 
-                  maxlength="30" 
+                  placeholder="010-1234-5678" 
+                  maxlength="13"
+                  @input="formatPhoneNumber"
                   required
                 >
                 <label for="phone-number">Phone Number</label>
@@ -147,16 +150,18 @@
               </div>
             </div>
 
-            <!-- Password Input Section - 소셜 로그인 시 숨김 -->
-            <div v-if="!isSocialLogin" class="signup-password-group">
-              <div class="input-group">
+            <!-- ✅ Password Input Section - 비밀번호 강도 체크 추가 -->
+            <div v-if="!isSocialLogin" class="signup-password-section">
+              <!-- 비밀번호 입력 -->
+              <div class="input-group password-input-group">
                 <div class="password-input-wrapper">
                   <input 
                     :type="showPassword.signup ? 'text' : 'password'" 
                     id="signup-password" 
                     v-model="signupForm.password"
                     placeholder="*************" 
-                    maxlength="255" 
+                    maxlength="255"
+                    @input="checkPasswordStrength"
                     required
                   >
                   <button 
@@ -164,22 +169,37 @@
                     class="password-toggle" 
                     @click="togglePassword('signup')"
                   >
-                  <img 
-                    :src="showPassword.signup ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
-                    alt="Toggle Password" 
-                  />
+                    <img 
+                      :src="showPassword.signup ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                      alt="Toggle Password" 
+                    />
                   </button>
                 </div>
-                <label for="signup-password">Password</label>
+                <label for="signup-password">비밀번호</label>
+                
+                <!-- ✅ 비밀번호 조건 표시 -->
+                <div class="password-requirements">
+                  <div class="requirement-item" :class="{ valid: passwordChecks.minLength }">
+                    <span class="check-icon">✓</span>
+                    <span>최소 8자</span>
+                  </div>
+                  <div class="requirement-item" :class="{ valid: passwordChecks.hasComplexity }">
+                    <span class="check-icon">✓</span>
+                    <span>영문, 숫자, 특수문자 3가지 조합</span>
+                  </div>
+                </div>
               </div>
-              <div class="input-group">
+              
+              <!-- 비밀번호 확인 -->
+              <div class="input-group password-confirm-group">
                 <div class="password-input-wrapper">
                   <input 
                     :type="showPassword.confirm ? 'text' : 'password'" 
                     id="confirm-password" 
                     v-model="signupForm.confirmPassword"
                     placeholder="*************" 
-                    maxlength="255" 
+                    maxlength="255"
+                    @input="checkPasswordMatch"
                     required
                   >
                   <button 
@@ -187,13 +207,21 @@
                     class="password-toggle" 
                     @click="togglePassword('confirm')"
                   >
-                  <img 
-                    :src="showPassword.confirm ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
-                    alt="Toggle Password" 
-                  />
+                    <img 
+                      :src="showPassword.confirm ? '/images/login_img/close-eye.jpg' : '/images/login_img/open-eye.jpg'" 
+                      alt="Toggle Password" 
+                    />
                   </button>
                 </div>
-                <label for="confirm-password">Confirm Password</label>
+                <label for="confirm-password">비밀번호 확인</label>
+                
+                <!-- ✅ 비밀번호 일치 여부 표시 -->
+                <div v-if="signupForm.confirmPassword" class="password-match">
+                  <div class="requirement-item" :class="{ valid: passwordChecks.match }">
+                    <span class="check-icon">{{ passwordChecks.match ? '✓' : '✗' }}</span>
+                    <span>{{ passwordChecks.match ? '비밀번호가 일치합니다' : '비밀번호가 일치하지 않습니다' }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -211,7 +239,7 @@
                 <input type="checkbox" id="agreement-checkbox" v-model="signupForm.agreement" required>
                 <label for="agreement-checkbox">동의 하기</label>
               </div>
-              <button type="submit" class="submit-button" :disabled="isLoading">
+              <button type="submit" class="submit-button" :disabled="isLoading || !isPasswordValid">
                 {{ isLoading ? '가입 중...' : (isSocialLogin ? '회원가입 완료' : '계정 생성') }}
               </button>
             </div>
@@ -423,12 +451,23 @@ export default {
         confirm: false
       },
       
+      // ✅ 비밀번호 체크 상태
+      passwordChecks: {
+        minLength: false,
+        hasComplexity: false,
+        match: false
+      },
+      
       turnstileToken: null,
       turnstileWidgetId: null,
       
       paymentForm: {
         cardNumber: '',
         expDate: '',
+        cvv: '',
+        cardholderName: '',
+        billingAddress: '',
+        saveCard: false,
         cardPassword: '',
         nameOnCard: '',
         country: 'KR',
@@ -443,6 +482,14 @@ export default {
         return '';
       }
       return formatMemberName(this.socialUserInfo);
+    },
+    
+    // ✅ 비밀번호 유효성 검사
+    isPasswordValid() {
+      if (this.isSocialLogin) return true;
+      return this.passwordChecks.minLength && 
+             this.passwordChecks.hasComplexity && 
+             this.passwordChecks.match;
     }
   },
   
@@ -458,6 +505,49 @@ export default {
   },
   
   methods: {
+    // ✅ 전화번호 자동 포맷팅
+    formatPhoneNumber(event) {
+      let value = event.target.value.replace(/[^0-9]/g, '');
+      
+      if (value.length <= 3) {
+        this.signupForm.phoneNumber = value;
+      } else if (value.length <= 7) {
+        this.signupForm.phoneNumber = value.slice(0, 3) + '-' + value.slice(3);
+      } else if (value.length <= 11) {
+        this.signupForm.phoneNumber = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+      } else {
+        this.signupForm.phoneNumber = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+      }
+    },
+    
+    // ✅ 비밀번호 강도 체크
+    checkPasswordStrength() {
+      const password = this.signupForm.password;
+      
+      // 최소 8자
+      this.passwordChecks.minLength = password.length >= 8;
+      
+      // 영문, 숫자, 특수문자 3가지 조합
+      const hasLetter = /[a-zA-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+      
+      const complexityCount = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
+      this.passwordChecks.hasComplexity = complexityCount >= 3;
+      
+      // 비밀번호 일치 여부도 다시 체크
+      this.checkPasswordMatch();
+    },
+    
+    // ✅ 비밀번호 일치 여부 체크
+    checkPasswordMatch() {
+      if (this.signupForm.confirmPassword) {
+        this.passwordChecks.match = this.signupForm.password === this.signupForm.confirmPassword;
+      } else {
+        this.passwordChecks.match = false;
+      }
+    },
+    
     // 소셜 로그인 콜백 처리
     handleSocialLoginCallback() {
       const savedSocialData = sessionStorage.getItem('socialSignupData');
@@ -519,7 +609,7 @@ export default {
       
       try {
         const response = await memberAPI.completeSocialSignup({
-          phoneNumber: this.signupForm.phoneNumber,
+          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''), // ✅ 하이픈 제거
           roadAddress: this.signupForm.roadAddress,
           detailAddress: this.signupForm.detailAddress || null,
           turnstileToken: this.turnstileToken
@@ -581,9 +671,9 @@ export default {
     
     // 일반 회원가입
     async regularSignup() {
-      // 유효성 검사
-      if (this.signupForm.password !== this.signupForm.confirmPassword) {
-        alert('비밀번호가 일치하지 않습니다.');
+      // ✅ 비밀번호 유효성 검사
+      if (!this.isPasswordValid) {
+        alert('비밀번호 조건을 모두 만족해주세요.');
         return;
       }
       
@@ -604,7 +694,7 @@ export default {
           firstName: this.signupForm.firstName,
           lastName: this.signupForm.lastName,
           email: this.signupForm.email,
-          phoneNumber: this.signupForm.phoneNumber,
+          phoneNumber: this.signupForm.phoneNumber.replace(/-/g, ''), // ✅ 하이픈 제거
           password: this.signupForm.password,
           confirmPassword: this.signupForm.confirmPassword,
           roadAddress: this.signupForm.roadAddress,
@@ -728,9 +818,10 @@ export default {
       this.paymentForm.cardNumber = value;
     },
     
+    // ✅ 결제수단 등록 (기존 코드 유지)
     async submitPaymentMethod() {
       if (!this.paymentForm.cardNumber || !this.paymentForm.expDate || 
-          !this.paymentForm.cardPassword || !this.paymentForm.nameOnCard) {
+          !this.paymentForm.cvv || !this.paymentForm.cardholderName) {
         alert('모든 필드를 입력해주세요.');
         return;
       }
@@ -748,10 +839,10 @@ export default {
           cardNumber: this.paymentForm.cardNumber.replace(/\s/g, ''),
           cardExpirationMonth: expDateParts[0],
           cardExpirationYear: expDateParts[1],
-          cardPassword: this.paymentForm.cardPassword,
-          customerName: this.paymentForm.nameOnCard,
-          country: this.paymentForm.country,
-          isDefault: this.paymentForm.setAsDefault
+          cardPassword: this.paymentForm.cardPassword || '00',
+          customerName: this.paymentForm.cardholderName,
+          country: this.paymentForm.country || 'KR',
+          isDefault: this.paymentForm.saveCard
         };
         
         const response = await paymentMethodAPI.registerPaymentMethod(cardData);
@@ -870,20 +961,42 @@ export default {
   background: white;
 }
 
-/* ===== 폼 섹션 ===== */
+/* ===== 폼 섹션 - 스크롤 가능 ===== */
 .form-section {
   flex: 1;
   width: 50%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px;
+  padding: 40px 40px 20px 40px;
   background-color: white;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* 스크롤바 스타일링 (선택사항) */
+.form-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.form-section::-webkit-scrollbar-thumb {
+  background: #7dd3c0;
+  border-radius: 10px;
+}
+
+.form-section::-webkit-scrollbar-thumb:hover {
+  background: #6bc4a6;
 }
 
 .form-wrapper {
   width: 640px;
   max-width: 100%;
+  padding-bottom: 80px; /* ✅ 하단 여백 증가 */
 }
 
 /* ===== 폼 헤더 ===== */
@@ -932,9 +1045,10 @@ export default {
   border-color: #7dd3c0;
 }
 
-.input-group input[readonly] {
+.input-group input[readonly],
+.input-group input[disabled] {
   background-color: #f9f9f9;
-  cursor: pointer;
+  cursor: not-allowed;
 }
 
 .input-group label {
@@ -1015,22 +1129,29 @@ export default {
   background-color: #5db399;
 }
 
-.signup-password-group {
-  display: flex;
-  gap: 20px;
-  width: 100%;
+/* ✅ 비밀번호 섹션 스타일 - 높이 자동 조절 */
+.signup-password-section {
   margin-bottom: 25px;
 }
 
-.signup-password-group .input-group {
-  flex: 1;
+/* ✅ 비밀번호 입력 그룹 - 높이 자동 */
+.password-input-group {
+  height: auto;
+  min-height: 56px;
+  margin-bottom: 15px;
+}
+
+/* ✅ 비밀번호 확인 그룹 - 높이 자동 */
+.password-confirm-group {
+  height: auto;
+  min-height: 56px;
   margin-bottom: 0;
 }
 
 .password-input-wrapper {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 56px;
 }
 
 .password-toggle {
@@ -1056,10 +1177,71 @@ export default {
   opacity: 1;
 }
 
+/* ✅ 비밀번호 조건 표시 스타일 */
+.password-requirements,
+.password-match {
+  margin-top: 12px; /* ✅ 여백 증가 */
+  padding: 12px; /* ✅ 패딩 증가 */
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px; /* ✅ 여백 증가 */
+  line-height: 1.5; /* ✅ 줄간격 증가 */
+}
+
+.requirement-item:last-child {
+  margin-bottom: 0;
+}
+
+.requirement-item.valid {
+  color: #10b981;
+}
+
+.requirement-item .check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.requirement-item.valid .check-icon {
+  background-color: #10b981;
+  color: white;
+}
+
+/* ✅ 비밀번호 일치 표시 스타일 */
+.password-match .requirement-item {
+  margin-bottom: 0;
+}
+
+.password-match .requirement-item:not(.valid) {
+  color: #ef4444;
+}
+
+.password-match .requirement-item:not(.valid) .check-icon {
+  background-color: #ef4444;
+  color: white;
+}
+
 .turnstile-wrapper {
   display: flex;
   justify-content: center;
-  margin: 20px 0;
+  margin: 25px 0; /* ✅ 여백 조정 */
+  min-height: 65px;
 }
 
 .form-options {
@@ -1166,7 +1348,7 @@ export default {
 /* ===== 결제수단 전용 스타일 ===== */
 .payment-form-wrapper {
   width: 640px;
-  height: 668px;
+  max-height: calc(100vh - 80px);
 }
 
 .payment-header {
