@@ -7,7 +7,7 @@
       @click="openChat"
       :class="{ 'has-notification': unreadCount > 0 }"
     >
-      <img src="/images/chat-icon.png" alt="Chat" class="chat-icon">
+      <img src="/images/chat-icon.jpg" alt="Chat" class="chat-icon">
       <div v-if="unreadCount > 0" class="notification-badge">
         {{ unreadCount }}
       </div>
@@ -74,7 +74,7 @@
           class="message-input"
         >
         <button @click="sendMessage" class="send-btn" :disabled="!messageInput.trim()">
-          <img src="/images/send-icon.png" alt="Send">
+          <img src="/images/send-icon.jpg" alt="Send">
         </button>
       </div>
     </div>
@@ -108,11 +108,36 @@ export default {
       
       // FAQ
       faqs: [
-        { id: 1, question: '체크인/체크아웃 시간이 어떻게 되나요?', answer: '체크인은 오후 3시, 체크아웃은 오전 11시입니다.' },
-        { id: 2, question: '조식은 포함되어 있나요?', answer: '객실 타입에 따라 조식 포함 여부가 다릅니다. 예약 상세 페이지에서 확인해주세요.' },
-        { id: 3, question: '주차는 가능한가요?', answer: '무료 주차가 가능합니다. 단, 주차 공간이 제한적이니 미리 연락 주시면 좋습니다.' },
-        { id: 4, question: '취소 및 환불 정책은 어떻게 되나요?', answer: '체크인 3일 전까지 무료 취소 가능하며, 이후에는 위약금이 발생할 수 있습니다.' },
-        { id: 5, question: '반려동물 동반이 가능한가요?', answer: '일부 객실에서만 반려동물 동반이 가능합니다. 사전 문의 바랍니다.' }
+        {
+          id: 1,
+          question: "체크인은 몇 시부터 가능한가요?",
+          answer: "호텔마다 체크인 시작 시간이 다릅니다. 예약 확인 페이지에서 해당 객실의 체크인 시간을 확인해주세요."
+        },
+        {
+          id: 2,
+          question: "체크아웃은 몇 시까지 해야 하나요?",
+          answer: "호텔마다 체크아웃 시간이 다르니 예약 상세 페이지에서 정확한 시간을 확인해주세요."
+        },
+        {
+          id: 3,
+          question: "조식을 신청하려면 어떻게 해야 하나요?",
+          answer: "일부 객실은 조식이 포함되어 있지 않습니다. 예약 시 조식 옵션을 선택하거나 호텔에 직접 문의해주세요."
+        },
+        {
+          id: 4,
+          question: "예약 취소나 환불은 언제까지 가능한가요?",
+          answer: "예약 취소 및 환불은 대부분 입실 전까지만 가능합니다. 세부 조건은 예약 확인 페이지에서 확인해주세요."
+        },
+        {
+          id: 5,
+          question: "반려동물과 함께 숙박할 수 있나요?",
+          answer: "반려동물 동반 가능 여부는 객실마다 다릅니다. 예약 전 호텔 상세페이지에서 확인하거나 호텔에 문의해주세요."
+        },
+        {
+          id: 6,
+          question: "호텔에 주차장이 있나요?",
+          answer: "호텔마다 주차 정책이 다릅니다. 주차 가능 여부와 비용은 예약 페이지에서 확인해주세요."
+        }
       ]
     };
   },
