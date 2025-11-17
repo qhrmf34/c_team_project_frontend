@@ -3,9 +3,9 @@ export function formatMemberName(userInfo) {
   
   const { provider, firstName, lastName, email } = userInfo;
   
-  // leave: 탈퇴한 회원
+  // leave: 탈퇴한 회원 (firstName만 반환)
   if (provider === 'leave') {
-    return '탈퇴한 회원';
+    return firstName || '탈퇴한 회원';
   }
   
   // local: firstName + lastName (이름 + 성)

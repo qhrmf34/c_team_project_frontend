@@ -406,52 +406,38 @@ export default {
         alert('올바른 이메일 형식을 입력해주세요.');
         return;
       }
-
+    
       this.isLoading = true;
-      
+
       try {
         const result = await memberAPI.login({
           email: this.loginForm.email,
           password: this.loginForm.password,
           turnstileToken: this.turnstileToken
         });
-        
+  
         if (result.data && result.data.token) {
-          // JWT 토큰에서 사용자 정보 추출
-          const payload = authUtils.decodeToken(result.data.token);
-          
-          if (!payload) {
-            throw new Error('JWT 토큰을 디코딩할 수 없습니다.');
-          }
-          
-          // JWT에서 추출한 정보로 사용자 정보 구성
+          authUtils.saveToken(result.data.token);
+
           const userInfo = {
-            id: payload.sub ? parseInt(payload.sub) : null,
-            firstName: payload.firstName || '',
-            lastName: payload.lastName || '',
-            email: payload.email || '',
-            provider: payload.provider || ''
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            email: result.data.email,
+            provider: result.data.provider
           };
-          
-          // 사용자 이름 포맷팅
+
           const memberName = formatMemberName(userInfo);
-          
-          // JWT 토큰만 저장 (사용자 정보는 토큰에서 추출)
-          localStorage.setItem('jwt_token', result.data.token);
-          
           alert(`${memberName}님, 환영합니다!`);
-          this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+          this.$router.push('/hotelone');
         }
       } catch (error) {
         console.error('로그인 실패:', error);
         alert(error.response?.data?.message || '로그인에 실패했습니다.');
         this.resetTurnstile();
-
       } finally {
         this.isLoading = false;
       }
     },
-    
     resetTurnstile() {
         this.turnstileToken = null;
         if (window.turnstile && this.$refs.turnstileWidget) {
@@ -615,6 +601,7 @@ export default {
     },
     
     goToSignup() {
+      sessionStorage.removeItem('socialSignupData');
       this.$router.push('/signup');
     },
     

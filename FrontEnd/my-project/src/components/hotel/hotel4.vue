@@ -724,6 +724,10 @@ export default {
         country: 'KR',
         saveInfo: false
       },
+
+      newsletter: {
+        email: ''
+      },
       
       // 사용자 정보
       userInfo: null,
@@ -802,10 +806,30 @@ export default {
   },
   
   async mounted() {
+      // ✅ 소셜 로그인 처리 (결제 페이지에서 온 경우)
+  const urlParams = new URLSearchParams(window.location.search)
+  const loginSuccess = urlParams.get('login')
+  const token = urlParams.get('token')
+  
+  if (loginSuccess === 'success' && token) {
+    // 토큰 저장
+    authUtils.saveToken(token)
+    
+    // URL에서 로그인 파라미터 제거
+    this.$router.replace({
+      path: this.$route.path,
+      query: {
+        ...this.$route.query,
+        login: undefined,
+        token: undefined,
+        needAdditionalInfo: undefined
+      }
+    })
+  }
     document.addEventListener('click', this.handleClickOutside);
     await this.handleSocialLoginCallback();
-
-    this.loadUserInfo();
+    await this.loadProfileImage();
+    await this.loadUserInfo();
     
     // URL 파라미터에서 예약 정보 가져오기
     this.bookingInfo = {
@@ -871,8 +895,8 @@ export default {
   },
   
   watch: {
-    '$route'() {
-      this.loadUserInfo();
+    async '$route'() {
+      await this.loadUserInfo();
     },
     
     async selectedCoupon(newCoupon) {  
@@ -967,27 +991,60 @@ export default {
     async handleSocialLoginCallback() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
-      const userInfoParam = urlParams.get('userInfo');
       const loginSuccess = urlParams.get('login');
+      const needAdditionalInfo = urlParams.get('needAdditionalInfo');
     
-      if (loginSuccess === 'success' && token && userInfoParam) {
+      if (loginSuccess === 'success' && token) {
         try {
           console.log('✅ 소셜 로그인 성공 - 토큰 저장 중...');
-
-          // JWT 토큰 저장
-          localStorage.setItem('jwt_token', token);
-
-          // 사용자 정보 파싱 및 저장
-          const userInfo = JSON.parse(decodeURIComponent(userInfoParam));
-          localStorage.setItem('user_info', JSON.stringify(userInfo));
-
+        
+          // ✅ needAdditionalInfo 확인
+          if (needAdditionalInfo === 'true') {
+            console.log('→ 신규 회원: 추가 정보 입력 필요');
+            
+            // ✅ 임시 토큰에서 사용자 정보 추출
+            const payload = authUtils.decodeToken(token);
+            
+            if (payload) {
+              const socialData = {
+                tempToken: token,
+                socialInfo: {
+                  firstName: payload.firstName || '',
+                  lastName: payload.lastName || '',
+                  email: payload.email || '',
+                  provider: payload.provider || ''
+                }
+              };
+              
+              // ✅ sessionStorage에 저장
+              sessionStorage.setItem('socialSignupData', JSON.stringify(socialData));
+              console.log('✅ 소셜 회원가입 데이터 저장 완료:', socialData);
+            }
+            
+            alert('추가 정보 입력이 필요합니다.');
+            this.$router.push('/signup');
+            return;
+          }
+        
+          // ✅ 기존 회원 처리
+          authUtils.saveToken(token);
+        
+          // ✅ 사용자 정보는 API로 조회
+          try {
+            this.userInfo = await authUtils.getUserInfo();
+            this.isLoggedIn = true;
+            console.log('✅ 사용자 정보 로드 완료:', this.userInfo);
+          } catch (error) {
+            console.error('사용자 정보 로드 실패:', error);
+          }
+        
           // 세션에 저장된 예약 정보 복원
           const pendingReservation = sessionStorage.getItem('pendingReservation');
           const pendingGuests = sessionStorage.getItem('pendingGuests');
-
+        
           if (pendingReservation) {
             const reservationData = JSON.parse(pendingReservation);
-
+          
             // URL 파라미터 재설정 (clean URL로)
             const newQuery = {
               roomId: reservationData.roomId,
@@ -998,20 +1055,31 @@ export default {
               totalPrice: reservationData.basePrice,
               guests: pendingGuests || 2
             };
-
-            // URL 정리 (토큰과 userInfo 제거)
+          
+            // ✅ URL 정리 (토큰, needAdditionalInfo 제거)
             await this.$router.replace({ 
               path: '/hotelfour', 
               query: newQuery 
             });
-
+          
             // 세션 정리
             sessionStorage.removeItem('pendingReservation');
             sessionStorage.removeItem('pendingGuests');
-
+          
             console.log('✅ 소셜 로그인 후 예약 정보 복원 완료');
+          } else {
+            // ✅ 예약 정보가 없으면 URL만 정리
+            await this.$router.replace({ 
+              path: '/hotelfour', 
+              query: {
+                ...this.$route.query,
+                login: undefined,
+                token: undefined,
+                needAdditionalInfo: undefined
+              }
+            });
           }
-
+        
         } catch (error) {
           console.error('❌ 소셜 로그인 콜백 처리 실패:', error);
           alert('로그인 정보 처리에 실패했습니다.');
@@ -1195,13 +1263,6 @@ export default {
 
         if (result.data && result.data.token) {
           localStorage.setItem('jwt_token', result.data.token);
-          localStorage.setItem('user_info', JSON.stringify({
-            id: result.data.memberId,
-            firstName: result.data.firstName,
-            lastName: result.data.lastName,
-            email: result.data.email,
-            provider: result.data.provider
-          }));
 
           this.loadUserInfo();
 
@@ -1258,10 +1319,13 @@ export default {
       window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
     },
 
+    
     goToSignup() {
       // 예약 정보 세션에 저장 후 회원가입 페이지로
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
       sessionStorage.setItem('pendingGuests', this.$route.query.guests);
+      
+      sessionStorage.removeItem('socialSignupData');
       this.$router.push('/signup');
     },
     // ===== 토스 SDK 로드 =====
@@ -1766,35 +1830,47 @@ export default {
     },
 
     
-    loadUserInfo() {
+    async loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
     
       if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
-        this.loadProfileImage();
+        try {
+          // await 추가!
+          this.userInfo = await authUtils.getUserInfo();
+
+          if (this.userInfo) {
+            this.loadProfileImage();
+          } else {
+            console.warn('사용자 정보가 null입니다.');
+            await authUtils.logout();
+            this.isLoggedIn = false;
+          }
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error);
+          // 토큰이 유효하지 않으면 로그아웃
+          if (error.response?.status === 401) {
+            await authUtils.logout();
+            this.isLoggedIn = false;
+            this.userInfo = null;
+          }
+        }
       } else {
         this.userInfo = null;
         this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
     async loadProfileImage() {
+      if (!this.isLoggedIn) return;
+
       try {
         const response = await memberImageAPI.getProfileImage();
-        if (response.code === 200 && response.data.imagePath) {
-          const imagePath = response.data.imagePath;
-          if (imagePath.startsWith('http')) {
-            this.profileImageUrl = imagePath;
-          } else {
-            this.profileImageUrl = adminAPI.getImageUrl(imagePath);
-          }
+        if (response && response.data && response.data.imagePath) {
+          this.profileImageUrl = this.getImageUrl(response.data.imagePath);
         }
       } catch (error) {
         console.error('프로필 이미지 로드 실패:', error);
-        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
-
     
     async handleLogout() {
       if (confirm('로그아웃하시겠습니까?')) {

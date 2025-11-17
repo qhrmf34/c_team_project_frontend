@@ -32,7 +32,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // 토큰 만료 시 자동 로그아웃
-      localStorage.removeItem('jwt_token')
+      authUtils.clearAuth()
       
       // 현재 페이지가 인증이 필요한 페이지라면 로그인 페이지로 이동
       if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
@@ -57,14 +57,24 @@ export const memberAPI = {
     const response = await apiClient.post('/api/member/signup', signupData)
     return response.data
   },
-
+  // 회원 탈퇴
+  async withdrawMember(requestData) {
+    const response = await apiClient.post('/api/member/withdraw', requestData)
+    return response.data
+  },
   // 로그인
   async login(loginData) {
     const response = await apiClient.post('/api/member/login', loginData)
     return response.data
   },
 
-  // 로그아웃 - 개선된 버전
+  // 사용자 정보 조회 
+  async getUserInfo() {
+    const response = await apiClient.get('/api/member/info')
+    return response.data
+  },
+
+  // 로그아웃
   async logout() {
     try {
       // 서버에 로그아웃 요청
@@ -696,6 +706,52 @@ export const ticketAPI = {
     return response.data;
   }
 }
+// 채팅 API
+export const chatAPI = {
+  /**
+   * 채팅방 생성 또는 가져오기
+   */
+  async getOrCreateRoom(customerId, customerName) {
+    const response = await apiClient.post('/api/chat/room', null, {
+      params: { customerId, customerName }
+    });
+    return response.data;
+  },
+
+  /**
+   * 채팅 메시지 조회
+   */
+  async getMessages(roomId) {
+    const response = await apiClient.get(`/api/chat/messages/${roomId}`);
+    return response.data;
+  },
+
+  /**
+   * 메시지 읽음 처리
+   */
+  async markAsRead(roomId, senderType) {
+    const response = await apiClient.post(`/api/chat/read/${roomId}`, null, {
+      params: { senderType }
+    });
+    return response.data;
+  },
+
+  /**
+   * 활성 채팅방 목록 조회 (관리자용)
+   */
+  async getActiveRooms() {
+    const response = await apiClient.get('/api/chat/rooms/active');
+    return response.data;
+  },
+
+  /**
+   * 채팅방 닫기
+   */
+  async closeRoom(roomId) {
+    const response = await apiClient.post(`/api/chat/room/${roomId}/close`);
+    return response.data;
+  }
+}
 // 관리자 API
 export const adminAPI = {
   // 기본 CRUD 메서드
@@ -815,12 +871,9 @@ export const adminAPI = {
 
 // 인증 관련 유틸리티
 export const authUtils = {
- // 토큰 저장 (기존 메서드 - 하위 호환성)
-  saveAuth(token) {
-    localStorage.setItem('jwt_token', token)
-  },
 
-  // 토큰 저장 (새 메서드 - 더 명확한 이름)
+
+  // 토큰 저장 
   saveToken(token) {
     localStorage.setItem('jwt_token', token)
   },
@@ -828,6 +881,11 @@ export const authUtils = {
   // 토큰 조회
   getToken() {
     return localStorage.getItem('jwt_token')
+  },
+  // 인증 데이터 삭제
+  clearAuth() {
+    localStorage.removeItem('jwt_token')
+    sessionStorage.clear()
   },
 
   // JWT 디코딩하여 사용자 정보 추출
@@ -851,20 +909,16 @@ export const authUtils = {
   },
 
   // 토큰에서 사용자 정보 가져오기
-  getUserInfo() {
-    const token = this.getToken()
-    if (!token) return null
-    
-    const payload = this.decodeToken(token)
-    if (!payload) return null
-    
-    return {
-      id: payload.sub ? parseInt(payload.sub) : null,
-      firstName: payload.firstName || '',
-      lastName: payload.lastName || '',
-      email: payload.email || '',
-      provider: payload.provider || '',
-      type: payload.type || ''
+  async getUserInfo() {
+    try {
+      const response = await memberAPI.getUserInfo()
+      if (response.code === 200) {
+        return response.data
+      }
+      return null
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error)
+      return null
     }
   },
 
@@ -898,7 +952,7 @@ export const authUtils = {
     } catch (error) {
       console.warn('서버 로그아웃 실패, 로컬 정보만 삭제:', error)
     } finally {
-      localStorage.removeItem('jwt_token')
+      this.clearAuth()
   }
 }
 }

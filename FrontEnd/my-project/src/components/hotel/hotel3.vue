@@ -442,26 +442,22 @@
     </div>
 
     <!-- ========== NEWSLETTER & FOOTER ========== -->
-    <section class="newsletter-section"></section>
-    <div class="newsletter-content">
-      <div class="newsletter-left">
-        <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
-        <div class="newsletter-info">
-          <div class="newsletter-brand">The Travel</div>
-          <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
+    <section class="newsletter-section">
+          </section>
+      <div class="newsletter-content">
+        <div class="newsletter-left">
+          <h2 class="newsletter-title">구독서비스<br>신청해보세요</h2>
+
+          <div class="newsletter-info">
+            <div class="newsletter-brand">The Travel</div>
+            <p class="newsletter-desc">구독자로 여행 할인, 팁 및 비하인드 정보를 받아보세요</p>
+          </div>
+
+          <div class="newsletter-form">
+            <input type="email" class="newsletter-input" placeholder="Your email address" v-model="newsletter.email">
+            <button class="subscribe-btn" @click="subscribe">Subscribe</button>
+          </div>
         </div>
-        <div class="newsletter-form">
-          <input 
-            type="email" 
-            id="newsletterEmail"
-            name="newsletterEmail"
-            class="newsletter-input" 
-            placeholder="Your email address" 
-            v-model="newsletterEmail"
-          >
-          <button class="subscribe-btn" @click="subscribe">Subscribe</button>
-        </div>
-      </div>
 
       <div class="mailbox-container">
         <div class="mailbox-back"></div>
@@ -574,7 +570,6 @@ export default {
       reviewText: '',
       selectedReportReason: '',
       reportDescription: '',
-      newsletterEmail: '',
       activeFilter: 'all',
       selectedReviewId: null,
       isShareModalVisible: false,
@@ -593,6 +588,10 @@ export default {
       isEditMode: false,
       editingReviewId: null,
       guests: 2,  
+      
+      newsletter: {
+        email: ''
+      },
 
       isRoomSelectionModalVisible: false,
       selectedRoomGroup: null,
@@ -703,12 +702,12 @@ export default {
   
   async mounted() {
     document.addEventListener('click', this.handleClickOutside);
-    this.loadUserInfo();
-    
+    await this.loadUserInfo();
+    await this.loadProfileImage();
     const hotelId = this.$route.query.hotelId;
     this.checkIn = this.$route.query.checkIn || this.getToday();
     this.checkOut = this.$route.query.checkOut || this.getTomorrow();
-      // ✅ 날짜 검증 추가
+      // 날짜 검증 추가
     if (!this.validateDatesOnMount()) {
       return;
     }
@@ -733,8 +732,8 @@ export default {
   },
   
   watch: {
-    '$route'() {
-      this.loadUserInfo();
+    async '$route'() {
+      await this.loadUserInfo();
     }
   },
   
@@ -1342,54 +1341,40 @@ export default {
       if (!this.hotel || !window.google) {
         return;
       }
-      
-      if (this.hotel.latitude && this.hotel.longitude) {
-        const position = {
-          lat: parseFloat(this.hotel.latitude),
-          lng: parseFloat(this.hotel.longitude)
-        };
-        
-        const map = new google.maps.Map(document.getElementById('googleMap'), {
-          center: position,
-          zoom: 15
-        });
-        
-        new google.maps.Marker({
-          position: position,
-          map: map,
-          title: this.hotel.hotelName
-        });
-      } else {
-        this.geocodeAddress(this.hotel.address);
-      }
+    
+      // 호텔 이름이 있으면 이름으로, 없으면 주소로 검색
+      const query = this.hotel.hotelName;
+      this.geocodeAddress(query);
     },
     
-    geocodeAddress(address) {
+    geocodeAddress(query) {
       const geocoder = new google.maps.Geocoder();
-      
-      geocoder.geocode({ address: address }, (results, status) => {
-        if (status === 'OK') {
+    
+      geocoder.geocode({ address: query }, (results, status) => {
+        if (status === 'OK' && results[0]) {
           const position = results[0].geometry.location;
-          
+        
           const map = new google.maps.Map(document.getElementById('googleMap'), {
             center: position,
-            zoom: 15
+            zoom: 20
           });
-          
+        
           new google.maps.Marker({
             position: position,
             map: map,
             title: this.hotel.hotelName
           });
+        } else {
+          console.error('Geocode was not successful for the following reason: ' + status);
         }
       });
     },
     
-    openGoogleMaps() {
-      const address = this.hotel.address;
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-      window.open(url, '_blank');
-    },
+openGoogleMaps() {
+  const address = this.hotel.hotelName;
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  window.open(url, '_blank');
+},
     
     // ===== UI 메서드 =====
     
@@ -1513,32 +1498,45 @@ export default {
     
     // ===== 사용자 관련 =====
     
-    loadUserInfo() {
+    async loadUserInfo() {
       this.isLoggedIn = authUtils.isLoggedIn() && !authUtils.isTokenExpired();
     
       if (this.isLoggedIn) {
-        this.userInfo = authUtils.getUserInfo();
-        console.log('사용자 정보:', this.userInfo);
-        this.loadProfileImage();
+        try {
+          // await 추가!
+          this.userInfo = await authUtils.getUserInfo();
+
+          if (this.userInfo) {
+            this.loadProfileImage();
+          } else {
+            console.warn('사용자 정보가 null입니다.');
+            await authUtils.logout();
+            this.isLoggedIn = false;
+          }
+        } catch (error) {
+          console.error('사용자 정보 로드 실패:', error);
+          // 토큰이 유효하지 않으면 로그아웃
+          if (error.response?.status === 401) {
+            await authUtils.logout();
+            this.isLoggedIn = false;
+            this.userInfo = null;
+          }
+        }
       } else {
         this.userInfo = null;
         this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
     async loadProfileImage() {
+      if (!this.isLoggedIn) return;
+
       try {
         const response = await memberImageAPI.getProfileImage();
-        if (response.code === 200 && response.data.imagePath) {
-          const imagePath = response.data.imagePath;
-          if (imagePath.startsWith('http')) {
-            this.profileImageUrl = imagePath;
-          } else {
-            this.profileImageUrl = adminAPI.getImageUrl(imagePath);
-          }
+        if (response && response.data && response.data.imagePath) {
+          this.profileImageUrl = this.getImageUrl(response.data.imagePath);
         }
       } catch (error) {
         console.error('프로필 이미지 로드 실패:', error);
-        this.profileImageUrl = '/images/hotel_account_img/member.jpg';
       }
     },
     
