@@ -278,16 +278,22 @@
           </div>
         </div>
       </div>
+      <!--채팅 위젯 추가 -->
+      <ChatWidget />
     </div>
 </template>
 
 <script>
 // HotelOne.vue의 script 부분만 업데이트
 import { authUtils, hotelAPI, adminAPI,memberCouponAPI,memberImageAPI  } from '@/utils/commonAxios'
+import ChatWidget from '@/components/chat/ChatWidget.vue'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
   name: 'HotelOne',
+  components: {
+    ChatWidget  
+  },
   data() {
     return {
       isDropdownActive: false,

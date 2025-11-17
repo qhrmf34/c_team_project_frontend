@@ -63,7 +63,15 @@
                 @click="selectTable(table.key)"
                 :class="['tab-button', { active: currentTable === table.key }]">
           {{ table.name }}
+          <span v-if="table.key === 'chat' && totalUnreadCount > 0" class="tab-badge">
+            {{ totalUnreadCount }}
+          </span>
         </button>
+      </div>
+
+      <!-- 채팅 관리 패널 -->
+      <div v-if="currentTable === 'chat'" class="chat-admin-panel">
+        <AdminChatPanel />
       </div>
 
       <!-- Search and Actions -->
@@ -288,11 +296,15 @@
 </template>
 
 <script>
-import { authUtils, adminAPI, memberImageAPI } from '@/utils/commonAxios'
+import { authUtils, adminAPI, memberImageAPI, chatAPI } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
+import AdminChatPanel from '@/components/chat/AdminChatPanel.vue'
 
 export default {
   name: 'HotelAdmin',
+  components: {
+    AdminChatPanel  
+  },
   data() {
     return {
       // UI 상태
@@ -322,7 +334,9 @@ export default {
       
       // 알림
       notification: null,
-      
+
+      totalUnreadCount: 0,
+
       // 테이블 정의 (논리적 순서)
       tableList: [
         { key: 'countries', name: '국가' },
@@ -337,7 +351,9 @@ export default {
         { key: 'rooms', name: '객실' },
         { key: 'room_images', name: '객실 이미지' },
         { key: 'room_pricing', name: '객실 가격' },
-        { key: 'coupons', name: '쿠폰' }
+        { key: 'coupons', name: '쿠폰' },
+        { key: 'chat', name: '💬 실시간 상담' }  
+
       ],
       
       // 테이블 컬럼 정의 (ViewDto 기반으로 수정)
@@ -650,8 +666,15 @@ export default {
         this.isLoading = false;
       }
     },
-    
-async loadForeignKeyData() {
+    async loadUnreadCount() {
+      try {
+        const response = await chatAPI.getActiveRooms()
+        this.totalUnreadCount = response.data.reduce((sum, room) => sum + room.unreadCount, 0)
+      } catch (error) {
+        console.error('안 읽은 메시지 수 로드 실패:', error)
+      }
+    },
+    async loadForeignKeyData() {
       try {
         // 국가 데이터
         const countriesResponse = await adminAPI.getList('countries', { page: 0, size: 1000 });
@@ -2472,7 +2495,31 @@ nav {
 .form-scroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+.tab-badge {
+  display: inline-block;
+  margin-left: 8px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+}
 
+.tab-button.active .tab-badge {
+  background: white;
+  color: #8DD3BB;
+}
+
+/* 채팅 관리 패널 */
+.chat-admin-panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
 /* 포커스 관리 */
 .tab-button:focus,
 .search-btn:focus,
