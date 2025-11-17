@@ -15,12 +15,21 @@
           :class="['room-item', { active: selectedRoom?.id === room.id }]"
         >
           <div class="room-avatar">
-            {{ room.customerName.charAt(0) }}
+            <img 
+              v-if="room.customerProfileImage" 
+              :src="room.customerProfileImage" 
+              :alt="room.customerName"
+              @error="handleImageError"
+              class="avatar-img"
+            >
+            <span v-else class="avatar-initial">{{ room.customerName.charAt(0) }}</span>
           </div>
+          
           <div class="room-info">
             <div class="room-name">{{ room.customerName }}</div>
             <div class="room-preview">마지막 메시지...</div>
           </div>
+          
           <div class="room-meta">
             <div class="room-time">{{ formatTime(room.updatedAt) }}</div>
             <div v-if="room.unreadCount > 0" class="unread-badge">
@@ -49,13 +58,22 @@
         <div class="chat-conversation-header">
           <div class="header-info">
             <div class="customer-avatar">
-              {{ selectedRoom.customerName.charAt(0) }}
+              <img 
+                v-if="selectedRoom.customerProfileImage" 
+                :src="selectedRoom.customerProfileImage" 
+                :alt="selectedRoom.customerName"
+                @error="handleImageError"
+                class="avatar-img"
+              >
+              <span v-else class="avatar-initial">{{ selectedRoom.customerName.charAt(0) }}</span>
             </div>
+            
             <div>
               <h3>{{ selectedRoom.customerName }}</h3>
               <p>고객 ID: {{ selectedRoom.customerId }}</p>
             </div>
           </div>
+          
           <div class="header-actions">
             <button @click="closeCurrentRoom" class="close-room-btn">
               상담 종료
@@ -70,6 +88,21 @@
             :key="index"
             :class="['admin-message', message.senderType === 'ADMIN' ? 'sent' : 'received']"
           >
+            <!-- ✅ 고객 메시지일 때만 프로필 이미지 표시 -->
+            <div v-if="message.senderType === 'CUSTOMER'" class="message-avatar-wrapper">
+              <img 
+                v-if="selectedRoom.customerProfileImage"
+                :src="selectedRoom.customerProfileImage" 
+                :alt="selectedRoom.customerName"
+                class="message-avatar"
+                @error="handleImageError"
+              >
+              <div v-else class="message-avatar-fallback">
+                {{ selectedRoom.customerName.charAt(0) }}
+              </div>
+            </div>
+            
+            <!-- 메시지 말풍선 -->
             <div class="admin-message-bubble">
               <div class="admin-message-sender">{{ message.senderName }}</div>
               <div class="admin-message-content">{{ message.content }}</div>
@@ -126,7 +159,7 @@
 <script>
 import SockJS from 'sockjs-client'
 import { Client } from '@stomp/stompjs'
-import { chatAPI, authUtils } from '@/utils/commonAxios'
+import { chatAPI, adminAPI, memberImageAPI, authUtils } from '@/utils/commonAxios'
 import { formatMemberName } from '@/utils/nameFormatter'
 
 export default {
@@ -171,14 +204,57 @@ export default {
       this.adminInfo = await authUtils.getUserInfo()
     },
     
+    // ✅ 채팅방 목록 로드
     async loadActiveRooms() {
       try {
         const response = await chatAPI.getActiveRooms()
         this.activeRooms = response.data || []
+
+        // ✅ 각 고객의 프로필 이미지 로드
+        for (const room of this.activeRooms) {
+          room.customerProfileImage = await this.loadCustomerProfileImage(room.customerId)
+        }
       } catch (error) {
         console.error('채팅방 목록 로드 실패:', error)
       }
     },
+  
+    
+  // ✅ 고객 프로필 이미지 로드 (기존 API 활용)
+// ✅ 고객 프로필 이미지 로드
+async loadCustomerProfileImage(customerId) {
+  try {
+    console.log('🔍 프로필 이미지 요청:', customerId)
+    const response = await memberImageAPI.getProfileImageByMemberId(customerId)
+    console.log('📦 응답:', response)
+    
+    if (response && response.data && response.data.memberImagePath) {
+      const imageUrl = this.getImageUrl(response.data.memberImagePath)
+      console.log('✅ 이미지 URL:', imageUrl)
+      return imageUrl
+    }
+    
+    console.log('⚠️ 이미지 없음')
+    return null
+  } catch (error) {
+    console.error('❌ 이미지 로드 실패:', error)
+    return null
+  }
+},
+  
+  // ✅ 이미지 URL 변환
+  getImageUrl(imagePath) {
+    if (!imagePath) return '/images/hotel_account_img/member.jpg'
+    if (imagePath.startsWith('http')) return imagePath
+    if (imagePath.startsWith('/images/')) return imagePath
+    return adminAPI.getImageUrl(imagePath)
+  },
+  
+  // ✅ 이미지 로드 실패 처리
+  handleImageError(event) {
+    event.target.style.display = 'none'
+  },
+  
     
     async refreshRooms() {
       await this.loadActiveRooms()
@@ -368,7 +444,9 @@ export default {
 <style scoped>
 .admin-chat-container {
   display: flex;
-  height: 700px;
+  height: calc(100vh - 300px); /* 고정 높이 */
+  max-height: 700px;
+  min-height: 500px;
   background: white;
 }
 
@@ -434,7 +512,8 @@ export default {
   border-left: 4px solid #8DD3BB;
 }
 
-.room-avatar {
+.room-avatar,
+.customer-avatar {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #8DD3BB, #7bc7b0);
@@ -445,8 +524,20 @@ export default {
   justify-content: center;
   font-weight: 600;
   font-size: 18px;
+  position: relative;
+  overflow: hidden;
 }
-
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-initial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 .room-info {
   flex: 1;
   min-width: 0;
@@ -540,6 +631,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%; 
 }
 
 .chat-conversation-header {
@@ -557,18 +649,6 @@ export default {
   gap: 16px;
 }
 
-.customer-avatar {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #8DD3BB, #7bc7b0);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 20px;
-}
 
 .header-info h3 {
   font-size: 16px;
@@ -601,9 +681,9 @@ export default {
 }
 
 .chat-conversation-messages {
-  flex: 1;
+  flex: 1; 
   padding: 24px;
-  overflow-y: auto;
+  overflow-y: auto; /* ✅ 스크롤 */
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -612,6 +692,7 @@ export default {
 
 .admin-message {
   display: flex;
+  align-items: flex-end;
 }
 
 .admin-message.sent {
@@ -710,11 +791,40 @@ export default {
 }
 
 .chat-conversation-input {
+  flex-shrink: 0; /* ✅ 크기 고정 */
   border-top: 2px solid #f1f5f9;
   background: white;
   padding: 16px 24px;
 }
+/* ✅ 메시지 옆 프로필 이미지 */
+.message-avatar-wrapper {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+}
 
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.message-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8DD3BB, #7bc7b0);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #e5e7eb;
+}
 .quick-replies {
   display: flex;
   gap: 8px;

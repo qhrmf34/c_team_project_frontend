@@ -30,19 +30,34 @@ apiClient.interceptors.response.use(
     return response
   },
   (error) => {
+    // ✅ 네트워크 에러면 토큰 삭제 안 함
+    if (!error.response) {
+      console.error('백엔드 연결 실패')
+      return Promise.reject(error)
+    }
+    
     if (error.response?.status === 401) {
-      // 토큰 만료 시 자동 로그아웃
+      const token = authUtils.getToken()
+      
+      // ✅ 토큰 유효하면 삭제 안 함
+      if (token && !authUtils.isTokenExpired()) {
+        console.warn('401 에러지만 토큰 유효 - 백엔드 재시작 가능성')
+        return Promise.reject(error)
+      }
+      
+      // 진짜 만료된 경우만 삭제
       authUtils.clearAuth()
       
-      // 현재 페이지가 인증이 필요한 페이지라면 로그인 페이지로 이동
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+      if (window.location.pathname !== '/login' && 
+          window.location.pathname !== '/signup') {
+        alert('로그인이 만료되었습니다.')
         window.location.href = '/login'
       }
     }
+    
     return Promise.reject(error)
   }
 )
-
 // 인증 데이터 삭제 헬퍼 함수
 function clearAuthData() {
   localStorage.removeItem('jwt_token')
@@ -173,7 +188,11 @@ export const memberImageAPI = {
     const response = await apiClient.get('/api/member/images/profile')
     return response.data
   },
-
+  // 특정 회원 프로필 이미지 조회 (관리자용)
+  async getProfileImageByMemberId(memberId) {
+    const response = await apiClient.get(`/api/member/images/profile/member/${memberId}`)
+    return response.data
+  },
   // 배경 이미지 조회
   async getBackgroundImage() {
     const response = await apiClient.get('/api/member/images/background')
