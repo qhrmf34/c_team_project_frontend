@@ -75,18 +75,17 @@
       </div>
 
       <!-- Search and Actions -->
-      <div class="admin-controls">
+      <div v-if="currentTable !== 'chat'" class="admin-controls">
         <div class="search-section">
           <input v-model="searchQuery" @keyup.enter="handleSearch"
                  placeholder="검색어를 입력하세요..." class="search-input">
           <button @click="handleSearch" class="search-btn">검색</button>
-          <!-- searchByName 버튼과 canSearchByName computed 제거됨 -->
         </div>
         <button @click="openCreateModal" class="create-btn">새로 추가</button>
-      </div>  
+      </div>
 
       <!-- Data Table -->
-      <div class="table-container">
+      <div v-if="currentTable !== 'chat'" class="table-container">
         <table class="data-table" v-if="currentTableData.length > 0">
           <thead>
             <tr>
@@ -136,7 +135,7 @@
       </div>
 
       <!-- Pagination -->
-      <div class="pagination" v-if="totalPages > 1">
+      <div v-if="currentTable !== 'chat' && totalPages > 1" class="pagination">
         <button @click="changePage(currentPage - 1)" 
                 :disabled="currentPage <= 1" class="page-btn">이전</button>
         
@@ -634,11 +633,20 @@ export default {
       this.currentTable = tableKey;
       this.currentPage = 1;
       this.searchQuery = '';
-      await this.loadTableData();
+
+      // ✅ chat은 별도 처리
+      if (tableKey !== 'chat') {
+        await this.loadTableData();
+      }
     },
     
     // 데이터 로드
     async loadTableData() {
+      // ✅ chat 테이블은 AdminChatPanel에서 처리하므로 스킵
+      if (this.currentTable === 'chat') {
+        return;
+      }
+    
       this.isLoading = true;
       try {
         const params = {
@@ -646,9 +654,9 @@ export default {
           size: this.pageSize,
           search: this.searchQuery
         };
-
+      
         const response = await adminAPI.getList(this.currentTable, params);
-        
+
         if (response.data.content) {
           this.currentTableData = response.data.content;
           this.totalPages = response.data.totalPages || 1;
@@ -656,9 +664,9 @@ export default {
           this.currentTableData = response.data || [];
           this.totalPages = 1;
         }
-        
+
         await this.loadForeignKeyData();
-        
+
       } catch (error) {
         console.error('데이터 로드 실패:', error);
         this.showNotification('데이터를 불러오는데 실패했습니다.', 'error');
