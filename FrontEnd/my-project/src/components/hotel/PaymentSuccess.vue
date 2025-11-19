@@ -140,6 +140,7 @@ export default {
     if (this.countdownTimer) {
       clearInterval(this.countdownTimer);
     }
+    this.clearTossTokens();
   },
   
   methods: {
@@ -179,24 +180,41 @@ export default {
           this.isProcessing = false;
           
           console.log('✅ 결제 완료! paymentId:', this.paymentId);
-          
+          this.clearTossTokens();
           // 2. 티켓 로드 및 이미지 생성 (백그라운드)
-        // await this.$nextTick(); // DOM 렌더링 완료 대기
-        await this.loadTicketAndCreateImage();
-        this.startCountdown();
+          // await this.$nextTick(); // DOM 렌더링 완료 대기
+          await this.loadTicketAndCreateImage();
+          this.startCountdown();
           
         } else {
           this.isProcessing = false;
           this.errorMessage = response.message || '결제 확인에 실패했습니다.';
+          this.clearTossTokens();
         }
         
       } catch (error) {
         console.error('❌ 결제 승인 실패:', error);
         this.isProcessing = false;
         this.errorMessage = error.response?.data?.message || error.message || '결제 확인 중 오류가 발생했습니다.';
+        this.clearTossTokens();
       }
     },
-    
+    clearTossTokens() {
+      try {
+        const tossKeys = [
+          '@tosspayments/merchant-browser-id',
+          '@tosspayments/payment-widget-previous-payment-method-id'
+        ];
+        
+        tossKeys.forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        console.log('✅ 토스 토큰 정리 완료');
+      } catch (error) {
+        console.error('토스 토큰 정리 실패:', error);
+      }
+    },
     async loadTicketAndCreateImage() {
       try {
         console.log('📋 티켓 로드 시작');
