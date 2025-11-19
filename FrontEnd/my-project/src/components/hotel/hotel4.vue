@@ -892,6 +892,8 @@ export default {
     if (window.onTurnstileError) {
       delete window.onTurnstileError;
     }
+    this.clearTossTokens();
+
   },
   
   watch: {
@@ -987,6 +989,24 @@ export default {
       }
 
       this.tossWidgets = null;
+      this.clearTossTokens();
+    },
+      clearTossTokens() {
+      try {
+        // 토스 관련 localStorage 키들 삭제
+        const tossKeys = [
+          '@tosspayments/merchant-browser-id',
+          '@tosspayments/payment-widget-previous-payment-method-id'
+        ];
+        
+        tossKeys.forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        console.log('✅ 토스 토큰 정리 완료');
+      } catch (error) {
+        console.error('토스 토큰 정리 실패:', error);
+      }
     },
     async handleSocialLoginCallback() {
       const urlParams = new URLSearchParams(window.location.search);
