@@ -918,7 +918,7 @@ export default {
     },
     searchByCountry(countryName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: countryName,
           checkIn: this.getToday(),
@@ -928,7 +928,7 @@ export default {
     },
     searchByCity(cityName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: cityName,
           checkIn: this.getToday(),
@@ -1078,7 +1078,7 @@ export default {
           
             // ✅ URL 정리 (토큰, needAdditionalInfo 제거)
             await this.$router.replace({ 
-              path: '/hotelfour', 
+              path: '/payment', 
               query: newQuery 
             });
           
@@ -1090,7 +1090,7 @@ export default {
           } else {
             // ✅ 예약 정보가 없으면 URL만 정리
             await this.$router.replace({ 
-              path: '/hotelfour', 
+              path: '/payment', 
               query: {
                 ...this.$route.query,
                 login: undefined,
@@ -1206,14 +1206,14 @@ export default {
       // 체크인이 과거인 경우
       if (checkInDate < today) {
         alert('과거 날짜로는 예약할 수 없습니다. 검색 페이지로 돌아갑니다.');
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
         return false;
       }
 
       // 체크아웃이 체크인보다 이전이거나 같은 경우
       if (checkOutDate <= checkInDate) {
         alert('잘못된 날짜입니다. 검색 페이지로 돌아갑니다.');
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
         return false;
       }
 
@@ -1250,7 +1250,7 @@ export default {
         }
 
         alert('예약 생성에 실패했습니다. 다시 시도해주세요.');
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
       }
     },
     // 결제 페이지 내 로그인 처리
@@ -1318,7 +1318,7 @@ export default {
       // ✅ 쿠키 설정 추가
       document.cookie = 'returnToPayment=true; path=/; max-age=300'; // 5분 유효
 
-      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+      window.location.href = 'https://mjc813k.softagape.com/oauth2/authorization/kakao';
     },
 
 
@@ -1328,7 +1328,7 @@ export default {
 
       document.cookie = 'returnToPayment=true; path=/; max-age=300';
 
-      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
+      window.location.href = 'https://mjc813k.softagape.com/oauth2/authorization/google';
     },
     loginWithNaver() {
       sessionStorage.setItem('pendingReservation', JSON.stringify(this.bookingInfo));
@@ -1336,7 +1336,7 @@ export default {
 
       document.cookie = 'returnToPayment=true; path=/; max-age=300';
 
-      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
+      window.location.href = 'https://mjc813k.softagape.com/oauth2/authorization/naver';
     },
 
     
@@ -1909,7 +1909,7 @@ export default {
     },
     
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     },
     
     goToFavourites() {

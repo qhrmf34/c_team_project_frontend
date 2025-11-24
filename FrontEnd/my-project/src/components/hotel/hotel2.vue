@@ -554,7 +554,7 @@ export default {
     viewPlace(hotel) {
       console.log('View place:', hotel.title);
       this.$router.push({
-        path: '/hotelthree',
+        path: '/room',
         query: { 
           hotelId: hotel.id,
           checkIn: this.searchData.checkIn,
@@ -745,7 +745,7 @@ export default {
       }
     },
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     },
     
     updateTabCounts(hotelTypeCounts) {
@@ -1001,7 +1001,7 @@ export default {
     },
     
     resetFilters() {
-      this.$router.push('/hoteltwo').then(() => {
+      this.$router.push('/hotel').then(() => {
         window.location.reload();
       });
     },

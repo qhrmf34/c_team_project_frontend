@@ -285,7 +285,7 @@ async loadCustomerProfileImage(customerId) {
     },
     
     connectWebSocket() {
-      const socket = new SockJS('http://localhost:8089/ws-chat')
+      const socket = new SockJS('https://mjc813k.softagape.com/ws-chat')
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,

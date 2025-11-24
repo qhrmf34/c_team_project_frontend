@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8089',
+  baseURL: 'https://mjc813k.softagape.com',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

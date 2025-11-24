@@ -445,7 +445,7 @@ export default {
     
     searchByCountry(countryName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: countryName,
           checkIn: this.getToday(),
@@ -456,7 +456,7 @@ export default {
     
     searchByCity(cityName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: cityName,
           checkIn: this.getToday(),
@@ -837,7 +837,7 @@ export default {
     },
     
     goToHotel() {
-        this.$router.push('/hotelone');
+        this.$router.push('/');
     },
     
     goToFavourites() {

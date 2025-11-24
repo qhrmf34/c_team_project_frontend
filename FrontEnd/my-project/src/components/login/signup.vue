@@ -750,19 +750,19 @@ export default {
     },
     
     loginWithKakao() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://mjc813k.softagape.com';
       const authUrl = `${baseUrl}/oauth2/authorization/kakao`;
       window.location.href = authUrl;
     },
     
     loginWithGoogle() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://mjc813k.softagape.com';
       const authUrl = `${baseUrl}/oauth2/authorization/google`;
       window.location.href = authUrl;
     },
     
     loginWithNaver() {
-      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8089';
+      const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://mjc813k.softagape.com';
       const authUrl = `${baseUrl}/oauth2/authorization/naver`;
       window.location.href = authUrl;
     },
@@ -890,7 +890,7 @@ export default {
   
   beforeRouteLeave(to, from, next) {
     // 회원가입 완료하지 않고 떠나는 경우
-    if (to.path === '/login' || to.path === '/hotelone') {
+    if (to.path === '/login' || to.path === '/') {
       console.log('회원가입 미완료 상태로 페이지 이동 → 소셜 데이터 정리');
       sessionStorage.removeItem('socialSignupData');
     }

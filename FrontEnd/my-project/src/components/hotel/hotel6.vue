@@ -610,7 +610,7 @@ export default {
       );
       
       this.$router.push({
-        path: '/hotelfour',
+        path: '/payment',
         query: {
           reservationId: reservation.reservationId,
           roomId: reservation.roomId,
@@ -877,7 +877,7 @@ export default {
     
     viewPlace(hotel) {
       this.$router.push({
-        path: '/hotelthree',
+        path: '/room',
         query: { hotelId: hotel.id }
       });
     },
@@ -1028,7 +1028,7 @@ export default {
     },
     
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     }, 
     
     goToFavourites() {

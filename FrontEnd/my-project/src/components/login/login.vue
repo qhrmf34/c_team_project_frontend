@@ -428,7 +428,7 @@ export default {
 
           const memberName = formatMemberName(userInfo);
           alert(`${memberName}님, 환영합니다!`);
-          this.$router.push('/hotelone');
+          this.$router.push('/');
         }
       } catch (error) {
         console.error('로그인 실패:', error);
@@ -580,7 +580,7 @@ export default {
       if (urlParams.get('login') === 'success') {
         alert('소셜 로그인이 완료되었습니다!');
         window.history.replaceState({}, document.title, window.location.pathname);
-        this.$router.push('/hotelone'); // 호텔1 화면으로 이동
+        this.$router.push('/'); // 호텔1 화면으로 이동
       } else if (urlParams.get('error') === 'oauth_failed') {
         alert('소셜 로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -589,15 +589,15 @@ export default {
     
     // Social login methods
     loginWithKakao() {
-      window.location.href = 'http://localhost:8089/oauth2/authorization/kakao';
+      window.location.href = 'https://mjc813k.softagape.com/oauth2/authorization/kakao';
     },
     
     loginWithGoogle() {
-      window.location.href = 'http://localhost:8089/oauth2/authorization/google';
+      window.location.href = 'https://mjc813k.softagape.com/oauth2/authorization/google';
     },
     
     loginWithNaver() {
-      window.location.href = 'http://localhost:8089/oauth2/authorization/naver';
+      window.location.href = 'http://mjc813k.softagape.com/oauth2/authorization/naver';
     },
     
     goToSignup() {
@@ -629,7 +629,7 @@ export default {
     // 이미 로그인된 상태라면 호텔1 화면으로 이동
     const token = localStorage.getItem('jwt_token');
     if (token) {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     }
   }
 }

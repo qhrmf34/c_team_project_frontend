@@ -432,7 +432,7 @@ export default {
       },
 
       goToHotel() {
-        this.$router.push('/hotelone');
+        this.$router.push('/');
       },
 
       goToFavourites() {
@@ -513,7 +513,7 @@ export default {
 
       bookHotelByCity(cityName) {
         this.$router.push({
-          path: '/hoteltwo',
+          path: '/hotel',
           query: { 
             destination: cityName,
             checkIn: this.getToday(),
@@ -523,7 +523,7 @@ export default {
       },
 
       goToHotelSearch() {
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
       },
 
       getToday() {

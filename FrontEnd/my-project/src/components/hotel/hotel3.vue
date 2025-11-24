@@ -723,7 +723,7 @@ export default {
       }
     } else {
       alert('호텔 정보를 찾을 수 없습니다.');
-      this.$router.push('/hoteltwo');
+      this.$router.push('/hotel');
     }
   },
   
@@ -755,14 +755,14 @@ export default {
       // 체크인이 과거인 경우
       if (checkInDate < today) {
         alert('과거 날짜로는 예약할 수 없습니다. 검색 페이지로 돌아갑니다.');
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
         return false;
       }
 
       // 체크아웃이 체크인보다 이전이거나 같은 경우
       if (checkOutDate <= checkInDate) {
         alert('잘못된 날짜입니다. 검색 페이지로 돌아갑니다.');
-        this.$router.push('/hoteltwo');
+        this.$router.push('/hotel');
         return false;
       }
 
@@ -853,7 +853,7 @@ export default {
       // 로그인하지 않은 경우: 예약 정보만 쿼리로 전달
       if (!this.isLoggedIn) {
         await this.$router.push({
-          path: '/hotelfour',
+          path: '/payment',
           query: {
             roomId: room.roomId,
             hotelId: this.hotel.id,
@@ -891,7 +891,7 @@ export default {
         const reservationId = reservationResponse.data.id;
 
         await this.$router.push({
-          path: '/hotelfour',
+          path: '/payment',
           query: {
             reservationId: reservationId,
             roomId: room.roomId,
@@ -916,7 +916,7 @@ export default {
           if (existingReservationId) {
             if (confirm('미결제된 예약이 있습니다. 이어서 진행하시겠습니까?')) {
               await this.$router.push({
-                path: '/hotelfour',
+                path: '/payment',
                 query: {
                   reservationId: existingReservationId,
                   roomId: room.roomId,
@@ -1575,7 +1575,7 @@ openGoogleMaps() {
     },
     
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     },
     
     // ===== 유틸리티 메서드 =====
@@ -1633,7 +1633,7 @@ openGoogleMaps() {
 
     searchByCountry(countryName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: countryName,
           checkIn: this.getToday(),
@@ -1644,7 +1644,7 @@ openGoogleMaps() {
   
     searchByCity(cityName) {
       this.$router.push({
-        path: '/hoteltwo',
+        path: '/hotel',
         query: { 
           destination: cityName,
           checkIn: this.getToday(),

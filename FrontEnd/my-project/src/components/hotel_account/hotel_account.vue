@@ -1245,7 +1245,7 @@ methods: {
       }
     },
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     },
     
     goToFavourites() {

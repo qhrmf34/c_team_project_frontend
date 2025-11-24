@@ -613,7 +613,7 @@ export default {
     },
     
     goToHotel() {
-      this.$router.push('/hotelone');
+      this.$router.push('/');
     },
     
     goToAccount() {

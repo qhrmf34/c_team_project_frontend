@@ -90,7 +90,7 @@ export default {
           }
           
           this.loading = false
-          this.$router.push('/hotelone')
+          this.$router.push('/')
         }
         
       } catch (error) {
